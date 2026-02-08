@@ -4,13 +4,8 @@ namespace AppilicationProcesserAPI.MessageQueue
 {
     public interface IMessageBroker
     {
-        ValueTask PublishAsync<TMessage>(TMessage message, CancellationToken cancellationToken = default) where TMessage : IMessageEnvelope;
+        ValueTask PublishAsync(IMessageEnvelope message, CancellationToken cancellationToken = default);
 
-        ChannelReader<IMessageEnvelope> GetReader();
-    }
-
-    public interface IMessageHandler<in TMessage> where TMessage : IMessageEnvelope
-    {
-        ValueTask HandleAsync(TMessage message, CancellationToken cancellationToken = default);
+        ValueTask<IMessageEnvelope> ConsumeAsync(CancellationToken cancellationToken = default);
     }
 }

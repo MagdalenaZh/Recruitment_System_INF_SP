@@ -7,10 +7,9 @@ namespace AppilicationProcesserAPI.Configurations
         public static void ConfigureMessageBus(this IServiceCollection services)
         {
             // Add Message Queue Services
-            services.AddSingleton<IMessageBroker, MessagePublisher>();
-            services.AddSingleton<MessageDispatcher>();
+            services.AddSingleton<IMessageBroker, MessageBroker>();
 
-            services.AddHostedService<MessageConsumer>();
+            services.AddHostedService<MessageBackgroundProcessor>();
         }
     }
 }
