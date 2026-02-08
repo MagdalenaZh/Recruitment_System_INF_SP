@@ -1,5 +1,5 @@
+using AppilicationProcesserAPI.Data;
 using Microsoft.EntityFrameworkCore;
-using YourApiNamespace.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 

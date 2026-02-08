@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 
-namespace YourApiNamespace.Data
+namespace AppilicationProcesserAPI.Data
 {
     public class AppDbContext : DbContext
     {
