@@ -1,4 +1,3 @@
 <Solution>
   <Project Path="AppilicationProcesserAPI/AppilicationProcesserAPI.csproj" />
-  <Project Path="NotificationWorker/ApplicationWorker.csproj" Id="c94d7e39-00b1-48e9-bd21-13edae4a9a98" />
 </Solution>
