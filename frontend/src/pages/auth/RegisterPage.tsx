@@ -2,6 +2,8 @@ import { useState } from "react";
 import { apiPost } from "../services/api";
 import { Link, useNavigate } from "react-router-dom";
 import type { RegisterRequest, RegisterResponse } from "../../types/auth";
+import { Button } from "../../components/ui/Button";
+import { Input } from "../../components/ui/Input";
 
 export default function RegisterPage() {
   const nav = useNavigate();
@@ -45,8 +47,8 @@ export default function RegisterPage() {
             <label className="block text-sm font-medium text-gray-700">
               First name
             </label>
-            <input
-              className="mt-1 w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:border-black focus:ring-2 focus:ring-black/10"
+            <Input
+              className="mt-1"
               placeholder="First name"
               value={firstName}
               onChange={(e) => setFirstName(e.target.value)}
@@ -54,11 +56,10 @@ export default function RegisterPage() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
               Last name
             </label>
-            <input
-              className="mt-1 w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:border-black focus:ring-2 focus:ring-black/10"
+            <Input
               placeholder="Last name"
               value={lastName}
               onChange={(e) => setLastName(e.target.value)}
@@ -67,11 +68,10 @@ export default function RegisterPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
               Email
             </label>
-            <input
-              className="mt-1 w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:border-black focus:ring-2 focus:ring-black/10"
+            <Input
               placeholder="you@aubg.edu"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -80,16 +80,15 @@ export default function RegisterPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
               Password
             </label>
-            <input
-              className="mt-1 w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:border-black focus:ring-2 focus:ring-black/10"
+            <Input
               placeholder="********"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              autoComplete="new-password"
+              autoComplete="current-password"
             />
           </div>
 
@@ -99,13 +98,13 @@ export default function RegisterPage() {
             </div>
           )}
 
-          <button
-            disabled={loading}
+          <Button
             type="submit"
-            className="w-full rounded-xl bg-black px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-black/90 disabled:cursor-not-allowed disabled:opacity-60"
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+            disabled={loading}
           >
-            {loading ? "Creating..." : "Create account"}
-          </button>
+            {loading ? "Registering..." : "Register"}
+          </Button>
         </form>
 
         <p className="mt-4 text-center text-sm text-gray-600">
