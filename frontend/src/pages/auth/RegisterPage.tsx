@@ -1,9 +1,12 @@
 import { useState } from "react";
-import { apiPost } from "./services/api";
-import { Link } from "react-router-dom";
-import type { LoginRequest, LoginResponse } from "../types/auth";
+import { apiPost } from "../services/api";
+import { Link, useNavigate } from "react-router-dom";
+import type { RegisterRequest, RegisterResponse } from "../../types/auth";
 
-export default function LoginPage() {
+export default function RegisterPage() {
+  const nav = useNavigate();
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
@@ -16,18 +19,14 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const payload: LoginRequest = { email, password };
-      const res = await apiPost<LoginRequest, LoginResponse>(
-        "/api/auth/login",
+      const payload: RegisterRequest = { firstName, lastName, email, password };
+      await apiPost<RegisterRequest, RegisterResponse>(
+        "/api/auth/register",
         payload,
       );
-
-      localStorage.setItem("auth_token", res.token);
-      localStorage.setItem("auth_role", res.role);
-
-      alert(`Logged in as ${res.role}`);
+      nav("/login");
     } catch (err: any) {
-      setError(err.message ?? "Login failed");
+      setError(err.message ?? "Register failed");
     } finally {
       setLoading(false);
     }
@@ -36,12 +35,37 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
       <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow">
-        <h1 className="text-2xl font-semibold tracking-tight">Login</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">Register</h1>
         <p className="mt-1 text-sm text-gray-600">
-          Sign in to continue to the recruitment system.
+          Create an account to apply and track your status.
         </p>
 
         <form onSubmit={onSubmit} className="mt-6 space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              First name
+            </label>
+            <input
+              className="mt-1 w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:border-black focus:ring-2 focus:ring-black/10"
+              placeholder="First name"
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
+              autoComplete="name"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Last name
+            </label>
+            <input
+              className="mt-1 w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:border-black focus:ring-2 focus:ring-black/10"
+              placeholder="Last name"
+              value={lastName}
+              onChange={(e) => setLastName(e.target.value)}
+              autoComplete="name"
+            />
+          </div>
+
           <div>
             <label className="block text-sm font-medium text-gray-700">
               Email
@@ -65,7 +89,7 @@ export default function LoginPage() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              autoComplete="current-password"
+              autoComplete="new-password"
             />
           </div>
 
@@ -80,17 +104,17 @@ export default function LoginPage() {
             type="submit"
             className="w-full rounded-xl bg-black px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-black/90 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {loading ? "Signing in..." : "Login"}
+            {loading ? "Creating..." : "Create account"}
           </button>
         </form>
 
         <p className="mt-4 text-center text-sm text-gray-600">
-          No account?{" "}
+          Already have an account?{" "}
           <Link
-            to="/register"
+            to="/login"
             className="font-semibold text-black underline-offset-4 hover:underline"
           >
-            Register
+            Login
           </Link>
         </p>
       </div>
