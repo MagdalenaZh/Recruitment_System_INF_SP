@@ -7,6 +7,39 @@ export const clubsMock: Club[] = [
     shortDescription: "Tech community for building, learning, and shipping projects.",
     category: "Tech",
     isRecruiting: true,
+    about:
+      "The Hub is AUBG’s tech club. We build projects, host workshops, and create opportunities for students to learn by doing.",
+    departments: [
+      {
+        id: "dev-dept",
+        name: "Development",
+        description: "Builds the website, internal tools, and hackathon projects.",
+      },
+      {
+        id: "design-dept",
+        name: "Design",
+        description: "UI/UX, branding, and visuals for events and products.",
+      },
+      {
+        id: "logistics-dept",
+        name: "Logistics",
+        description: "Organizes meetups, workshops, and collaborations.",
+      },
+    ],
+    events: [
+      {
+        id: "ev-1",
+        title: "HackAUBG 8.0",
+        dateText: "March 2026",
+        description: "A practical workshop for beginners with a mini project.",
+      },
+      {
+        id: "ev-2",
+        title: "Project Showcase Night",
+        dateText: "April 2026",
+        description: "Students demo what they built this semester.",
+      },
+    ],
   },
   {
     clubId: "22222222-2222-2222-2222-222222222222",
