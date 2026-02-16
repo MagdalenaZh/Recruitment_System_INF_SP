@@ -9,6 +9,7 @@ import { HeroSection } from "./sections/HeroSection/HeroSection";
 import { ClubsSection } from "./sections/ClubsSection/ClubsSection";
 import { Footer } from "../../../components/layout/Footer";
 import type { RecruitingFilter } from "../../../components/clubs/CLubFilters";
+import { usePageTitle } from "../../../hooks/usePageTitle";
 
 export default function LandingPage() {
   const [search, setSearch] = useState("");
@@ -42,6 +43,8 @@ export default function LandingPage() {
         );
       });
   }, [search, activeCategory, recruiting]);
+
+  usePageTitle("AUBG Clubs");
 
   return (
     <div className="min-h-screen bg-slate-950 text-white">

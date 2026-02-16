@@ -11,12 +11,15 @@ import { DepartmentsSection } from "./sections/DepartmentsSection/DepartmentsSec
 import { EventsSection } from "./sections/EventsSections/EventsSection";
 import { ApplySection } from "./sections/ApplySection/ApplySection";
 import { Navbar } from "../../../components/layout/Navbar/Navbar";
+import { usePageTitle } from "../../../hooks/usePageTitle";
 
 export default function ClubDetailsPage() {
   const { clubId } = useParams();
   const [search, setSearch] = useState("");
   const [club, setClub] = useState<Club | null>(null);
   const [loading, setLoading] = useState(true);
+
+  usePageTitle(club ? club.name : "Club details");
 
   useEffect(() => {
     let cancelled = false;
