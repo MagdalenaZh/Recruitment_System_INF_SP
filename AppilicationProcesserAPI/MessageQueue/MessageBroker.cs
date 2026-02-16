@@ -25,11 +25,11 @@ namespace AppilicationProcesserAPI.MessageQueue
         {
             if (message == null) throw new ArgumentNullException(nameof(message));
 
-            _logger.LogInformation("Publishing message with AggregateId: {AggregateId} at {Timestamp}", message.AggregateId, message.Timestamp);
+            _logger.LogInformation("Publishing message with AggregateId: {AggregateId} at {Timestamp}", message.EventData.AggregateId, message.EventData.Timestamp);
 
             await _queue.Writer.WriteAsync(message, cancellationToken);
 
-            _logger.LogInformation("Message with AggregateId: {AggregateId} published successfully", message.AggregateId);
+            _logger.LogInformation("Message with AggregateId: {AggregateId} published successfully", message.EventData.AggregateId);
 
             return;
         }

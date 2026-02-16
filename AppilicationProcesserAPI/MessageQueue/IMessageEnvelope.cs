@@ -1,24 +1,23 @@
-﻿namespace AppilicationProcesserAPI.MessageQueue
+﻿using AppilicationProcesserAPI.DomainEvents;
+
+namespace AppilicationProcesserAPI.MessageQueue
 {
     public interface IMessageEnvelope
     {
-        Guid AggregateId { get; }
-        DateTimeOffset Timestamp { get; }
-
-        Task RunPayload();
+        public IDomainEvent EventData { get; }
+        Task RunPayload(CancellationToken cancellationToken);
     }
 
     public class MessageEnvelope : IMessageEnvelope
     {
-        public Guid AggregateId { get; }
-        public DateTimeOffset Timestamp { get; }
-        public MessageEnvelope(Guid aggregateId)
+        public  IDomainEvent EventData { get; }
+
+        public MessageEnvelope(IDomainEvent domainEvent)
         {
-            AggregateId = aggregateId;
-            Timestamp = DateTimeOffset.UtcNow;
+           EventData = domainEvent;
         }
 
-        public Task RunPayload()
+        public Task RunPayload(CancellationToken cancellationToken)
         {
             return Task.CompletedTask;
         }

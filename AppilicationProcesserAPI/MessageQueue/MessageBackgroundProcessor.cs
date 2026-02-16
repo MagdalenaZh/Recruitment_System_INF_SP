@@ -20,7 +20,7 @@
                     var message = await _messageBroker.ConsumeAsync(stoppingToken);
                     if (message != null)
                     {
-                        await message.RunPayload();
+                        await message.RunPayload(stoppingToken);
                     }
                 }
                 catch (OperationCanceledException)
