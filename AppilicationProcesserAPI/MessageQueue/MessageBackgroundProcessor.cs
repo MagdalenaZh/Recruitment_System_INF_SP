@@ -25,7 +25,6 @@
                 }
                 catch (OperationCanceledException)
                 {
-                    // Graceful shutdown
                     _logger.LogInformation("Message processor is shutting down.");
                 }
                 catch (Exception ex)
