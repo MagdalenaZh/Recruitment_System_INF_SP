@@ -1,4 +1,0 @@
-function validateApplicationData() {
-  return {
-  };
-}

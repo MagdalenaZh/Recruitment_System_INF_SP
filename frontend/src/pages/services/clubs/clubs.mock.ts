@@ -25,6 +25,11 @@ export const clubsMock: Club[] = [
         name: "Logistics",
         description: "Organizes meetups, workshops, and collaborations.",
       },
+      {
+        id: "marketing-dept",
+        name: "Marketing",
+        description: "Manages social media, outreach, and community engagement.",
+      }
     ],
     events: [
       {
