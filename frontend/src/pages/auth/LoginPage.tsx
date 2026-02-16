@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { use, useState } from "react";
 import { apiPost } from "../services/api";
 import { Link } from "react-router-dom";
 import type { LoginRequest, LoginResponse } from "../../types/auth";
 import { Button } from "../../components/ui/Button";
 import { Input } from "../../components/ui/Input";
+import { usePageTitle } from "../../hooks/usePageTitle";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -11,6 +12,8 @@ export default function LoginPage() {
 
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  usePageTitle("Login - AUBG Recruitment System");
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();

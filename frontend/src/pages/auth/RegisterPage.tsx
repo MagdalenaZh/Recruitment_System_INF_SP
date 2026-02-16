@@ -4,6 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import type { RegisterRequest, RegisterResponse } from "../../types/auth";
 import { Button } from "../../components/ui/Button";
 import { Input } from "../../components/ui/Input";
+import { usePageTitle } from "../../hooks/usePageTitle";
 
 export default function RegisterPage() {
   const nav = useNavigate();
@@ -33,6 +34,8 @@ export default function RegisterPage() {
       setLoading(false);
     }
   }
+
+  usePageTitle("Register - AUBG Recruitment System");
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">

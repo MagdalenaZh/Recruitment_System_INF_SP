@@ -30,12 +30,12 @@ export function ClubsSection({
   return (
     <section
       id="clubs"
-      className="bg-slate-50 py-12 text-slate-900 scroll-mt-28"
+      className="bg-slate-50 py-12 text-slate-900 scroll-mt min-h-screen flex items-center"
     >
       <Container>
-        <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+        <div className="flex flex-col items-center gap-3 md:flex-row md:items-end md:justify-between ">
           <div>
-            <h2 className="text-xl font-semibold">Clubs at AUBG</h2>
+            <h2 className="text-2xl font-semibold">Browse Clubs at AUBG</h2>
             <p className="mt-1 text-sm text-slate-600">
               {totalCount} club{totalCount === 1 ? "" : "s"} found
             </p>
