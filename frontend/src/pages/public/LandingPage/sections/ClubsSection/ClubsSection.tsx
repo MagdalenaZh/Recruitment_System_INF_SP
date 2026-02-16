@@ -28,7 +28,10 @@ export function ClubsSection({
   setRecruiting,
 }: Props) {
   return (
-    <section id="clubs" className="bg-slate-50 py-12 text-slate-900">
+    <section
+      id="clubs"
+      className="bg-slate-50 py-12 text-slate-900 scroll-mt-28"
+    >
       <Container>
         <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
           <div>
