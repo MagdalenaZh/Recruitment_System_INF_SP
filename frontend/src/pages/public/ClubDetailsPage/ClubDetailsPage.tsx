@@ -14,7 +14,7 @@ import { Navbar } from "../../../components/layout/Navbar/Navbar";
 
 export default function ClubDetailsPage() {
   const { clubId } = useParams();
-  const [search, setSearch] = useState(""); // navbar needs it
+  const [search, setSearch] = useState("");
   const [club, setClub] = useState<Club | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -43,7 +43,7 @@ export default function ClubDetailsPage() {
       <main className="pt-24">
         <Container>
           <Link
-            to="/"
+            to="/home"
             className="inline-flex text-sm text-white/70 hover:text-white"
           >
             ← Back to clubs
