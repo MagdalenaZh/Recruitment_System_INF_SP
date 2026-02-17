@@ -17,11 +17,30 @@ namespace AppilicationProcesserAPI.Controllers
         }
 
 
-        [HttpPost("api/process-application")]
+        [HttpPost("api/submit-application")]
         public async Task<IActionResult> ProcessApplication(CancellationToken cancellationToken)
         {
             var message = new MessageEnvelope(
-                new ApplicationSubmittedEvent(Guid.NewGuid(), version: 1, "user", "user@email.test"));
+                new ApplicationSubmittedEvent(3));
+
+            try
+            {
+                await _messageBroker.PublishAsync(message, cancellationToken);
+                _logger.LogInformation("Application processing message published for ApplicationId: {ApplicationId}", message.EventData.AggregateId);
+                return Accepted(new { message = "Application processing started.", applicationId = message.EventData.AggregateId });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error publishing application processing message for ApplicationId: {ApplicationId}", message.EventData.AggregateId);
+                return StatusCode(500, "An error occurred while processing the application.");
+            }
+        }
+
+        [HttpPost("api/approve-application/{aggregateId}")]
+        public async Task<IActionResult> ApproveApplication([FromRoute]Guid aggregateId, CancellationToken cancellationToken)
+        {
+            var message = new MessageEnvelope(
+                new ApplicationApproved(aggregateId, 2, Guid.NewGuid()));
 
             try
             {

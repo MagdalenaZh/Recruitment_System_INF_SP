@@ -1,4 +1,6 @@
-﻿namespace AppilicationProcesserAPI.MessageQueue
+﻿using AppilicationProcesserAPI.DomainEvents;
+
+namespace AppilicationProcesserAPI.MessageQueue
 {
     public class MessageBackgroundProcessor : BackgroundService
     {
@@ -13,7 +15,7 @@
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-           while (!stoppingToken.IsCancellationRequested)
+            while (!stoppingToken.IsCancellationRequested)
             {
                 try
                 {
