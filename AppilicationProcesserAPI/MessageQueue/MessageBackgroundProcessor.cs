@@ -1,4 +1,5 @@
-﻿using AppilicationProcesserAPI.DomainEvents;
+﻿using AppilicationProcesserAPI.AggregateStates;
+using AppilicationProcesserAPI.DomainEvents;
 
 namespace AppilicationProcesserAPI.MessageQueue
 {
@@ -15,6 +16,8 @@ namespace AppilicationProcesserAPI.MessageQueue
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
+            var testAggregate = new ApplicationAggregate();
+
             while (!stoppingToken.IsCancellationRequested)
             {
                 try
@@ -22,7 +25,7 @@ namespace AppilicationProcesserAPI.MessageQueue
                     var message = await _messageBroker.ConsumeAsync(stoppingToken);
                     if (message != null)
                     {
-                        await message.RunPayload(stoppingToken);
+                        testAggregate.ApplyEvent(message.EventData);
                     }
                 }
                 catch (OperationCanceledException)

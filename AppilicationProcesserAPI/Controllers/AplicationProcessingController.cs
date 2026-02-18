@@ -40,7 +40,7 @@ namespace AppilicationProcesserAPI.Controllers
         public async Task<IActionResult> ApproveApplication([FromRoute]Guid aggregateId, CancellationToken cancellationToken)
         {
             var message = new MessageEnvelope(
-                new ApplicationApproved(aggregateId, 2, Guid.NewGuid()));
+                new ApplicationApprovedEvent(aggregateId, 2, Guid.NewGuid()));
 
             try
             {

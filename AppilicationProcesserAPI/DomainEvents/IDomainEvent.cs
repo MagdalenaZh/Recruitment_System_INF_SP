@@ -39,11 +39,11 @@ public class ApplicationSubmittedEvent : DomainEvent
     }
 }
 
-public class ApplicationApproved : DomainEvent
+public class ApplicationApprovedEvent : DomainEvent
 {
     public Guid UserId { get; }
 
-    public ApplicationApproved(Guid aggregateId, int version, Guid userId) : base(aggregateId, version)
+    public ApplicationApprovedEvent(Guid aggregateId, int version, Guid userId) : base(aggregateId, version)
     {
         UserId = userId;
     }
@@ -62,5 +62,49 @@ public class ApplicationRejectedEvent : DomainEvent
 
     public override DomainEventEnum EventType => DomainEventEnum.ApplicationApprovalDecremented;
 }
+
+public class SendInterviewProposalEvent : DomainEvent
+{
+    public string InterviewLocation { get; }
+    public DateTimeOffset ProposedInterviewDateTime { get; }
+
+    public SendInterviewProposalEvent(Guid aggregateId, int version, string interviewLocation, DateTimeOffset proposedTime) : base(aggregateId, version)
+    {
+        InterviewLocation = interviewLocation;
+        ProposedInterviewDateTime = proposedTime;
+    }
+
+    public override DomainEventEnum EventType => DomainEventEnum.ApplicationInterviewProposed;
+}
+
+public class RemoveInterviewProposalEvent : DomainEvent
+{
+    public string InterviewLocation { get; }
+    public DateTimeOffset RemovedInterviewDateTime { get; }
+    public RemoveInterviewProposalEvent(Guid aggregateId, int version, string interviewLocation, DateTimeOffset removeDateTime) : base(aggregateId, version)
+    {
+        InterviewLocation = interviewLocation;
+        RemovedInterviewDateTime = removeDateTime;
+    }
+    public override DomainEventEnum EventType => DomainEventEnum.ApplicationInterviewProposalAmended;
+}
+
+public class InterviewProposalAcceptedEvent : DomainEvent
+{
+    public DateTimeOffset AcceptedDateTime { get; }
+    public InterviewProposalAcceptedEvent(Guid aggregateId, int version, DateTimeOffset acceptedDateTime) : base(aggregateId, version)
+    {
+       AcceptedDateTime = acceptedDateTime;
+    }
+    public override DomainEventEnum EventType => DomainEventEnum.ApplicationInterviewAccepted;
+}
+
+public class InterviewProposalRejectedEvent : DomainEvent
+{
+    public InterviewProposalRejectedEvent(Guid aggregateId, int version) : base(aggregateId, version)
+    {
+    }
+    public override DomainEventEnum EventType => DomainEventEnum.ApplicationInterviewRejected;
+}   
 
 
