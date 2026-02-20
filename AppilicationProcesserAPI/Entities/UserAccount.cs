@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 namespace AppilicationProcesserAPI.Entities
 
 {
-    [Index(nameof(Email), IsUnique =true)]
+    [Index(nameof(Email), IsUnique = true)]
     [Index(nameof(UserName), IsUnique = true)]
 
     public class UserAccount
@@ -11,26 +11,28 @@ namespace AppilicationProcesserAPI.Entities
         [Key]
         public int Id { get; set; }
 
-        public Guid UserId { get; set; } 
+        public Guid UserId { get; set; } = Guid.NewGuid();
 
-        [Required(ErrorMessage = "First name is required")]
-        [MaxLength(50, ErrorMessage = "First name cannot exceed 50 characters")]
-        public string FirstName { get; set; } 
+        [Required, MaxLength(100)]
+        public string Email { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "Last name is required")]
-        [MaxLength(50, ErrorMessage = "Last name cannot exceed 50 characters")]
-        public string LastName { get; set; }
+        [Required, MaxLength(20)]
+        public string UserName { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "Email is required")]
-        [MaxLength(100, ErrorMessage = "Email cannot exceed 100 characters")]
-        public string Email { get; set; }
+        [Required, MaxLength(50)]
+        public string FirstName { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "Username is required")]
-        [MaxLength(20, ErrorMessage = "Username cannot exceed 20 characters")]
-        public string UserName { get; set; }
+        [Required, MaxLength(50)]
+        public string LastName { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "Password is required")]
-        [MaxLength(20, ErrorMessage = "Password cannot exceed 200 characters")]
-        public string Password { get; set; }
-        }
+        [Required, MaxLength(30)]
+        public string Role { get; set; } = "User";
+
+        [Required]
+        public byte[] PasswordHash { get; set; } = Array.Empty<byte>();
+
+        [Required]
+        public byte[] PasswordSalt { get; set; } = Array.Empty<byte>();
+    }
+
 }
