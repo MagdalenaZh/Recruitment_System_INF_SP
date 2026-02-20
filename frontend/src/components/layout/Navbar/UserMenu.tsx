@@ -1,7 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useState, useRef, useEffect } from "react";
-import { useAuth } from "../../../pages/auth/AuthContext";
-import { useUserProfile } from "../../../pages/account/hooks/useUserProfile";
+import { useAuth } from "../../../features/auth/components/AuthContext";
+import { useUserProfile } from "../../../features/account/hooks/useUserProfile";
 import { Button } from "../../ui/Button";
 
 export function UserMenu() {

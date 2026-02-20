@@ -1,14 +1,14 @@
-import LoginPage from "./pages/auth/LoginPage.tsx";
-import RegisterPage from "./pages/auth/RegisterPage.tsx";
-import ClubDetailsPage from "./pages/public/ClubDetailsPage/ClubDetailsPage.tsx";
-import LandingPage from "./pages/public/LandingPage/LandingPage.tsx";
-import ApplicationFormPage from "./pages/public/ApplicationPage/ApplicationFormPage.tsx";
+import LoginPage from "./features/auth/pages/LoginPage.tsx";
+import RegisterPage from "./features/auth/pages/RegisterPage.tsx";
+import ClubDetailsPage from "./features/public/pages/ClubDetailsPage/ClubDetailsPage.tsx";
+import LandingPage from "./features/public/pages/LandingPage/LandingPage.tsx";
+import ApplicationFormPage from "./features/public/pages/ApplicationFormPage/ApplicationFormPage.tsx";
 import { Routes, Route, Navigate } from "react-router-dom";
-import { ProtectedRoute } from "./pages/auth/ProtectedRoute.tsx";
-import { AccountApplicationsPage } from "./pages/account/applicant/AccountApplicationsPage.tsx";
-import { AccountInboxPage } from "./pages/account/applicant/AccountInboxPage.tsx";
-import { AccountProfilePage } from "./pages/account/applicant/AccountProfilePage.tsx";
-import { AccountLayout } from "./pages/account/components/AccountLayout.tsx";
+import { ProtectedRoute } from "./features/auth/components/ProtectedRoute.tsx";
+import { AccountInboxPage } from "./features/account/pages/AccountInboxPage.tsx";
+import { AccountProfilePage } from "./features/account/pages/AccountProfilePage.tsx";
+import { AccountLayout } from "./features/account/components/AccountLayout/AccountLayout.tsx";
+import { AccountApplicationsPage } from "./features/account/pages/AccountApplicationsPage.tsx";
 
 export default function App() {
   return (

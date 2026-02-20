@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { Container } from "../Container";
 import { ClubSearch } from "./ClubSearch";
 import { Button } from "../../ui/Button";
-import { useAuth } from "../../../pages/auth/AuthContext";
+import { useAuth } from "../../../features/auth/components/AuthContext";
 import { UserMenu } from "./UserMenu";
 
 type Props = {
