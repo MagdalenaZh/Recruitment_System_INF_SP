@@ -1,37 +1,38 @@
-import { useMemo, useState } from "react";
-import type { UserProfile, UpdateProfileRequest } from "../types/profile";
-import type { UserRole } from "../types/roles";
+import { useEffect, useMemo, useState } from "react";
+import { getCurrentUser, updateProfile as updateProfileApi } from "../services/accountApi";
 
-// TEMP: until backend exists
-const MOCK_PROFILE: UserProfile = {
-  userId: "demo-user-id",
-  role: "Applicant",
-  firstName: "Jenny",
-  lastName: "Smith",
-  email: "jenny@aubg.edu",
-  avatarUrl: null,
-};
+export function useUserProfile() {
+  const [profile, setProfile] = useState<{
+    userId: string;
+    email: string;
+    firstName: string;
+    lastName: string;
+    role: string;
+    avatarUrl?: string | null;
+  } | null>(null);
 
-export function useUserProfile(role: UserRole) {
-  const [profile, setProfile] = useState<UserProfile>(() => ({
-    ...MOCK_PROFILE,
-    role,
-  }));
+  const [loading, setLoading] = useState(true);
 
-  const fullName = useMemo(
-    () => `${profile.firstName} ${profile.lastName}`.trim(),
-    [profile.firstName, profile.lastName]
-  );
+  const fullName = useMemo(() => {
+    if (!profile) return "";
+    return `${profile.firstName} ${profile.lastName}`.trim();
+  }, [profile]);
 
-  async function updateProfile(input: UpdateProfileRequest) {
-    // later: POST /api/me/profile
-    setProfile((p) => ({
-      ...p,
-      firstName: input.firstName,
-      lastName: input.lastName,
-      avatarUrl: input.avatarUrl ?? p.avatarUrl,
-    }));
-  }
+  useEffect(() => {
+    async function load() {
+      try {
+        const data = await getCurrentUser();
+        setProfile(data);
+      } finally {
+        setLoading(false);
+      }
+    }
+    load();
+  }, []);
 
-  return { profile, fullName, updateProfile };
+  async function updateProfile(data: { firstName: string; lastName: string; avatarUrl?: string | null }) {
+  await updateProfileApi(data);
+  setProfile((prev) => (prev ? { ...prev, ...data } : prev));
+}
+  return { profile, fullName, loading, updateProfile };
 }

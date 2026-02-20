@@ -28,7 +28,6 @@ export default function App() {
       <Route path="/account" element={<AccountLayout />}>
         <Route index element={<AccountProfilePage />} />
         <Route path="inbox" element={<AccountInboxPage />} />
-
         <Route path="applications" element={<AccountApplicationsPage />} />
       </Route>
       <Route path="/clubs/:clubId" element={<ClubDetailsPage />} />

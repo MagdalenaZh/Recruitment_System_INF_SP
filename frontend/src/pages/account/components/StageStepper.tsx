@@ -4,7 +4,7 @@ const STEPS: { key: ApplicationStage; label: string }[] = [
   { key: "Submitted", label: "Submitted" },
   { key: "UnderReview", label: "Review" },
   { key: "Interview", label: "Interview" },
-  { key: "Accepted", label: "Decision" }, // last bubble used as "Decision"
+  { key: "Accepted", label: "Decision" },
 ];
 
 function stepIndex(stage: ApplicationStage) {
@@ -73,7 +73,7 @@ export function StageStepper({ stage }: { stage: ApplicationStage }) {
         ))}
       </div>
 
-      <div className="mt-2 flex justify-between text-[11px] text-slate-500">
+      <div className="mt-2 flex gap-9 text-[11px] text-slate-500">
         <span>Submitted</span>
         <span>Review</span>
         <span>Interview</span>

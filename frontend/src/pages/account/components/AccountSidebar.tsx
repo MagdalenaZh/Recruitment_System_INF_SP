@@ -16,28 +16,37 @@ export function AccountSidebar() {
   const normalized = normalizeRole(role);
 
   const sections = useAccountNav(normalized);
-  const { profile } = useUserProfile(normalized);
+
+  const { profile, loading } = useUserProfile();
+
+  const firstName = profile?.firstName ?? "";
+  const lastName = profile?.lastName ?? "";
+  const email = profile?.email ?? "";
 
   const initials =
-    (profile.firstName?.[0] ?? "U").toUpperCase() +
-    (profile.lastName?.[0] ?? "").toUpperCase();
+    (firstName[0] ?? "U").toUpperCase() + (lastName[0] ?? "").toUpperCase();
 
   return (
     <aside className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-100">
-      {/* Profile mini card */}
       <div className="flex items-center gap-3 rounded-2xl bg-slate-50 p-3 ring-1 ring-slate-100">
         <div className="grid h-10 w-10 place-items-center rounded-full bg-slate-900 text-white text-sm font-semibold">
           {initials}
         </div>
+
         <div className="min-w-0">
-          <div className="truncate text-sm font-semibold text-slate-900">
-            {profile.firstName} {profile.lastName}
-          </div>
-          <div className="truncate text-xs text-slate-500">{profile.email}</div>
+          {loading ? (
+            <div className="text-sm text-slate-500">Loading...</div>
+          ) : (
+            <>
+              <div className="truncate text-sm font-semibold text-slate-900">
+                {firstName} {lastName}
+              </div>
+              <div className="truncate text-xs text-slate-500">{email}</div>
+            </>
+          )}
         </div>
       </div>
 
-      {/* Nav */}
       <div className="mt-4 space-y-4">
         {sections.map((section) => (
           <div key={section.title ?? "section"}>
@@ -46,6 +55,7 @@ export function AccountSidebar() {
                 {section.title}
               </div>
             )}
+
             <div className="space-y-1">
               {section.items.map((item) => (
                 <NavLink key={item.key} to={item.to} className={cx} end>

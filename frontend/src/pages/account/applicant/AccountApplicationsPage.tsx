@@ -26,13 +26,6 @@ export function AccountApplicationsPage() {
 
   return (
     <div>
-      <div className="text-sm font-semibold text-slate-900">
-        My applications
-      </div>
-      <div className="mt-1 text-sm text-slate-500">
-        Track what stage each application is in.
-      </div>
-
       <div className="mt-6 space-y-4">
         {mockApps.map((a) => (
           <div
@@ -53,11 +46,7 @@ export function AccountApplicationsPage() {
 
             <StageStepper stage={a.stage} />
 
-            <div className="mt-4 flex justify-end">
-              <button className="text-sm font-medium text-blue-600 hover:underline">
-                View details
-              </button>
-            </div>
+            <div className="mt-4 flex justify-end"></div>
           </div>
         ))}
       </div>

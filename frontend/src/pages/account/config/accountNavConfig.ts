@@ -4,6 +4,14 @@ export const ACCOUNT_NAV_SECTIONS: AccountNavSection[] = [
   {
     title: "Account",
     items: [
+        {
+        key: "your profile",
+        label: "Your profile",
+        description: "View and edit your personal information",
+        to: "/account",
+        icon: "user",
+        roles: ["Applicant", "Board", "ClubAdmin", "Admin", "User"],
+        },
       {
         key: "inbox",
         label: "Inbox",

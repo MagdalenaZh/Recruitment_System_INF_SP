@@ -52,7 +52,6 @@ export function Navbar({ search, setSearch }: Props) {
           </nav>
         </div>
 
-        {/* Mobile search */}
         <div className="mt-3 md:hidden">
           <div className="rounded-2xl bg-white/10 p-3 backdrop-blur-md ring-1 ring-white/15">
             <ClubSearch value={search} onChange={setSearch} />

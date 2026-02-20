@@ -14,7 +14,6 @@ export function AccountInboxPage() {
 
   return (
     <div>
-      <div className="text-sm font-semibold text-slate-900">Inbox</div>
       <div className="mt-6 space-y-3">
         {mock.map((m) => (
           <div

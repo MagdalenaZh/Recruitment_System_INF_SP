@@ -1,6 +1,6 @@
 import type { UserRole } from "./roles";
 
-export type AccountNavKey = "editProfile" | "inbox" | "applications" | "tasks" | "clubPanel";
+export type AccountNavKey = "your profile" | "inbox" | "applications" | "tasks" | "clubPanel";
 
 export type AccountNavItem = {
   key: AccountNavKey;

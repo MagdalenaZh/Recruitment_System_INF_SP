@@ -2,6 +2,7 @@
 using AppilicationProcesserAPI.Entities;
 using AppilicationProcesserAPI.Models;
 using AppilicationProcesserAPI.Security;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -27,7 +28,6 @@ namespace AppilicationProcesserAPI.Controllers
         [HttpPost("register")]
         public async Task<ActionResult<RegisterResponse>> Register([FromBody] RegisterRequest req)
         {
-            // basic validation
             if (string.IsNullOrWhiteSpace(req.Email) || string.IsNullOrWhiteSpace(req.Password))
                 return BadRequest("Email and password are required.");
 
@@ -41,7 +41,7 @@ namespace AppilicationProcesserAPI.Controllers
             var user = new UserAccount
             {
                 Email = email,
-                UserName = email, // you can change later
+                UserName = email,
                 FirstName = req.FirstName.Trim(),
                 LastName = req.LastName.Trim(),
                 Role = "User",
@@ -86,6 +86,8 @@ namespace AppilicationProcesserAPI.Controllers
                 new Claim(ClaimTypes.Role, user.Role),
                 new Claim("firstName", user.FirstName),
                 new Claim("lastName", user.LastName),
+                new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()),
+
             };
 
             var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key));
@@ -100,6 +102,57 @@ namespace AppilicationProcesserAPI.Controllers
             );
 
             return new JwtSecurityTokenHandler().WriteToken(jwt);
+
+
+        }
+
+        [Authorize]
+        [HttpGet("me")]
+        public async Task<IActionResult> GetCurrentUser()
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (userIdClaim == null)
+                return Unauthorized();
+
+            var userId = Guid.Parse(userIdClaim.Value);
+
+            var user = await _context.UserAccounts
+                .FirstOrDefaultAsync(x => x.UserId == userId);
+
+            if (user == null)
+                return NotFound();
+
+            return Ok(new CurrentUserResponse
+            {
+                Email = user.Email,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                Role = user.Role
+            });
+        }
+
+        [Authorize]
+        [HttpPut("me")]
+        public async Task<IActionResult> UpdateProfile(UpdateProfileRequest request)
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (userIdClaim == null)
+                return Unauthorized();
+
+            var userId = Guid.Parse(userIdClaim.Value);
+
+            var user = await _context.UserAccounts
+                .FirstOrDefaultAsync(x => x.UserId == userId);
+
+            if (user == null)
+                return NotFound();
+
+            user.FirstName = request.FirstName;
+            user.LastName = request.LastName;
+
+            await _context.SaveChangesAsync();
+
+            return NoContent();
         }
     }
 }
