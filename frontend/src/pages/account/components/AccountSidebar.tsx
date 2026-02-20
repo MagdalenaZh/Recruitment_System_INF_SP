@@ -1,0 +1,62 @@
+import { NavLink } from "react-router-dom";
+import { useAuth } from "../../../pages/auth/AuthContext";
+import { normalizeRole } from "../types/roles";
+import { useAccountNav } from "../hooks/useAccountNav";
+import { useUserProfile } from "../hooks/useUserProfile";
+
+function cx({ isActive }: { isActive: boolean }) {
+  return [
+    "flex items-center justify-between rounded-xl px-3 py-2 text-sm transition",
+    isActive ? "bg-slate-900 text-white" : "text-slate-700 hover:bg-slate-100",
+  ].join(" ");
+}
+
+export function AccountSidebar() {
+  const { role } = useAuth();
+  const normalized = normalizeRole(role);
+
+  const sections = useAccountNav(normalized);
+  const { profile } = useUserProfile(normalized);
+
+  const initials =
+    (profile.firstName?.[0] ?? "U").toUpperCase() +
+    (profile.lastName?.[0] ?? "").toUpperCase();
+
+  return (
+    <aside className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-100">
+      {/* Profile mini card */}
+      <div className="flex items-center gap-3 rounded-2xl bg-slate-50 p-3 ring-1 ring-slate-100">
+        <div className="grid h-10 w-10 place-items-center rounded-full bg-slate-900 text-white text-sm font-semibold">
+          {initials}
+        </div>
+        <div className="min-w-0">
+          <div className="truncate text-sm font-semibold text-slate-900">
+            {profile.firstName} {profile.lastName}
+          </div>
+          <div className="truncate text-xs text-slate-500">{profile.email}</div>
+        </div>
+      </div>
+
+      {/* Nav */}
+      <div className="mt-4 space-y-4">
+        {sections.map((section) => (
+          <div key={section.title ?? "section"}>
+            {section.title && (
+              <div className="px-1 pb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                {section.title}
+              </div>
+            )}
+            <div className="space-y-1">
+              {section.items.map((item) => (
+                <NavLink key={item.key} to={item.to} className={cx} end>
+                  <span className="truncate">{item.label}</span>
+                  <span className="text-slate-400">›</span>
+                </NavLink>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </aside>
+  );
+}
