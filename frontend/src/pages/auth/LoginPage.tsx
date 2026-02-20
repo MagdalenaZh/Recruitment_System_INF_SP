@@ -1,15 +1,17 @@
 import { useState } from "react";
 import { apiPost } from "../services/api";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import type { LoginRequest, LoginResponse } from "../../types/auth";
 import { Button } from "../../components/ui/Button";
 import { Input } from "../../components/ui/Input";
 import { usePageTitle } from "../../hooks/usePageTitle";
+import { useAuth } from "./AuthContext";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
+  const nav = useNavigate();
+  const { login } = useAuth();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -27,10 +29,8 @@ export default function LoginPage() {
         payload,
       );
 
-      localStorage.setItem("auth_token", res.token);
-      localStorage.setItem("auth_role", res.role);
-
-      alert(`Logged in as ${res.role}`);
+      login(res.token, res.role);
+      nav("/home");
     } catch (err: any) {
       setError(err.message ?? "Login failed");
     } finally {

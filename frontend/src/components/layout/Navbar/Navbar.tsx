@@ -2,6 +2,8 @@ import { Link } from "react-router-dom";
 import { Container } from "../Container";
 import { ClubSearch } from "./ClubSearch";
 import { Button } from "../../ui/Button";
+import { useAuth } from "../../../pages/auth/AuthContext";
+import { UserMenu } from "./UserMenu";
 
 type Props = {
   search: string;
@@ -9,6 +11,8 @@ type Props = {
 };
 
 export function Navbar({ search, setSearch }: Props) {
+  const { isAuthenticated } = useAuth();
+
   return (
     <header className="fixed top-0 z-50 w-full pt-4">
       <Container>
@@ -28,21 +32,27 @@ export function Navbar({ search, setSearch }: Props) {
           </div>
 
           <nav className="flex items-center gap-3">
-            <Link to="/login">
-              <Button variant="ghost" size="sm" type="button">
-                Log in
-              </Button>
-            </Link>
+            {isAuthenticated ? (
+              <UserMenu />
+            ) : (
+              <>
+                <Link to="/login">
+                  <Button variant="ghost" size="sm" type="button">
+                    Log in
+                  </Button>
+                </Link>
 
-            <Link to="/register">
-              <Button size="sm" type="button">
-                Create account
-              </Button>
-            </Link>
+                <Link to="/register">
+                  <Button size="sm" type="button">
+                    Create account
+                  </Button>
+                </Link>
+              </>
+            )}
           </nav>
         </div>
 
-        {/* Mobile */}
+        {/* Mobile search */}
         <div className="mt-3 md:hidden">
           <div className="rounded-2xl bg-white/10 p-3 backdrop-blur-md ring-1 ring-white/15">
             <ClubSearch value={search} onChange={setSearch} />
