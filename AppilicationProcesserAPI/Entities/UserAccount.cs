@@ -11,7 +11,7 @@ namespace AppilicationProcesserAPI.Entities
         [Key]
         public int Id { get; set; }
 
-        Guid UserId { get; set; }
+        public Guid UserId { get; set; } 
 
         [Required(ErrorMessage = "First name is required")]
         [MaxLength(50, ErrorMessage = "First name cannot exceed 50 characters")]
