@@ -1,6 +1,7 @@
-import type { ApplicationQuestion } from "../../../../types/application/application";
 import { Input } from "../../../../components/ui/Input";
 import { Field } from "../Fields";
+
+import type { ApplicationQuestion } from "../../../../types/application/application";
 
 export function QuestionsStep(props: {
   questions: ApplicationQuestion[];

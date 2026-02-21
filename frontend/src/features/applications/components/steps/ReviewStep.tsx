@@ -1,5 +1,6 @@
 import type { ApplicationQuestion } from "../../../../types/application/application";
 import type { PersonalInfo } from "../../../../types/application/application";
+
 import { SummaryCard } from "../SummaryCard";
 
 export function ReviewStep(props: {

@@ -1,6 +1,7 @@
 import { Input } from "../../../../components/ui/Input";
-import type { PersonalInfo } from "../../../../types/application/application";
 import { Field } from "../Fields";
+
+import type { PersonalInfo } from "../../../../types/application/application";
 
 export function PersonalInfoStep(props: {
   personal: PersonalInfo;

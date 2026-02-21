@@ -1,4 +1,5 @@
 import { Chip } from "../../../../components/ui/Chip";
+
 import type { ClubCategory } from "../../../../types/clubs/club";
 
 export type RecruitingFilter = "all" | "recruiting" | "notRecruiting";

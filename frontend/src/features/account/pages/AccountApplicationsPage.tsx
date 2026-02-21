@@ -1,6 +1,7 @@
-import type { ApplicationListItem } from "../../../types/account/applicationStage";
 import { StatusChip } from "../components/StatusChip";
 import { StageStepper } from "../components/StageStepper";
+
+import type { ApplicationListItem } from "../../../types/account/applicationStage";
 
 export function AccountApplicationsPage() {
   const mockApps: ApplicationListItem[] = [

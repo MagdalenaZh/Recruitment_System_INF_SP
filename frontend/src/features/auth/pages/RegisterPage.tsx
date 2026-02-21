@@ -1,12 +1,16 @@
 import { useState } from "react";
-import { apiPost } from "../../../services/api";
 import { Link, useNavigate } from "react-router-dom";
+
+import { Button } from "../../../components/ui/Button";
+import { Input } from "../../../components/ui/Input";
+
 import type {
   RegisterRequest,
   RegisterResponse,
 } from "../../../types/auth/auth";
-import { Button } from "../../../components/ui/Button";
-import { Input } from "../../../components/ui/Input";
+
+import { apiPost } from "../../../services/api";
+
 import { usePageTitle } from "../../public/hooks/usePageTitle";
 
 export default function RegisterPage() {

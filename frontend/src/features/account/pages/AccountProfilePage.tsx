@@ -1,6 +1,8 @@
+import { useEffect, useMemo, useRef, useState } from "react";
+
 import { Button } from "../../../components/ui/Button";
 import { Input } from "../../../components/ui/Input";
-import { useEffect, useMemo, useRef, useState } from "react";
+
 import { useUserProfile } from "../hooks/useUserProfile";
 
 export function AccountProfilePage() {

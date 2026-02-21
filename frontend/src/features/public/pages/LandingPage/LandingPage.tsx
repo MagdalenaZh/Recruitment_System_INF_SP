@@ -1,15 +1,16 @@
 import { useMemo, useState } from "react";
 
+import { HeroSection } from "./sections/HeroSection";
+import { ClubsSection } from "./sections/ClubsSection";
+
+import { Footer } from "../../../../components/layout/Footer";
 import { Navbar } from "../../../../components/layout/Navbar/Navbar";
+import type { RecruitingFilter } from "../../components/clubs/CLubFilters";
+
 import { clubsMock } from "../../../../mocks/clubs.mock";
 import type { ClubCategory } from "../../../../types/clubs/club";
 
-import { HeroSection } from "./sections/HeroSection";
-import { ClubsSection } from "./sections/ClubsSection";
-import { Footer } from "../../../../components/layout/Footer";
-
 import { usePageTitle } from "../../hooks/usePageTitle";
-import type { RecruitingFilter } from "../../components/clubs/CLubFilters";
 
 export default function LandingPage() {
   const [search, setSearch] = useState("");

@@ -3,8 +3,9 @@ import {
   ClubFilters,
   type RecruitingFilter,
 } from "../../../components/clubs/CLubFilters";
-import type { Club, ClubCategory } from "../../../../../types/clubs/club";
 import { ClubGrid } from "../../../components/clubs/ClubGrid";
+
+import type { Club, ClubCategory } from "../../../../../types/clubs/club";
 
 type Props = {
   clubs: Club[];
