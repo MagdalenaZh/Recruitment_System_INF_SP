@@ -1,4 +1,4 @@
-import { Container } from "../../../../../components/layout/Container";
+import { Container } from "../../../../components/layout/Container";
 
 export function AboutSection({ about }: { about?: string }) {
   return (

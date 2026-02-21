@@ -1,6 +1,7 @@
-import { Container } from "../../../../../components/layout/Container";
-import { Badge } from "../../../../../components/ui/Badge";
-import type { Club } from "../../../../../types/clubs/club";
+import { Container } from "../../../../components/layout/Container";
+import { Badge } from "../../../../components/ui/Badge";
+
+import type { Club } from "../../../../types/clubs/club";
 
 export function HeaderSection({ club }: { club: Club }) {
   return (

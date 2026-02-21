@@ -1,14 +1,15 @@
+import { Routes, Route, Navigate } from "react-router-dom";
+
 import LoginPage from "./features/auth/pages/LoginPage.tsx";
 import RegisterPage from "./features/auth/pages/RegisterPage.tsx";
-import ClubDetailsPage from "./features/public/pages/ClubDetailsPage/ClubDetailsPage.tsx";
 import LandingPage from "./features/public/pages/LandingPage/LandingPage.tsx";
-import ApplicationFormPage from "./features/public/pages/ApplicationFormPage/ApplicationFormPage.tsx";
-import { Routes, Route, Navigate } from "react-router-dom";
 import { ProtectedRoute } from "./features/auth/components/ProtectedRoute.tsx";
 import { AccountInboxPage } from "./features/account/pages/AccountInboxPage.tsx";
 import { AccountProfilePage } from "./features/account/pages/AccountProfilePage.tsx";
 import { AccountLayout } from "./features/account/components/AccountLayout/AccountLayout.tsx";
 import { AccountApplicationsPage } from "./features/account/pages/AccountApplicationsPage.tsx";
+import ClubDetailsPage from "./features/clubs/pages/ClubDetailsPage.tsx";
+import ApplicationFormPage from "./features/applications/pages/ApplicationFormPage.tsx";
 
 export default function App() {
   return (
@@ -17,14 +18,13 @@ export default function App() {
       <Route
         path="/home"
         element={
-          <ProtectedRoute>
-            <LandingPage />
-          </ProtectedRoute>
+          //otectedRoute>
+          <LandingPage />
+          //</ProtectedRoute>
         }
       />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
-      {/* Account routes (sidebar persists) */}
       <Route path="/account" element={<AccountLayout />}>
         <Route index element={<AccountProfilePage />} />
         <Route path="inbox" element={<AccountInboxPage />} />

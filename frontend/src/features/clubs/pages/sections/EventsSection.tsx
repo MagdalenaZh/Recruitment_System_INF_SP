@@ -1,5 +1,6 @@
-import { Container } from "../../../../../components/layout/Container";
-import type { ClubEvent } from "../../../../../types/clubs/club";
+import { Container } from "../../../../components/layout/Container";
+
+import type { ClubEvent } from "../../../../types/clubs/club";
 
 export function EventsSection({ events }: { events?: ClubEvent[] }) {
   return (

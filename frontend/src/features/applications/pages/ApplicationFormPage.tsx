@@ -1,22 +1,22 @@
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 
-import { ApplicationFormShell } from "../../../applications/components/ApplicationFormShell";
-import { QuestionsStep } from "../../../applications/components/steps/QuestionsStep";
-import { PersonalInfoStep } from "../../../applications/components/steps/PersonalInfoStep";
-import { ReviewStep } from "../../../applications/components/steps/ReviewStep";
-import { FormActions } from "../../../applications/components/FormActions";
-import { Stepper } from "../../../applications/components/Stepper";
+import { ApplicationFormShell } from "../components/ApplicationFormShell";
+import { QuestionsStep } from "../components/steps/QuestionsStep";
+import { PersonalInfoStep } from "../components/steps/PersonalInfoStep";
+import { ReviewStep } from "../components/steps/ReviewStep";
+import { FormActions } from "../components/FormActions";
+import { Stepper } from "../components/Stepper";
 
-import type { Club } from "../../../../types/clubs/club";
-import type { ApplicationQuestion } from "../../../../types/application/application";
+import type { Club } from "../../../types/clubs/club";
+import type { ApplicationQuestion } from "../../../types/application/application";
 
-import { applicationQuestionsByClubId } from "../../../../mocks/applicationQuestions.mock";
+import { applicationQuestionsByClubId } from "../../../mocks/applicationQuestions.mock";
 
-import { getClubById } from "../../../../services/clubs/clubs.api";
+import { getClubById } from "../../../services/clubs/clubs.api";
 
-import { useApplicationState } from "../../../applications/hooks/useApplicationState";
-import { useApplicationController } from "../../../applications/hooks/useApplicationController";
+import { useApplicationState } from "../hooks/useApplicationState";
+import { useApplicationController } from "../hooks/useApplicationController";
 
 export default function ApplicationFormPage() {
   const { clubId } = useParams();

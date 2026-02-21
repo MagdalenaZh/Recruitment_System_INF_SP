@@ -9,7 +9,7 @@ import type { LoginRequest, LoginResponse } from "../../../types/auth/auth";
 
 import { apiPost } from "../../../services/api";
 
-import { usePageTitle } from "../../public/hooks/usePageTitle";
+import { usePageTitle } from "../../clubs/hooks/usePageTitle";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");

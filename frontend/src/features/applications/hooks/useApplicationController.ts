@@ -1,9 +1,12 @@
 import { useMemo, useState } from "react";
-import type { Step } from "./useApplicationState";
-import type { ApplicationDraft, ApplicationQuestion, PersonalInfo } from "../../../types/application/application";
-import { isFormValid, validateAnswers, validatePersonal, type Errors } from "../../public/pages/ApplicationFormPage/validation/application.validation";
+
+import { isFormValid, validateAnswers, validatePersonal, type Errors } from "../pages/validation/application.validation";
+
 import { submitApplicationDraft } from "../../../services/applications/applicationSubmit";
 
+import type { ApplicationDraft, ApplicationQuestion, PersonalInfo } from "../../../types/application/application";
+
+import type { Step } from "./useApplicationState";
 
 
 export function useApplicationController(args: {

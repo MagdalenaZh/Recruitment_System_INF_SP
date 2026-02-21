@@ -1,5 +1,6 @@
-import { Container } from "../../../../../components/layout/Container";
-import type { ClubDepartment } from "../../../../../types/clubs/club";
+import { Container } from "../../../../components/layout/Container";
+
+import type { ClubDepartment } from "../../../../types/clubs/club";
 
 export function DepartmentsSection({
   departments,

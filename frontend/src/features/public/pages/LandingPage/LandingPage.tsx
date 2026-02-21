@@ -10,7 +10,7 @@ import type { RecruitingFilter } from "../../components/clubs/CLubFilters";
 import { clubsMock } from "../../../../mocks/clubs.mock";
 import type { ClubCategory } from "../../../../types/clubs/club";
 
-import { usePageTitle } from "../../hooks/usePageTitle";
+import { usePageTitle } from "../../../clubs/hooks/usePageTitle";
 
 export default function LandingPage() {
   const [search, setSearch] = useState("");

@@ -1,17 +1,21 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 
-import { Footer } from "../../../../components/layout/Footer";
-import { Container } from "../../../../components/layout/Container";
-import type { Club } from "../../../../types/clubs/club";
-import { AboutSection } from "./sections/AboutSection";
-import * as Navbar from "../../../../components/layout/Navbar/Navbar";
-import { usePageTitle } from "../../hooks/usePageTitle";
-import { getClubById } from "../../../../services/clubs/clubs.api";
 import { HeaderSection } from "./sections/HeaderSection";
+import { AboutSection } from "./sections/AboutSection";
 import { DepartmentsSection } from "./sections/DepartmentsSection";
 import { EventsSection } from "./sections/EventsSection";
 import { ApplySection } from "./sections/ApplySection";
+
+import { Navbar } from "../../../components/layout/Navbar/Navbar";
+import { Footer } from "../../../components/layout/Footer";
+import { Container } from "../../../components/layout/Container";
+
+import type { Club } from "../../../types/clubs/club";
+
+import { getClubById } from "../../../services/clubs/clubs.api";
+
+import { usePageTitle } from "../hooks/usePageTitle";
 
 export default function ClubDetailsPage() {
   const { clubId } = useParams();
@@ -41,7 +45,7 @@ export default function ClubDetailsPage() {
 
   return (
     <div className="min-h-screen bg-slate-950 text-white">
-      <Navbar.Navbar search={search} setSearch={setSearch} />
+      <Navbar search={search} setSearch={setSearch} />
 
       <main className="pt-24">
         <Container>

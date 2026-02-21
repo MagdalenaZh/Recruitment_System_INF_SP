@@ -11,7 +11,7 @@ import type {
 
 import { apiPost } from "../../../services/api";
 
-import { usePageTitle } from "../../public/hooks/usePageTitle";
+import { usePageTitle } from "../../clubs/hooks/usePageTitle";
 
 export default function RegisterPage() {
   const nav = useNavigate();

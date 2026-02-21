@@ -1,7 +1,7 @@
 import type {
   ApplicationQuestion,
   PersonalInfo,
-} from "../../../../../types/application/application";
+} from "../../../../types/application/application";
 
 //TO DO: move validation logic to backend also add more validation rules (email format, phone format, answer length, etc.) anddd use zod for schema validation and type inference
 export type Errors = {
