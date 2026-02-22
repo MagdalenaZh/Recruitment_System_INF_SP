@@ -1,23 +1,22 @@
 ﻿using AppilicationProcesserAPI.AggregateStates;
-using AppilicationProcesserAPI.DomainEvents;
 
 namespace AppilicationProcesserAPI.MessageQueue
 {
     public class MessageBackgroundProcessor : BackgroundService
     {
         private readonly IMessageBroker _messageBroker;
+        private readonly IAggregateManager _aggregateManager;
         private readonly ILogger<MessageBackgroundProcessor> _logger;
 
-        public MessageBackgroundProcessor(IMessageBroker messageBroker, ILogger<MessageBackgroundProcessor> logger)
+        public MessageBackgroundProcessor(IMessageBroker messageBroker, IAggregateManager aggregateManager, ILogger<MessageBackgroundProcessor> logger)
         {
-            _messageBroker = messageBroker;
+            _messageBroker = messageBroker; 
+            _aggregateManager = aggregateManager;
             _logger = logger;
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            var testAggregate = new ApplicationAggregate();
-
             while (!stoppingToken.IsCancellationRequested)
             {
                 try
@@ -25,7 +24,7 @@ namespace AppilicationProcesserAPI.MessageQueue
                     var message = await _messageBroker.ConsumeAsync(stoppingToken);
                     if (message != null)
                     {
-                        testAggregate.ApplyEvent(message.EventData);
+                       await _aggregateManager.AcceptEvent(message.EventData, stoppingToken).ConfigureAwait(false);
                     }
                 }
                 catch (OperationCanceledException)

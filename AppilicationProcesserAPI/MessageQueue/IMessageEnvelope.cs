@@ -5,7 +5,6 @@ namespace AppilicationProcesserAPI.MessageQueue
     public interface IMessageEnvelope
     {
         public IDomainEvent EventData { get; }
-        Task RunPayload(CancellationToken cancellationToken);
     }
 
     public class MessageEnvelope : IMessageEnvelope
@@ -15,11 +14,6 @@ namespace AppilicationProcesserAPI.MessageQueue
         public MessageEnvelope(IDomainEvent domainEvent)
         {
            EventData = domainEvent;
-        }
-
-        public Task RunPayload(CancellationToken cancellationToken)
-        {
-            return Task.CompletedTask;
         }
     }
 }

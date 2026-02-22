@@ -16,7 +16,6 @@ namespace AppilicationProcesserAPI.Controllers
             _logger = logger;
         }
 
-
         [HttpPost("api/submit-application")]
         public async Task<IActionResult> ProcessApplication(CancellationToken cancellationToken)
         {
