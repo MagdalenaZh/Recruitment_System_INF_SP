@@ -1,5 +1,6 @@
 ﻿using AppilicationProcesserAPI.AggregateStates;
 using AppilicationProcesserAPI.MessageQueue;
+using AppilicationProcesserAPI.Visitors;
 
 namespace AppilicationProcesserAPI.Configurations
 {
@@ -8,12 +9,16 @@ namespace AppilicationProcesserAPI.Configurations
         public static void ConfigureMessageBus(this IServiceCollection services)
         {
             services.AddSingleton<IMessageBroker, MessageBroker>();
-            services.AddSingleton<IMessageEmitter, MessageEmitter>();
-
-            services.AddSingleton<IAggregateManager, AggregateManager>();
-            services.AddSingleton<IEventStore, EventStore>();
+            services.AddSingleton<IRepresentationEmitter, RepresentationEmitter>();
 
             services.AddHostedService<MessageBackgroundProcessor>();
+        }
+
+        public static void ConfigureAggregateManagment(this IServiceCollection services)
+        {
+            services.AddSingleton<IStateVisitorFactory, StateVisitorFactory>();
+            services.AddSingleton<IEventStore, EventStore>();
+            services.AddSingleton<IAggregateManager, AggregateManager>();
         }
     }
 }

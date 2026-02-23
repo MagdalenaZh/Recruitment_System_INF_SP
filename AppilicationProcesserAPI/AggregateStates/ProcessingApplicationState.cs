@@ -1,4 +1,5 @@
 ﻿using AppilicationProcesserAPI.DomainEvents;
+using AppilicationProcesserAPI.Visitors;
 
 namespace AppilicationProcesserAPI.AggregateStates;
 
@@ -16,6 +17,14 @@ public class ProcessingApplicationState : IApplicationState
         _requiredNumberOfApprovals = requiredNumberOfApprovals;
         _numberOfApprovals = 0;
         _userDecisionsMap = new Dictionary<Guid, bool>();
+    }
+
+    public void AcceptVisitor(IStateVisitor stateVisitor)
+    {
+        stateVisitor.PropertyBag.Set("ApplicationId", _aggregateId);
+        stateVisitor.PropertyBag.Set("CurrentNumberOfApprovals", _numberOfApprovals);
+        stateVisitor.PropertyBag.Set("RequiredNumberOfApprovals", _requiredNumberOfApprovals);
+        stateVisitor.PropertyBag.Set("UserDecisionsMap", _userDecisionsMap);
     }
 
     public void HandleEvent(ApplicationAggregate applicationAggregate, IDomainEvent domainEvent)

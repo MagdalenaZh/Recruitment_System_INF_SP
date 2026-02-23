@@ -17,6 +17,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddOpenApi();
 
+builder.Services.ConfigureAggregateManagment();
 builder.Services.ConfigureMessageBus();
 
 builder.Services.AddCors(options =>

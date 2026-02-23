@@ -1,4 +1,5 @@
 ﻿using AppilicationProcesserAPI.DomainEvents;
+using AppilicationProcesserAPI.Visitors;
 
 namespace AppilicationProcesserAPI.AggregateStates;
 
@@ -6,6 +7,8 @@ public interface IApplicationAggregate
 {
     public IApplicationState State { get; }
     public void ApplyEvent(IDomainEvent domainEvent);
+
+    public void AllowVisitor(IStateVisitor stateVisitor);
 }
 
 public class ApplicationAggregate : IApplicationAggregate
@@ -24,6 +27,11 @@ public class ApplicationAggregate : IApplicationAggregate
         _state.HandleEvent(this, domainEvent);
     }
 
+    public void AllowVisitor(IStateVisitor stateVisitor)
+    {
+       _state.AcceptVisitor(stateVisitor);
+    }
+
     public void TransitionToProcessingState(Guid aggregateId, int requiredNumberOfApprovals)
     {
         _state = new ProcessingApplicationState(aggregateId, requiredNumberOfApprovals);
@@ -39,8 +47,8 @@ public class ApplicationAggregate : IApplicationAggregate
         _state = new ApplicationApprovedState(aggregateId);
     }
 
-    public void TransitionToConcludedState(Guid aggregateId)
+    public void TransitionToConcludedState(Guid aggregateId, string conclusionResult)
     {
-        _state = new ApplicationConcludedState(aggregateId);
+        _state = new ApplicationConcludedState(aggregateId, conclusionResult);
     }
 }

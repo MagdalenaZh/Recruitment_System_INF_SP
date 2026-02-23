@@ -8,10 +8,10 @@ namespace AppilicationProcesserAPI.Controllers
     [ApiController]
     public class EventEmitterController : ControllerBase
     {
-        private readonly IMessageEmitter _messageEmitter;
+        private readonly IRepresentationEmitter _messageEmitter;
         private readonly ILogger<EventEmitterController> _logger;
 
-        public EventEmitterController(ILogger<EventEmitterController> logger, IMessageEmitter messageEmitter)
+        public EventEmitterController(ILogger<EventEmitterController> logger, IRepresentationEmitter messageEmitter)
         {
             _logger = logger;
             _messageEmitter = messageEmitter;
@@ -22,7 +22,7 @@ namespace AppilicationProcesserAPI.Controllers
         {
             try
             {
-                return TypedResults.ServerSentEvents(_messageEmitter.TransformToRepresentationState(cancellationToken), "applicationUpdates");
+                return TypedResults.ServerSentEvents(_messageEmitter.ReadRepresentationStates(cancellationToken), "applicationUpdates");
             }
             catch (Exception ex) 
             {

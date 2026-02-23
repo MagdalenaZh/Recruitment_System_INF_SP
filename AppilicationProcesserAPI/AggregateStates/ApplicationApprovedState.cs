@@ -1,4 +1,5 @@
 ﻿using AppilicationProcesserAPI.DomainEvents;
+using AppilicationProcesserAPI.Visitors;
 
 namespace AppilicationProcesserAPI.AggregateStates;
 
@@ -12,6 +13,12 @@ public class ApplicationApprovedState : IApplicationState
     {
         _aggregateId = aggregateId;
         _interviewTimesProposals = new HashSet<DateTimeOffset>();
+    }
+
+    public void AcceptVisitor(IStateVisitor stateVisitor)
+    {
+        stateVisitor.PropertyBag.Set("ApplicationId", _aggregateId);
+        stateVisitor.PropertyBag.Set("InterviewTimesProposals", _interviewTimesProposals.ToList()); 
     }
 
     public void HandleEvent(ApplicationAggregate applicationAggregate, IDomainEvent domainEvent)
@@ -38,7 +45,7 @@ public class ApplicationApprovedState : IApplicationState
                 break;
             case InterviewProposalRejectedEvent:
                 {
-                    applicationAggregate.TransitionToConcludedState(_aggregateId);
+                    applicationAggregate.TransitionToConcludedState(_aggregateId, "Rejected");
                 }
                 break;
         }

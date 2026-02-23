@@ -1,5 +1,6 @@
 ﻿using AppilicationProcesserAPI.DomainEvents;
 using AppilicationProcesserAPI.MessageQueue;
+using AppilicationProcesserAPI.Visitors;
 using System.Collections.Concurrent;
 
 namespace AppilicationProcesserAPI.AggregateStates
@@ -11,25 +12,31 @@ namespace AppilicationProcesserAPI.AggregateStates
 
     public class AggregateManager : IAggregateManager
     {
-        private readonly IMessageEmitter _messageEmitter;
+        private readonly IRepresentationEmitter _messageEmitter;
         private readonly IEventStore _eventStore;
+        private readonly IStateVisitorFactory _stateVisitorFactory;
         private readonly ConcurrentDictionary<Guid, IApplicationAggregate> _aggregates;
+        private readonly ILogger<AggregateManager> _logger;
 
-        public AggregateManager(IMessageEmitter messageEmitter, IEventStore eventStore)
+        public AggregateManager(IRepresentationEmitter messageEmitter, IEventStore eventStore, IStateVisitorFactory stateVisitorFactory, ILogger<AggregateManager> logger)
         {
             _aggregates = new ConcurrentDictionary<Guid, IApplicationAggregate>();
             _eventStore = eventStore;
             _messageEmitter = messageEmitter;
+            _logger = logger;
+            _stateVisitorFactory = stateVisitorFactory;
         }
 
         public async Task AcceptEvent(IDomainEvent domainEvent, CancellationToken cancellationToken = default)
         {
             var aggregateId = domainEvent.AggregateId;
 
+            var stateVisitor = _stateVisitorFactory.CreateStateVisitor();
+
             if (_aggregates.TryGetValue(aggregateId, out var existingAggregate))
             {
                 existingAggregate.ApplyEvent(domainEvent);
-                await _messageEmitter.EmmitApplicationState(existingAggregate.State, cancellationToken).ConfigureAwait(false);
+                existingAggregate.AllowVisitor(stateVisitor);
             }
             else
             {
@@ -43,9 +50,10 @@ namespace AppilicationProcesserAPI.AggregateStates
                 aggregate.ApplyEvent(domainEvent);
 
                 _aggregates.TryAdd(aggregateId, aggregate);
-
-                await _messageEmitter.EmmitApplicationState(aggregate.State, cancellationToken).ConfigureAwait(false);
+                aggregate.AllowVisitor(stateVisitor);
             }
+
+            await _messageEmitter.EmmitApplicationStateChanges(stateVisitor.GetStateRepresentation(), cancellationToken).ConfigureAwait(false);
         }
     }
 }
