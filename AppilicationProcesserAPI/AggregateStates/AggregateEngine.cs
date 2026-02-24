@@ -5,20 +5,21 @@ using System.Collections.Concurrent;
 
 namespace AppilicationProcesserAPI.AggregateStates
 {
-    public interface IAggregateManager
+    public interface IAggregateEngine
     {
-        Task AcceptEvent(IDomainEvent domainEvent, CancellationToken cancellationToken = default);
+        Task HandleEvent(IDomainEvent domainEvent, CancellationToken cancellationToken = default);
     }
 
-    public class AggregateManager : IAggregateManager
+    public class AggregateEngine : IAggregateEngine
     {
         private readonly IRepresentationEmitter _messageEmitter;
         private readonly IEventStore _eventStore;
         private readonly IStateVisitorFactory _stateVisitorFactory;
         private readonly ConcurrentDictionary<Guid, IApplicationAggregate> _aggregates;
-        private readonly ILogger<AggregateManager> _logger;
+        private readonly ILogger<AggregateEngine> _logger;
 
-        public AggregateManager(IRepresentationEmitter messageEmitter, IEventStore eventStore, IStateVisitorFactory stateVisitorFactory, ILogger<AggregateManager> logger)
+        public AggregateEngine(IRepresentationEmitter messageEmitter, IEventStore eventStore,
+            IStateVisitorFactory stateVisitorFactory, ILogger<AggregateEngine> logger)
         {
             _aggregates = new ConcurrentDictionary<Guid, IApplicationAggregate>();
             _eventStore = eventStore;
@@ -27,7 +28,7 @@ namespace AppilicationProcesserAPI.AggregateStates
             _stateVisitorFactory = stateVisitorFactory;
         }
 
-        public async Task AcceptEvent(IDomainEvent domainEvent, CancellationToken cancellationToken = default)
+        public async Task HandleEvent(IDomainEvent domainEvent, CancellationToken cancellationToken = default)
         {
             var aggregateId = domainEvent.AggregateId;
 

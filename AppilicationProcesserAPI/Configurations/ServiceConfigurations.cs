@@ -18,7 +18,9 @@ namespace AppilicationProcesserAPI.Configurations
         {
             services.AddSingleton<IStateVisitorFactory, StateVisitorFactory>();
             services.AddSingleton<IEventStore, EventStore>();
-            services.AddSingleton<IAggregateManager, AggregateManager>();
+            services.AddSingleton<IAggregateEngine, AggregateEngine>();
+
+            services.AddScoped<IAggregateReconstructor, AggregateReconstructor>();
         }
     }
 }
