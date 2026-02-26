@@ -22,6 +22,7 @@ namespace AppilicationProcesserAPI.AggregateStates
         public void AcceptVisitor(IStateVisitor stateVisitor)
         {
             stateVisitor.PropertyBag.Set("ApplicationProcessed", _applicationProcessed);
+            stateVisitor.Visit(this);
         }
 
         public void HandleEvent(ApplicationAggregate applicationAggregate, IDomainEvent domainEvent)

@@ -18,6 +18,7 @@ namespace AppilicationProcesserAPI.AggregateStates
         {
             stateVisitor.PropertyBag.Set("ApplicationId", _aggregateId);
             stateVisitor.PropertyBag.Set("ConclusionResult", _conclusionResult);
+            stateVisitor.Visit(this);
         }
 
         public void HandleEvent(ApplicationAggregate applicationAggregate, IDomainEvent domainEvent)

@@ -18,7 +18,8 @@ public class ApplicationApprovedState : IApplicationState
     public void AcceptVisitor(IStateVisitor stateVisitor)
     {
         stateVisitor.PropertyBag.Set("ApplicationId", _aggregateId);
-        stateVisitor.PropertyBag.Set("InterviewTimesProposals", _interviewTimesProposals.ToList()); 
+        stateVisitor.PropertyBag.Set("InterviewTimesProposals", _interviewTimesProposals.ToList());
+        stateVisitor.Visit(this);
     }
 
     public void HandleEvent(ApplicationAggregate applicationAggregate, IDomainEvent domainEvent)

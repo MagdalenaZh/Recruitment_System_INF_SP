@@ -25,6 +25,7 @@ public class ProcessingApplicationState : IApplicationState
         stateVisitor.PropertyBag.Set("CurrentNumberOfApprovals", _numberOfApprovals);
         stateVisitor.PropertyBag.Set("RequiredNumberOfApprovals", _requiredNumberOfApprovals);
         stateVisitor.PropertyBag.Set("UserDecisionsMap", _userDecisionsMap);
+        stateVisitor.Visit(this);
     }
 
     public void HandleEvent(ApplicationAggregate applicationAggregate, IDomainEvent domainEvent)

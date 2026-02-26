@@ -19,6 +19,7 @@ public class HibernatedApplicationState : IApplicationState
     {
         stateVisitor.PropertyBag.Set("ApplicationId", _aggregateId);
         stateVisitor.PropertyBag.Set("ScheduledTime", _scheduledTime);
+        stateVisitor.Visit(this);
     }
 
     public void HandleEvent(ApplicationAggregate applicationAggregate, IDomainEvent domainEvent)

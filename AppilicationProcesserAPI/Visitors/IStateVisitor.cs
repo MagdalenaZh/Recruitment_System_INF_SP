@@ -42,7 +42,6 @@ namespace AppilicationProcesserAPI.Visitors
 
         public void Visit(InitialApplicationState initialState)
         {
-            initialState.AcceptVisitor(this);
             _stateRepresentation = new InitialRepresentation
             {
                 ApplicationId = PropertyBag.Get<Guid>("ApplicationId"),
@@ -52,7 +51,6 @@ namespace AppilicationProcesserAPI.Visitors
 
         public void Visit(ProcessingApplicationState processingState)
         {
-            processingState.AcceptVisitor(this);
             _stateRepresentation = new ProcessingStateRepresentation
             {
                 ApplicationId = PropertyBag.Get<Guid>("ApplicationId"),
@@ -64,7 +62,6 @@ namespace AppilicationProcesserAPI.Visitors
 
         public void Visit(HibernatedApplicationState hibernatedState)
         {
-            hibernatedState.AcceptVisitor(this);
             _stateRepresentation = new HibernatedStateRepresentation
             {
                 ApplicationId = PropertyBag.Get<Guid>("ApplicationId"),
@@ -74,7 +71,6 @@ namespace AppilicationProcesserAPI.Visitors
 
         public void Visit(ApplicationApprovedState approvedState)
         {
-            approvedState.AcceptVisitor(this);
             _stateRepresentation = new ApprovedStateRepresentation
             {
                 ApplicationId = PropertyBag.Get<Guid>("ApplicationId"),
@@ -84,7 +80,6 @@ namespace AppilicationProcesserAPI.Visitors
 
         public void Visit(ApplicationConcludedState concludedState)
         {
-           concludedState.AcceptVisitor(this);
             _stateRepresentation = new ConcludedStateRepresentation
             {
                 ApplicationId = PropertyBag.Get<Guid>("ApplicationId"),
