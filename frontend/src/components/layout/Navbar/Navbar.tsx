@@ -1,20 +1,22 @@
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
 import { Container } from "../Container";
 import { ClubSearch } from "./ClubSearch";
 import { UserMenu } from "./UserMenu";
-
 import { Button } from "../../ui/Button";
-
 import { useAuth } from "../../../features/auth/components/AuthContext";
 
 type Props = {
-  search: string;
-  setSearch: (v: string) => void;
+  search?: string;
+  setSearch?: (v: string) => void;
 };
 
 export function Navbar({ search, setSearch }: Props) {
   const { isAuthenticated } = useAuth();
+  const location = useLocation();
+
+  // show search only on /home (or any route you want)
+  const showSearch = location.pathname === "/home";
 
   return (
     <header className="fixed top-0 z-50 w-full pt-4">
@@ -30,9 +32,12 @@ export function Navbar({ search, setSearch }: Props) {
             </div>
           </Link>
 
-          <div className="hidden w-full max-w-md md:block">
-            <ClubSearch value={search} onChange={setSearch} />
-          </div>
+          {/* Desktop search */}
+          {showSearch && search !== undefined && setSearch && (
+            <div className="hidden w-full max-w-md md:block">
+              <ClubSearch value={search} onChange={setSearch} />
+            </div>
+          )}
 
           <nav className="flex items-center gap-3">
             {isAuthenticated ? (
@@ -55,11 +60,14 @@ export function Navbar({ search, setSearch }: Props) {
           </nav>
         </div>
 
-        <div className="mt-3 md:hidden">
-          <div className="rounded-2xl bg-white/10 p-3 backdrop-blur-md ring-1 ring-white/15">
-            <ClubSearch value={search} onChange={setSearch} />
+        {/* Mobile search */}
+        {showSearch && search !== undefined && setSearch && (
+          <div className="mt-3 md:hidden">
+            <div className="rounded-2xl bg-white/10 p-3 backdrop-blur-md ring-1 ring-white/15">
+              <ClubSearch value={search} onChange={setSearch} />
+            </div>
           </div>
-        </div>
+        )}
       </Container>
     </header>
   );

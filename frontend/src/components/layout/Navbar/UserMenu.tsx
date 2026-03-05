@@ -86,11 +86,11 @@ export function UserMenu() {
 
             {(role === "Board" || role === "ClubAdmin" || role === "Admin") && (
               <Link
-                to="/account/tasks"
+                to="/board"
                 className="block rounded-xl px-3 py-2 text-sm hover:bg-white/10"
                 onClick={() => setOpen(false)}
               >
-                Review tasks
+                Review applications
               </Link>
             )}
 
