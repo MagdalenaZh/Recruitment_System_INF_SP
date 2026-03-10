@@ -54,7 +54,7 @@ namespace AppilicationProcesserAPI.AggregateStates
                 aggregate.AllowVisitor(stateVisitor);
             }
 
-            await _messageEmitter.EmmitApplicationStateChanges(stateVisitor.GetStateRepresentation(), cancellationToken).ConfigureAwait(false);
+            await _messageEmitter.EmmitApplicationStateChanges(stateVisitor.GetStateRepresentation(), DateTimeOffset.UtcNow, cancellationToken).ConfigureAwait(false);
         }
     }
 }

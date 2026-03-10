@@ -20,15 +20,17 @@ namespace AppilicationProcesserAPI.Controllers
         [HttpGet("AplicationUpdates")]
         public ServerSentEventsResult<IStateRepresentation> GetAplicationUpdates([FromHeader(Name = "Last-Event-ID")] string? lastEventId, CancellationToken cancellationToken)
         {
+            var client = Guid.NewGuid();
+
             try
             {
-                return TypedResults.ServerSentEvents(_messageEmitter.ReadRepresentationStates(cancellationToken), "applicationUpdates");
+                return TypedResults.ServerSentEvents(_messageEmitter.ReadRepresentationsStates(client, lastEventId, cancellationToken), "applicationUpdates");
             }
-            catch (Exception ex) 
+            catch (Exception ex)
             {
                 _logger.LogError(ex, "Error while getting application updates");
-                return TypedResults.ServerSentEvents<IStateRepresentation>(null, "applicationUpdates");
-            }   
+                throw;
+            }
         }
     }
 }
