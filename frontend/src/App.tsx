@@ -13,10 +13,14 @@ import { AccountApplicationsPage } from "./features/account/pages/AccountApplica
 import ClubDetailsPage from "./features/clubs/pages/ClubDetailsPage.tsx";
 import ApplicationFormPage from "./features/applications/pages/ApplicationFormPage.tsx";
 
-// BOARD PAGES (new)
 import { BoardHomePage } from "./features/board/pages/BoardHomePage.tsx";
 import { BoardDepartmentApplicationsPage } from "./features/board/pages/BoardDepartmentApplicationsPage.tsx";
 import { BoardApplicationDetailPage } from "./features/board/pages/BoardApplicationDetailPage.tsx";
+
+import { ClubAdminHomePage } from "./features/clubAdmin/pages/ClubAdminHomePage.tsx";
+import { ClubAdminDepartmentApplicationsPage } from "./features/clubAdmin/pages/ClubAdminDepartmentApplicationsPage.tsx";
+import { ClubAdminApplicationDetailPage } from "./features/clubAdmin/pages/ClubAdminApplicationDetailPage.tsx";
+import { ClubAdminBoardMembersPage } from "./features/clubAdmin/pages/ClubAdminBoardMembersPage.tsx";
 
 export default function App() {
   return (
@@ -26,7 +30,6 @@ export default function App() {
       <Route
         path="/home"
         element={
-          // Wrap later if you want home to be protected:
           // <ProtectedRoute>
           <LandingPage />
           // </ProtectedRoute>
@@ -52,7 +55,6 @@ export default function App() {
       <Route path="/clubs/:clubId" element={<ClubDetailsPage />} />
       <Route path="/clubs/:clubId/apply" element={<ApplicationFormPage />} />
 
-      {/* BOARD ROUTES (new) */}
       <Route
         path="/board"
         element={
@@ -76,6 +78,20 @@ export default function App() {
           <BoardApplicationDetailPage />
           // </ProtectedRoute>
         }
+      />
+
+      <Route path="/club-admin" element={<ClubAdminHomePage />} />
+      <Route
+        path="/club-admin/departments/:departmentId/applications"
+        element={<ClubAdminDepartmentApplicationsPage />}
+      />
+      <Route
+        path="/club-admin/applications/:applicationId"
+        element={<ClubAdminApplicationDetailPage />}
+      />
+      <Route
+        path="/club-admin/board-members"
+        element={<ClubAdminBoardMembersPage />}
       />
     </Routes>
   );
