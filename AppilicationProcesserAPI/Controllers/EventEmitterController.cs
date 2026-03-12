@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace AppilicationProcesserAPI.Controllers
 {
     [ApiController]
+    [Route("api/eventEmmitter")]
     public class EventEmitterController : ControllerBase
     {
         private readonly IRepresentationEmitter _messageEmitter;
@@ -17,7 +18,7 @@ namespace AppilicationProcesserAPI.Controllers
             _messageEmitter = messageEmitter;
         }
 
-        [HttpGet("AplicationUpdates")]
+        [HttpGet("aplicationUpdates")]
         public ServerSentEventsResult<IStateRepresentation> GetAplicationUpdates([FromHeader(Name = "Last-Event-ID")] string? lastEventId, CancellationToken cancellationToken)
         {
             var client = Guid.NewGuid();

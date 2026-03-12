@@ -12,12 +12,17 @@ namespace AppilicationProcesserAPI.AggregateStates
 
     public class EventStore : IEventStore
     {
+        private static readonly JsonSerializerOptions _serializerOptions = new JsonSerializerOptions()
+        {
+            PropertyNameCaseInsensitive = true,
+        };
+
         private readonly string _connectionString;
 
-        private static readonly string GetAllEventsForAggregate = "SELECT [EventType],[PayLoad] FROM [Events] WHERE [AggregateId] = @aggregateId";
+        private static readonly string GetAllEventsForAggregate = "SELECT [EventType], [PayLoad] FROM [Events] WHERE [AggregateId] = @aggregateId ORDER BY [TimeStamp]";
         private static readonly string InsertEvent = "INSERT INTO [Events] ([AggregateId], [EventType], [PayLoad], [TimeStamp]) VALUES (@aggregateId, @eventType, @payload, @timeStamp)";
 
-        public EventStore(string connectionString)
+        public EventStore(string connectionString = "default")
         {
             _connectionString = connectionString;
         }
@@ -54,7 +59,7 @@ namespace AppilicationProcesserAPI.AggregateStates
 
                 var payLoad = reader.GetString(1);
 
-                if (JsonSerializer.Deserialize(payLoad, GetEventType(eventType)) is IDomainEvent data)
+                if (JsonSerializer.Deserialize(payLoad, GetEventType(eventType), _serializerOptions) is IDomainEvent data)
                 {
                     loadedEvents.Add(data);
                 }

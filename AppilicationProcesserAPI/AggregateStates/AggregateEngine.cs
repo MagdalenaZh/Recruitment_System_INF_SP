@@ -41,7 +41,9 @@ namespace AppilicationProcesserAPI.AggregateStates
             }
             else
             {
-                var events = await _eventStore.GetEventsAsync(aggregateId, cancellationToken).ConfigureAwait(false);
+#warning Revert after proper db connection established
+                //var events = await _eventStore.GetEventsAsync(aggregateId, cancellationToken).ConfigureAwait(false);
+                var events = new List<IDomainEvent>();
                 var aggregate = new ApplicationAggregate();
                 foreach (var evt in events)
                 {
