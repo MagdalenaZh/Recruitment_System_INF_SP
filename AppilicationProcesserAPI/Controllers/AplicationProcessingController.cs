@@ -1,4 +1,5 @@
-﻿using AppilicationProcesserAPI.DomainEvents;
+﻿using AppilicationProcesserAPI.AggregateStates;
+using AppilicationProcesserAPI.DomainEvents;
 using AppilicationProcesserAPI.MessageQueue;
 using Microsoft.AspNetCore.Mvc;
 
@@ -7,11 +8,13 @@ namespace AppilicationProcesserAPI.Controllers
     [ApiController]
     public class AplicationProcessingController : ControllerBase
     {
+        private readonly IEventStore _eventStore;
         private readonly IMessageBroker _messageBroker;
         private readonly ILogger<AplicationProcessingController> _logger;
 
-        public AplicationProcessingController(IMessageBroker messageBroker, ILogger<AplicationProcessingController> logger)
+        public AplicationProcessingController(IEventStore eventStore, IMessageBroker messageBroker, ILogger<AplicationProcessingController> logger)
         {
+            _eventStore = eventStore;
             _messageBroker = messageBroker;
             _logger = logger;
         }
@@ -19,8 +22,11 @@ namespace AppilicationProcesserAPI.Controllers
         [HttpPost("api/submit-application")]
         public async Task<IActionResult> ProcessApplication(CancellationToken cancellationToken)
         {
-            var message = new MessageEnvelope(
-                new ApplicationSubmittedEvent(3));
+            var domainEvent = new ApplicationSubmittedEvent(3);
+
+            await _eventStore.AppendEventAsync(domainEvent).ConfigureAwait(false);
+
+            var message = new MessageEnvelope(domainEvent);
 
             try
             {
@@ -38,8 +44,11 @@ namespace AppilicationProcesserAPI.Controllers
         [HttpPost("api/approve-application/{aggregateId}")]
         public async Task<IActionResult> ApproveApplication([FromRoute]Guid aggregateId, CancellationToken cancellationToken)
         {
-            var message = new MessageEnvelope(
-                new ApplicationApprovedEvent(aggregateId, 2, Guid.NewGuid()));
+            var domainEvent = new ApplicationApprovedEvent(aggregateId, 2, Guid.NewGuid());
+
+            await _eventStore.AppendEventAsync(domainEvent).ConfigureAwait(false);
+
+            var message = new MessageEnvelope(domainEvent);
 
             try
             {
