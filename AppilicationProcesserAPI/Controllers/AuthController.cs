@@ -132,18 +132,20 @@ namespace AppilicationProcesserAPI.Controllers
             await connection.OpenAsync();
 
             await using var cmd = new SqlCommand(@"
-                SELECT TOP 1
-                    u.UserId,
-                    u.FirstName,
-                    u.LastName,
-                    r.Name AS RoleName,
-                    uc.Email,
-                    uc.Password,
-                    uc.Status
-                FROM dbo.UserCredentials uc
-                INNER JOIN dbo.Users u ON u.UserId = uc.UserId
-                INNER JOIN dbo.Roles r ON r.RoleId = u.RoleId
-                WHERE uc.Email = @Email", connection);
+        SELECT TOP 1
+            u.UserId,
+            u.FirstName,
+            u.LastName,
+            u.DepartmentId,
+            u.RoleId,
+            r.Name AS RoleName,
+            uc.Email,
+            uc.Password,
+            uc.Status
+        FROM dbo.UserCredentials uc
+        INNER JOIN dbo.Users u ON u.UserId = uc.UserId
+        INNER JOIN dbo.Roles r ON r.RoleId = u.RoleId
+        WHERE uc.Email = @Email", connection);
 
             cmd.Parameters.AddWithValue("@Email", email);
 
@@ -160,6 +162,10 @@ namespace AppilicationProcesserAPI.Controllers
             var storedPassword = reader.GetString(reader.GetOrdinal("Password"));
             var status = reader.GetInt32(reader.GetOrdinal("Status"));
 
+            Guid? departmentId = reader.IsDBNull(reader.GetOrdinal("DepartmentId"))
+                ? null
+                : reader.GetGuid(reader.GetOrdinal("DepartmentId"));
+
             if (status != ActiveStatus)
                 return Unauthorized("Account is inactive.");
 
@@ -169,7 +175,21 @@ namespace AppilicationProcesserAPI.Controllers
 
             var token = CreateJwt(userId, dbEmail, roleName, firstName, lastName);
 
-            return Ok(new LoginResponse(token, roleName));
+            return Ok(new
+            {
+                token,
+                user = new
+                {
+
+                    userId,
+                    email = dbEmail,
+                    firstName,
+                    lastName,
+                    role = roleName,
+                    departmentId,
+                    clubId = (string?)null
+                }
+            });
         }
 
         [Authorize]

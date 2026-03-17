@@ -10,7 +10,7 @@ import type { LoginRequest, LoginResponse } from "../types/auth";
 import { apiPost } from "../../../services/api";
 import { usePageTitle } from "../../clubs/hooks/usePageTitle";
 
-function isBoardMemberRole(role: string | null | undefined) {
+function isBoardMember(role: string | null | undefined): boolean {
   return role === "BoardMember";
 }
 
@@ -18,22 +18,17 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const nav = useNavigate();
-  const { login, isAuthenticated, user } = useAuth();
+  const { login, isAuthenticated } = useAuth();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   usePageTitle("Login - AUBG Recruitment System");
 
   useEffect(() => {
-    if (!isAuthenticated) return;
-
-    if (isBoardMemberRole(user?.role)) {
-      nav("/board", { replace: true });
-      return;
+    if (isAuthenticated) {
+      nav("/home", { replace: true });
     }
-
-    nav("/home", { replace: true });
-  }, [isAuthenticated, user, nav]);
+  }, [isAuthenticated, nav]);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -53,10 +48,10 @@ export default function LoginPage() {
 
       login(res);
 
-      if (isBoardMemberRole(res.user.role)) {
+      if (isBoardMember(res.user.role)) {
         nav("/board", { replace: true });
       } else {
-        nav("/account", { replace: true });
+        nav("/home", { replace: true });
       }
     } catch (err: unknown) {
       if (err instanceof Error) {
