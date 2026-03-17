@@ -14,6 +14,10 @@ function isBoardMember(role: string | null | undefined): boolean {
   return role === "BoardMember";
 }
 
+function isClubAdmin(role: string | null | undefined): boolean {
+  return role === "ClubAdmin";
+}
+
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -50,6 +54,8 @@ export default function LoginPage() {
 
       if (isBoardMember(res.user.role)) {
         nav("/board", { replace: true });
+      } else if (isClubAdmin(res.user.role)) {
+        nav("/club-admin", { replace: true });
       } else {
         nav("/home", { replace: true });
       }
