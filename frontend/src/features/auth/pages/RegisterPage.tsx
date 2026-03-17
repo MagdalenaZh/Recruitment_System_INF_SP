@@ -4,13 +4,9 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button } from "../../../components/ui/Button";
 import { Input } from "../../../components/ui/Input";
 
-import type {
-  RegisterRequest,
-  RegisterResponse,
-} from "../../../types/auth/auth";
+import type { RegisterRequest, RegisterResponse } from "../types/auth";
 
 import { apiPost } from "../../../services/api";
-
 import { usePageTitle } from "../../clubs/hooks/usePageTitle";
 
 export default function RegisterPage() {
@@ -23,6 +19,8 @@ export default function RegisterPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
+  usePageTitle("Register - AUBG Recruitment System");
+
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
@@ -30,19 +28,23 @@ export default function RegisterPage() {
 
     try {
       const payload: RegisterRequest = { firstName, lastName, email, password };
+
       await apiPost<RegisterRequest, RegisterResponse>(
         "/api/auth/register",
         payload,
       );
+
       nav("/login");
-    } catch (err: any) {
-      setError(err.message ?? "Register failed");
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("Register failed");
+      }
     } finally {
       setLoading(false);
     }
   }
-
-  usePageTitle("Register - AUBG Recruitment System");
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
@@ -62,9 +64,10 @@ export default function RegisterPage() {
               placeholder="First name"
               value={firstName}
               onChange={(e) => setFirstName(e.target.value)}
-              autoComplete="name"
+              autoComplete="given-name"
             />
           </div>
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Last name
@@ -73,7 +76,7 @@ export default function RegisterPage() {
               placeholder="Last name"
               value={lastName}
               onChange={(e) => setLastName(e.target.value)}
-              autoComplete="name"
+              autoComplete="family-name"
             />
           </div>
 
@@ -98,7 +101,7 @@ export default function RegisterPage() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              autoComplete="current-password"
+              autoComplete="new-password"
             />
           </div>
 

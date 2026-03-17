@@ -3,7 +3,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import LoginPage from "./features/auth/pages/LoginPage.tsx";
 import RegisterPage from "./features/auth/pages/RegisterPage.tsx";
 import LandingPage from "./features/public/pages/LandingPage/LandingPage.tsx";
-//import { ProtectedRoute } from "./features/auth/components/ProtectedRoute.tsx";
+import { ProtectedRoute } from "./features/auth/components/ProtectedRoute.tsx";
 
 import { AccountInboxPage } from "./features/account/pages/AccountInboxPage.tsx";
 import { AccountProfilePage } from "./features/account/pages/AccountProfilePage.tsx";
@@ -27,24 +27,16 @@ export default function App() {
     <Routes>
       <Route path="/" element={<Navigate to="/home" replace />} />
 
-      <Route
-        path="/home"
-        element={
-          // <ProtectedRoute>
-          <LandingPage />
-          // </ProtectedRoute>
-        }
-      />
-
+      <Route path="/home" element={<LandingPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
 
       <Route
         path="/account"
         element={
-          // <ProtectedRoute>
-          <AccountLayout />
-          // </ProtectedRoute>
+          <ProtectedRoute>
+            <AccountLayout />
+          </ProtectedRoute>
         }
       >
         <Route index element={<AccountProfilePage />} />
@@ -58,40 +50,59 @@ export default function App() {
       <Route
         path="/board"
         element={
-          // <ProtectedRoute>
-          <BoardHomePage />
-          // </ProtectedRoute>
+          <ProtectedRoute>
+            <BoardHomePage />
+          </ProtectedRoute>
         }
       />
       <Route
         path="/board/departments/:departmentId/applications"
         element={
-          // <ProtectedRoute>
-          <BoardDepartmentApplicationsPage />
-          // </ProtectedRoute>
+          <ProtectedRoute>
+            <BoardDepartmentApplicationsPage />
+          </ProtectedRoute>
         }
       />
       <Route
         path="/board/applications/:applicationId"
         element={
-          // <ProtectedRoute>
-          <BoardApplicationDetailPage />
-          // </ProtectedRoute>
+          <ProtectedRoute>
+            <BoardApplicationDetailPage />
+          </ProtectedRoute>
         }
       />
 
-      <Route path="/club-admin" element={<ClubAdminHomePage />} />
+      <Route
+        path="/club-admin"
+        element={
+          <ProtectedRoute>
+            <ClubAdminHomePage />
+          </ProtectedRoute>
+        }
+      />
       <Route
         path="/club-admin/departments/:departmentId/applications"
-        element={<ClubAdminDepartmentApplicationsPage />}
+        element={
+          <ProtectedRoute>
+            <ClubAdminDepartmentApplicationsPage />
+          </ProtectedRoute>
+        }
       />
       <Route
         path="/club-admin/applications/:applicationId"
-        element={<ClubAdminApplicationDetailPage />}
+        element={
+          <ProtectedRoute>
+            <ClubAdminApplicationDetailPage />
+          </ProtectedRoute>
+        }
       />
       <Route
         path="/club-admin/board-members"
-        element={<ClubAdminBoardMembersPage />}
+        element={
+          <ProtectedRoute>
+            <ClubAdminBoardMembersPage />
+          </ProtectedRoute>
+        }
       />
     </Routes>
   );

@@ -1,25 +1,39 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 import { Button } from "../../../components/ui/Button";
 import { Input } from "../../../components/ui/Input";
 import { useAuth } from "../components/AuthContext";
 
-import type { LoginRequest, LoginResponse } from "../../../types/auth/auth";
+import type { LoginRequest, LoginResponse } from "../types/auth";
 
 import { apiPost } from "../../../services/api";
-
 import { usePageTitle } from "../../clubs/hooks/usePageTitle";
+
+function isBoardMemberRole(role: string | null | undefined) {
+  return role === "BoardMember";
+}
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const nav = useNavigate();
-  const { login } = useAuth();
+  const { login, isAuthenticated, user } = useAuth();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   usePageTitle("Login - AUBG Recruitment System");
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    if (isBoardMemberRole(user?.role)) {
+      nav("/board", { replace: true });
+      return;
+    }
+
+    nav("/account", { replace: true });
+  }, [isAuthenticated, user, nav]);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -28,15 +42,25 @@ export default function LoginPage() {
 
     try {
       const payload: LoginRequest = { email, password };
+
       const res = await apiPost<LoginRequest, LoginResponse>(
         "/api/auth/login",
         payload,
       );
 
-      login(res.token, res.role);
-      nav("/home");
-    } catch (err: any) {
-      setError(err.message ?? "Login failed");
+      login(res);
+
+      if (isBoardMemberRole(res.user.role)) {
+        nav("/board", { replace: true });
+      } else {
+        nav("/account", { replace: true });
+      }
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("Login failed");
+      }
     } finally {
       setLoading(false);
     }
