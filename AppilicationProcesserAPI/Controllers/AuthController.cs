@@ -1,10 +1,8 @@
-﻿using AppilicationProcesserAPI.Data;
-using AppilicationProcesserAPI.Entities;
-using AppilicationProcesserAPI.Models;
-using AppilicationProcesserAPI.Security;
+﻿using AppilicationProcesserAPI.Models;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+using Microsoft.Data.SqlClient;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -16,43 +14,110 @@ namespace AppilicationProcesserAPI.Controllers
     [Route("api/auth")]
     public class AuthController : ControllerBase
     {
-        private readonly AppDbContext _context;
-        private readonly IConfiguration _config;
+        private const string DefaultRoleName = "User";
+        private const int ActiveStatus = 1;
 
-        public AuthController(AppDbContext context, IConfiguration config)
+        private readonly IConfiguration _config;
+        private readonly string _connectionString;
+        private readonly PasswordHasher<string> _passwordHasher = new();
+
+        public AuthController(IConfiguration config)
         {
-            _context = context;
             _config = config;
+            _connectionString = _config.GetConnectionString("DefaultConnection")
+                ?? throw new InvalidOperationException("Missing DefaultConnection");
         }
 
         [HttpPost("register")]
         public async Task<ActionResult<RegisterResponse>> Register([FromBody] RegisterRequest req)
         {
-            if (string.IsNullOrWhiteSpace(req.Email) || string.IsNullOrWhiteSpace(req.Password))
-                return BadRequest("Email and password are required.");
+            if (string.IsNullOrWhiteSpace(req.Email) ||
+                string.IsNullOrWhiteSpace(req.Password) ||
+                string.IsNullOrWhiteSpace(req.FirstName) ||
+                string.IsNullOrWhiteSpace(req.LastName))
+            {
+                return BadRequest("Email, password, first name, and last name are required.");
+            }
 
             var email = req.Email.Trim().ToLowerInvariant();
+            var firstName = req.FirstName.Trim();
+            var lastName = req.LastName.Trim();
+            var userId = Guid.NewGuid();
 
-            var exists = await _context.UserAccounts.AnyAsync(u => u.Email.ToLower() == email);
-            if (exists) return BadRequest("Email already exists.");
+            await using var connection = new SqlConnection(_connectionString);
+            await connection.OpenAsync();
 
-            PasswordHasher.CreateHash(req.Password, out var hash, out var salt);
-
-            var user = new UserAccount
+            // Check if email already exists
+            await using (var checkCmd = new SqlCommand(
+                "SELECT COUNT(1) FROM dbo.UserCredentials WHERE Email = @Email", connection))
             {
-                Email = email,
-                UserName = email,
-                FirstName = req.FirstName.Trim(),
-                LastName = req.LastName.Trim(),
-                Role = "User",
-                PasswordHash = hash,
-                PasswordSalt = salt
-            };
+                checkCmd.Parameters.AddWithValue("@Email", email);
 
-            _context.UserAccounts.Add(user);
-            await _context.SaveChangesAsync();
+                var exists = (int)(await checkCmd.ExecuteScalarAsync() ?? 0) > 0;
+                if (exists)
+                    return BadRequest("Email already exists.");
+            }
 
-            return Ok(new RegisterResponse(user.UserId, user.Email, user.Role));
+            // Get default role id from Roles table
+            Guid roleId;
+            await using (var roleCmd = new SqlCommand(
+                "SELECT TOP 1 RoleId FROM dbo.Roles WHERE Name = @Name", connection))
+            {
+                roleCmd.Parameters.AddWithValue("@Name", DefaultRoleName);
+
+                var roleObj = await roleCmd.ExecuteScalarAsync();
+                if (roleObj == null || roleObj == DBNull.Value)
+                    return StatusCode(500, $"Role '{DefaultRoleName}' was not found in dbo.Roles.");
+
+                roleId = (Guid)roleObj;
+            }
+
+            // Hash password
+            var hashedPassword = _passwordHasher.HashPassword(email, req.Password);
+
+            await using var transaction = (SqlTransaction)await connection.BeginTransactionAsync();
+
+            try
+            {
+                // Insert into Users
+                await using (var userCmd = new SqlCommand(@"
+                    INSERT INTO dbo.Users
+                        (UserId, DepartmentId, RoleId, FirstName, LastName, CvUrl, CvFileName, AcademicYear, StudyMajor)
+                    VALUES
+                        (@UserId, NULL, @RoleId, @FirstName, @LastName, NULL, NULL, NULL, NULL)", connection, transaction))
+                {
+                    userCmd.Parameters.AddWithValue("@UserId", userId);
+                    userCmd.Parameters.AddWithValue("@RoleId", roleId);
+                    userCmd.Parameters.AddWithValue("@FirstName", firstName);
+                    userCmd.Parameters.AddWithValue("@LastName", lastName);
+
+                    await userCmd.ExecuteNonQueryAsync();
+                }
+
+                // Insert into UserCredentials
+                await using (var credCmd = new SqlCommand(@"
+                    INSERT INTO dbo.UserCredentials
+                        (Email, Password, UserId, Status)
+                    VALUES
+                        (@Email, @Password, @UserId, @Status)", connection, transaction))
+                {
+                    credCmd.Parameters.AddWithValue("@Email", email);
+                    credCmd.Parameters.AddWithValue("@Password", hashedPassword);
+                    credCmd.Parameters.AddWithValue("@UserId", userId);
+                    credCmd.Parameters.AddWithValue("@Status", ActiveStatus);
+
+                    await credCmd.ExecuteNonQueryAsync();
+                }
+
+                await transaction.CommitAsync();
+
+                return Ok(new RegisterResponse(userId, email, DefaultRoleName));
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
         }
 
         [HttpPost("login")]
@@ -63,17 +128,125 @@ namespace AppilicationProcesserAPI.Controllers
 
             var email = req.Email.Trim().ToLowerInvariant();
 
-            var user = await _context.UserAccounts.FirstOrDefaultAsync(u => u.Email.ToLower() == email);
-            if (user == null) return Unauthorized("Invalid email or password.");
+            await using var connection = new SqlConnection(_connectionString);
+            await connection.OpenAsync();
 
-            var ok = PasswordHasher.Verify(req.Password, user.PasswordHash, user.PasswordSalt);
-            if (!ok) return Unauthorized("Invalid email or password.");
+            await using var cmd = new SqlCommand(@"
+                SELECT TOP 1
+                    u.UserId,
+                    u.FirstName,
+                    u.LastName,
+                    r.Name AS RoleName,
+                    uc.Email,
+                    uc.Password,
+                    uc.Status
+                FROM dbo.UserCredentials uc
+                INNER JOIN dbo.Users u ON u.UserId = uc.UserId
+                INNER JOIN dbo.Roles r ON r.RoleId = u.RoleId
+                WHERE uc.Email = @Email", connection);
 
-            var token = CreateJwt(user);
-            return Ok(new LoginResponse(token, user.Role));
+            cmd.Parameters.AddWithValue("@Email", email);
+
+            await using var reader = await cmd.ExecuteReaderAsync();
+
+            if (!await reader.ReadAsync())
+                return Unauthorized("Invalid email or password.");
+
+            var userId = reader.GetGuid(reader.GetOrdinal("UserId"));
+            var firstName = reader.GetString(reader.GetOrdinal("FirstName"));
+            var lastName = reader.GetString(reader.GetOrdinal("LastName"));
+            var roleName = reader.GetString(reader.GetOrdinal("RoleName"));
+            var dbEmail = reader.GetString(reader.GetOrdinal("Email"));
+            var storedPassword = reader.GetString(reader.GetOrdinal("Password"));
+            var status = reader.GetInt32(reader.GetOrdinal("Status"));
+
+            if (status != ActiveStatus)
+                return Unauthorized("Account is inactive.");
+
+            var verifyResult = _passwordHasher.VerifyHashedPassword(dbEmail, storedPassword, req.Password);
+            if (verifyResult == PasswordVerificationResult.Failed)
+                return Unauthorized("Invalid email or password.");
+
+            var token = CreateJwt(userId, dbEmail, roleName, firstName, lastName);
+
+            return Ok(new LoginResponse(token, roleName));
         }
 
-        private string CreateJwt(UserAccount user)
+        [Authorize]
+        [HttpGet("me")]
+        public async Task<IActionResult> GetCurrentUser()
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (userIdClaim == null)
+                return Unauthorized();
+
+            var userId = Guid.Parse(userIdClaim.Value);
+
+            await using var connection = new SqlConnection(_connectionString);
+            await connection.OpenAsync();
+
+            await using var cmd = new SqlCommand(@"
+                SELECT TOP 1
+                    uc.Email,
+                    u.FirstName,
+                    u.LastName,
+                    r.Name AS RoleName
+                FROM dbo.Users u
+                INNER JOIN dbo.UserCredentials uc ON uc.UserId = u.UserId
+                INNER JOIN dbo.Roles r ON r.RoleId = u.RoleId
+                WHERE u.UserId = @UserId", connection);
+
+            cmd.Parameters.AddWithValue("@UserId", userId);
+
+            await using var reader = await cmd.ExecuteReaderAsync();
+
+            if (!await reader.ReadAsync())
+                return NotFound();
+
+            return Ok(new CurrentUserResponse
+            {
+                Email = reader.GetString(reader.GetOrdinal("Email")),
+                FirstName = reader.GetString(reader.GetOrdinal("FirstName")),
+                LastName = reader.GetString(reader.GetOrdinal("LastName")),
+                Role = reader.GetString(reader.GetOrdinal("RoleName"))
+            });
+        }
+
+        [Authorize]
+        [HttpPut("me")]
+        public async Task<IActionResult> UpdateProfile([FromBody] UpdateProfileRequest request)
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (userIdClaim == null)
+                return Unauthorized();
+
+            if (string.IsNullOrWhiteSpace(request.FirstName) || string.IsNullOrWhiteSpace(request.LastName))
+                return BadRequest("First name and last name are required.");
+
+            var userId = Guid.Parse(userIdClaim.Value);
+
+            await using var connection = new SqlConnection(_connectionString);
+            await connection.OpenAsync();
+
+            await using var cmd = new SqlCommand(@"
+                UPDATE dbo.Users
+                SET FirstName = @FirstName,
+                    LastName = @LastName
+                WHERE UserId = @UserId", connection);
+
+            cmd.Parameters.AddWithValue("@FirstName", request.FirstName.Trim());
+            cmd.Parameters.AddWithValue("@LastName", request.LastName.Trim());
+            cmd.Parameters.AddWithValue("@UserId", userId);
+
+            var rows = await cmd.ExecuteNonQueryAsync();
+
+            if (rows == 0)
+                return NotFound();
+
+            return NoContent();
+        }
+
+        private string CreateJwt(Guid userId, string email, string role, string firstName, string lastName)
         {
             var key = _config["Jwt:Key"] ?? throw new InvalidOperationException("Missing Jwt:Key");
             var issuer = _config["Jwt:Issuer"] ?? "AubgRecruitment";
@@ -81,13 +254,12 @@ namespace AppilicationProcesserAPI.Controllers
 
             var claims = new List<Claim>
             {
-                new Claim(JwtRegisteredClaimNames.Sub, user.UserId.ToString()),
-                new Claim(JwtRegisteredClaimNames.Email, user.Email),
-                new Claim(ClaimTypes.Role, user.Role),
-                new Claim("firstName", user.FirstName),
-                new Claim("lastName", user.LastName),
-                new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()),
-
+                new Claim(JwtRegisteredClaimNames.Sub, userId.ToString()),
+                new Claim(JwtRegisteredClaimNames.Email, email),
+                new Claim(ClaimTypes.Role, role),
+                new Claim("firstName", firstName),
+                new Claim("lastName", lastName),
+                new Claim(ClaimTypes.NameIdentifier, userId.ToString())
             };
 
             var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key));
@@ -102,57 +274,6 @@ namespace AppilicationProcesserAPI.Controllers
             );
 
             return new JwtSecurityTokenHandler().WriteToken(jwt);
-
-
-        }
-
-        [Authorize]
-        [HttpGet("me")]
-        public async Task<IActionResult> GetCurrentUser()
-        {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-            if (userIdClaim == null)
-                return Unauthorized();
-
-            var userId = Guid.Parse(userIdClaim.Value);
-
-            var user = await _context.UserAccounts
-                .FirstOrDefaultAsync(x => x.UserId == userId);
-
-            if (user == null)
-                return NotFound();
-
-            return Ok(new CurrentUserResponse
-            {
-                Email = user.Email,
-                FirstName = user.FirstName,
-                LastName = user.LastName,
-                Role = user.Role
-            });
-        }
-
-        [Authorize]
-        [HttpPut("me")]
-        public async Task<IActionResult> UpdateProfile(UpdateProfileRequest request)
-        {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-            if (userIdClaim == null)
-                return Unauthorized();
-
-            var userId = Guid.Parse(userIdClaim.Value);
-
-            var user = await _context.UserAccounts
-                .FirstOrDefaultAsync(x => x.UserId == userId);
-
-            if (user == null)
-                return NotFound();
-
-            user.FirstName = request.FirstName;
-            user.LastName = request.LastName;
-
-            await _context.SaveChangesAsync();
-
-            return NoContent();
         }
     }
 }
