@@ -32,7 +32,7 @@ export default function LoginPage() {
       return;
     }
 
-    nav("/account", { replace: true });
+    nav("/home", { replace: true });
   }, [isAuthenticated, user, nav]);
 
   async function onSubmit(e: React.FormEvent) {
@@ -46,7 +46,10 @@ export default function LoginPage() {
       const res = await apiPost<LoginRequest, LoginResponse>(
         "/api/auth/login",
         payload,
+        false,
       );
+
+      console.log("LOGIN RESPONSE:", res);
 
       login(res);
 
