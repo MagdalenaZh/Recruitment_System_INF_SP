@@ -8,6 +8,8 @@ namespace AppilicationProcesserAPI.AggregateStates
     {
         Task AppendEventAsync(IDomainEvent domainEvent, CancellationToken cancellationToken = default);
         Task<IEnumerable<IDomainEvent>> GetEventsAsync(Guid aggregateId, CancellationToken cancellationToken = default);
+        Task<IEnumerable<Guid>> GetApplicationsForUserAsync(Guid userId, CancellationToken cancellationToken = default);
+        Task InsertApplication(ApplicationData applicationData, CancellationToken cancellationToken = default);
     }
 
     public class EventStore : IEventStore
@@ -18,9 +20,6 @@ namespace AppilicationProcesserAPI.AggregateStates
         };
 
         private readonly string _connectionString;
-
-        private static readonly string GetAllEventsForAggregate = "SELECT [EventType], [PayLoad] FROM [Events] WHERE [AggregateId] = @aggregateId ORDER BY [TimeStamp]";
-        private static readonly string InsertEvent = "INSERT INTO [Events] ([AggregateId], [EventType], [PayLoad], [TimeStamp]) VALUES (@aggregateId, @eventType, @payload, @timeStamp)";
 
         public EventStore(string connectionString = "default")
         {
@@ -34,7 +33,8 @@ namespace AppilicationProcesserAPI.AggregateStates
             using var sqlConnection = new SqlConnection(_connectionString);
             await sqlConnection.OpenAsync(cancellationToken).ConfigureAwait(false);
 
-            using var command = new SqlCommand(InsertEvent, sqlConnection);
+            using var command = new SqlCommand(DbQueries.InsertEvent, sqlConnection);
+            command.Parameters.AddWithValue("@eventId", Guid.NewGuid());
             command.Parameters.AddWithValue("@aggregateId", domainEvent.AggregateId);
             command.Parameters.AddWithValue("@eventType", domainEvent.EventType);
             command.Parameters.AddWithValue("@payload", serializedData);
@@ -49,7 +49,7 @@ namespace AppilicationProcesserAPI.AggregateStates
             using var sqlConnection = new SqlConnection(_connectionString);
             await sqlConnection.OpenAsync(cancellationToken).ConfigureAwait(false);
 
-            using var command = new SqlCommand(GetAllEventsForAggregate, sqlConnection);
+            using var command = new SqlCommand(DbQueries.GetAllEventsForAggregate, sqlConnection);
             command.Parameters.AddWithValue("@aggregateId", aggregateId);
             using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
 
@@ -68,14 +68,58 @@ namespace AppilicationProcesserAPI.AggregateStates
             return loadedEvents;
         }
 
+        public async Task<IEnumerable<Guid>> GetApplicationsForUserAsync(Guid userId, CancellationToken cancellationToken = default)
+        {
+            var applicationIds = new List<Guid>();
+            using var sqlConnection = new SqlConnection(_connectionString);
+            await sqlConnection.OpenAsync(cancellationToken).ConfigureAwait(false);
+
+            using var command = new SqlCommand(DbQueries.GetAllApplicationsForUser, sqlConnection);
+            command.Parameters.AddWithValue("@userId", userId);
+            using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+
+            while (reader.Read())
+            {
+                var applicationId = reader.GetGuid(0);
+                applicationIds.Add(applicationId);
+            }
+
+            return applicationIds;
+        }
+
+        public async Task InsertApplication(ApplicationData applicationData, CancellationToken cancellationToken = default)
+        {
+            var serializedQuestionaire = JsonSerializer.Serialize(applicationData.Questionnaire);
+
+            using var sqlConnection = new SqlConnection(_connectionString);
+            await sqlConnection.OpenAsync(cancellationToken).ConfigureAwait(false);
+
+            using var command = new SqlCommand(DbQueries.InsertApplication, sqlConnection);
+            command.Parameters.AddWithValue("@aggregateId", applicationData.ApplicationId);
+            command.Parameters.AddWithValue("@userId", applicationData.UserId);
+            command.Parameters.AddWithValue("@departmentId", applicationData.DepartmentId);
+            command.Parameters.AddWithValue("@questionnaire", serializedQuestionaire);
+            command.Parameters.AddWithValue("@status", applicationData.Status);
+            await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+        }
+
         private static Type GetEventType(DomainEventEnum eventEnum)
         {
+#warning complete with missing events 
             switch (eventEnum)
             {
                 case DomainEventEnum.ApplicationCreated:
                     return typeof(ApplicationSubmittedEvent);
                 case DomainEventEnum.ApplicationApprovalIncremented:
                     return typeof(ApplicationApprovedEvent);
+                case DomainEventEnum.ApplicationApprovalDecremented:
+                    return typeof(ApplicationRejectedEvent);
+                case DomainEventEnum.ApplicationInterviewProposed:
+                    return typeof(SendInterviewProposalEvent);
+                case DomainEventEnum.ApplicationInterviewAccepted:
+                    return typeof(InterviewProposalAcceptedEvent);
+                case DomainEventEnum.ApplicationInterviewRejected:
+                    return typeof(InterviewProposalRejectedEvent);
                 default:
                     throw new ArgumentOutOfRangeException(nameof(eventEnum));
             }

@@ -24,6 +24,8 @@ namespace AppilicationProcesserAPI.AggregateStates
         {
             // select from applications by userId
             var foundAggregates = new List<Guid>();
+
+
             Task<IStateRepresentation>[] reconstructionTasks = [];
 
             for (int i = 0; i < foundAggregates.Count; i++)
