@@ -5,6 +5,13 @@
         #region SELECT QUERIES
         internal const string GetAllEventsForAggregate = "SELECT [EventType], [PayLoad] FROM [Events] WHERE [AggregateId] = @aggregateId ORDER BY [TimeStamp]";
         internal const string GetAllApplicationsForUser = "SELECT [AggregateId] FROM [Applications] WHERE [UserId] = @userId";
+        internal const string GetAllApplicationsForClub = """
+            SELECT appl.[AggregateId] 
+            FROM [Applications] AS appl 
+            INNER JOIN [Departments] AS deprt ON appl.[DepartmentId] = deprt.[DepartmentId] 
+            INNER JOIN [Clubs] AS clb ON deprt.[ClubId] = clb.[ClubId]
+            WHERE clb.[ClubId] = @clubId
+            """;
         #endregion
 
         #region INSERT QUERIES

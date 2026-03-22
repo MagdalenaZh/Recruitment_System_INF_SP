@@ -6,10 +6,11 @@ namespace AppilicationProcesserAPI.AggregateStates
 {
     public interface IEventStore
     {
-        Task AppendEventAsync(IDomainEvent domainEvent, CancellationToken cancellationToken = default);
-        Task<IEnumerable<IDomainEvent>> GetEventsAsync(Guid aggregateId, CancellationToken cancellationToken = default);
-        Task<IEnumerable<Guid>> GetApplicationsForUserAsync(Guid userId, CancellationToken cancellationToken = default);
-        Task InsertApplication(ApplicationData applicationData, CancellationToken cancellationToken = default);
+        Task AppendEventAsync(IDomainEvent domainEvent, CancellationToken cancellationToken);
+        Task InsertApplication(Guid applicationId, ApplicationData applicationData, CancellationToken cancellationToken);
+        Task<List<IDomainEvent>> GetEventsAsync(Guid aggregateId, CancellationToken cancellationToken);
+        Task<List<Guid>> GetApplicationsForUserAsync(Guid userId, CancellationToken cancellationToken);
+        Task<List<Guid>> GetAllApplicationsForClub(Guid clubId, CancellationToken cancellationToken);
     }
 
     public class EventStore : IEventStore
@@ -21,9 +22,9 @@ namespace AppilicationProcesserAPI.AggregateStates
 
         private readonly string _connectionString;
 
-        public EventStore(string connectionString = "default")
+        public EventStore(ServiceConfiguration configuration)
         {
-            _connectionString = connectionString;
+            _connectionString = configuration.SQLConnectionString;
         }
 
         public async Task AppendEventAsync(IDomainEvent domainEvent, CancellationToken cancellationToken = default)
@@ -42,7 +43,7 @@ namespace AppilicationProcesserAPI.AggregateStates
             await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
         }
 
-        public async Task<IEnumerable<IDomainEvent>> GetEventsAsync(Guid aggregateId, CancellationToken cancellationToken = default)
+        public async Task<List<IDomainEvent>> GetEventsAsync(Guid aggregateId, CancellationToken cancellationToken = default)
         {
             var loadedEvents = new List<IDomainEvent>();
 
@@ -68,7 +69,7 @@ namespace AppilicationProcesserAPI.AggregateStates
             return loadedEvents;
         }
 
-        public async Task<IEnumerable<Guid>> GetApplicationsForUserAsync(Guid userId, CancellationToken cancellationToken = default)
+        public async Task<List<Guid>> GetApplicationsForUserAsync(Guid userId, CancellationToken cancellationToken = default)
         {
             var applicationIds = new List<Guid>();
             using var sqlConnection = new SqlConnection(_connectionString);
@@ -87,7 +88,7 @@ namespace AppilicationProcesserAPI.AggregateStates
             return applicationIds;
         }
 
-        public async Task InsertApplication(ApplicationData applicationData, CancellationToken cancellationToken = default)
+        public async Task InsertApplication(Guid applicationId, ApplicationData applicationData, CancellationToken cancellationToken = default)
         {
             var serializedQuestionaire = JsonSerializer.Serialize(applicationData.Questionnaire);
 
@@ -95,12 +96,31 @@ namespace AppilicationProcesserAPI.AggregateStates
             await sqlConnection.OpenAsync(cancellationToken).ConfigureAwait(false);
 
             using var command = new SqlCommand(DbQueries.InsertApplication, sqlConnection);
-            command.Parameters.AddWithValue("@aggregateId", applicationData.ApplicationId);
+            command.Parameters.AddWithValue("@aggregateId", applicationId);
             command.Parameters.AddWithValue("@userId", applicationData.UserId);
             command.Parameters.AddWithValue("@departmentId", applicationData.DepartmentId);
             command.Parameters.AddWithValue("@questionnaire", serializedQuestionaire);
             command.Parameters.AddWithValue("@status", applicationData.Status);
             await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+        }
+
+        public async Task<List<Guid>> GetAllApplicationsForClub(Guid clubId, CancellationToken cancellationToken = default)
+        {
+            var applicationIds = new List<Guid>();
+            using var sqlConnection = new SqlConnection(_connectionString);
+            await sqlConnection.OpenAsync(cancellationToken).ConfigureAwait(false);
+
+            using var command = new SqlCommand(DbQueries.GetAllApplicationsForUser, sqlConnection);
+            command.Parameters.AddWithValue("@clubId", clubId);
+            using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+
+            while (reader.Read())
+            {
+                var applicationId = reader.GetGuid(0);
+                applicationIds.Add(applicationId);
+            }
+
+            return applicationIds;
         }
 
         private static Type GetEventType(DomainEventEnum eventEnum)

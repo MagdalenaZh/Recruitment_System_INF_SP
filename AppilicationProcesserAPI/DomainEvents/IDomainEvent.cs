@@ -6,8 +6,6 @@ public interface IDomainEvent
 
     public DateTimeOffset Timestamp { get; }
 
-    public int Version { get; }
-
     public DomainEventEnum EventType { get; }
 }
 
@@ -15,13 +13,11 @@ public abstract class DomainEvent : IDomainEvent
 {
     public Guid AggregateId { get; }
     public DateTimeOffset Timestamp { get; }
-    public int Version { get; }
 
-    protected DomainEvent(Guid aggregateId, int version)
+    protected DomainEvent(Guid aggregateId)
     {
         AggregateId = aggregateId;
         Timestamp = DateTimeOffset.UtcNow;
-        Version = version;
     }
 
     public abstract DomainEventEnum EventType { get; }
@@ -32,8 +28,8 @@ public class ApplicationSubmittedEvent : DomainEvent
     public int RequiredNumberOfApprovals { get; }
 
     public override DomainEventEnum EventType => DomainEventEnum.ApplicationCreated;
-    public ApplicationSubmittedEvent(int requiredNumberOfApprovals)
-        : base(Guid.NewGuid(), 1)
+    public ApplicationSubmittedEvent(Guid aggregateId, int requiredNumberOfApprovals)
+        : base(aggregateId)
     {
         RequiredNumberOfApprovals = requiredNumberOfApprovals;
     }
@@ -43,7 +39,7 @@ public class ApplicationApprovedEvent : DomainEvent
 {
     public Guid UserId { get; }
 
-    public ApplicationApprovedEvent(Guid aggregateId, int version, Guid userId) : base(aggregateId, version)
+    public ApplicationApprovedEvent(Guid aggregateId, Guid userId) : base(aggregateId)
     {
         UserId = userId;
     }
@@ -55,7 +51,7 @@ public class ApplicationRejectedEvent : DomainEvent
 {
     public Guid UserId { get; }
 
-    public ApplicationRejectedEvent(Guid aggregateId, int version, Guid userId) : base(aggregateId, version)
+    public ApplicationRejectedEvent(Guid aggregateId, Guid userId) : base(aggregateId)
     {
         UserId = userId;
     }
@@ -68,7 +64,7 @@ public class SendInterviewProposalEvent : DomainEvent
     public string InterviewLocation { get; }
     public DateTimeOffset ProposedInterviewDateTime { get; }
 
-    public SendInterviewProposalEvent(Guid aggregateId, int version, string interviewLocation, DateTimeOffset proposedTime) : base(aggregateId, version)
+    public SendInterviewProposalEvent(Guid aggregateId, string interviewLocation, DateTimeOffset proposedTime) : base(aggregateId)
     {
         InterviewLocation = interviewLocation;
         ProposedInterviewDateTime = proposedTime;
@@ -81,7 +77,7 @@ public class RemoveInterviewProposalEvent : DomainEvent
 {
     public string InterviewLocation { get; }
     public DateTimeOffset RemovedInterviewDateTime { get; }
-    public RemoveInterviewProposalEvent(Guid aggregateId, int version, string interviewLocation, DateTimeOffset removeDateTime) : base(aggregateId, version)
+    public RemoveInterviewProposalEvent(Guid aggregateId, string interviewLocation, DateTimeOffset removeDateTime) : base(aggregateId)
     {
         InterviewLocation = interviewLocation;
         RemovedInterviewDateTime = removeDateTime;
@@ -92,7 +88,7 @@ public class RemoveInterviewProposalEvent : DomainEvent
 public class InterviewProposalAcceptedEvent : DomainEvent
 {
     public DateTimeOffset AcceptedDateTime { get; }
-    public InterviewProposalAcceptedEvent(Guid aggregateId, int version, DateTimeOffset acceptedDateTime) : base(aggregateId, version)
+    public InterviewProposalAcceptedEvent(Guid aggregateId, DateTimeOffset acceptedDateTime) : base(aggregateId)
     {
        AcceptedDateTime = acceptedDateTime;
     }
@@ -101,7 +97,7 @@ public class InterviewProposalAcceptedEvent : DomainEvent
 
 public class InterviewProposalRejectedEvent : DomainEvent
 {
-    public InterviewProposalRejectedEvent(Guid aggregateId, int version) : base(aggregateId, version)
+    public InterviewProposalRejectedEvent(Guid aggregateId) : base(aggregateId)
     {
     }
     public override DomainEventEnum EventType => DomainEventEnum.ApplicationInterviewRejected;

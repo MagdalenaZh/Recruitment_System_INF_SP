@@ -1,9 +1,14 @@
+using AppilicationProcesserAPI;
 using AppilicationProcesserAPI.Configurations;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
+
+var serviceConfiguration = new ServiceConfiguration(builder.Configuration);
+
+builder.Services.AddSingleton<ServiceConfiguration>(serviceConfiguration);
 
 builder.Services.AddControllers();
 builder.Services.AddControllersWithViews();

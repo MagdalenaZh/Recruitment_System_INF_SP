@@ -20,11 +20,15 @@ namespace AppilicationProcesserAPI.Controllers
         }
 
         [HttpPost("api/submit-application")]
-        public async Task<IActionResult> ProcessApplication(CancellationToken cancellationToken)
+        public async Task<IActionResult> ProcessApplication(ApplicationData applicationData, CancellationToken cancellationToken)
         {
-            var domainEvent = new ApplicationSubmittedEvent(3);
+            var applicationId = Guid.NewGuid();
 
-            await _eventStore.AppendEventAsync(domainEvent).ConfigureAwait(false);
+            await _eventStore.InsertApplication(applicationId, applicationData, cancellationToken).ConfigureAwait(false);
+
+            var domainEvent = new ApplicationSubmittedEvent(applicationId, 3);
+
+            await _eventStore.AppendEventAsync(domainEvent, cancellationToken).ConfigureAwait(false);
 
             var message = new MessageEnvelope(domainEvent);
 
@@ -44,7 +48,7 @@ namespace AppilicationProcesserAPI.Controllers
         [HttpPost("api/approve-application/{aggregateId}")]
         public async Task<IActionResult> ApproveApplication([FromRoute]Guid aggregateId, CancellationToken cancellationToken)
         {
-            var domainEvent = new ApplicationApprovedEvent(aggregateId, 2, Guid.NewGuid());
+            var domainEvent = new ApplicationApprovedEvent(aggregateId, Guid.NewGuid());
 
             await _eventStore.AppendEventAsync(domainEvent).ConfigureAwait(false);
 
