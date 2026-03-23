@@ -1,8 +1,9 @@
-﻿using AppilicationProcesserAPI.DomainEvents;
+﻿using AppilicationProcesserAPI.Data;
+using AppilicationProcesserAPI.DomainEvents;
 using Microsoft.Data.SqlClient;
 using System.Text.Json;
 
-namespace AppilicationProcesserAPI.AggregateStates
+namespace AppilicationProcesserAPI.PersistanceServices
 {
     public interface IEventStore
     {
@@ -27,7 +28,7 @@ namespace AppilicationProcesserAPI.AggregateStates
             _connectionString = configuration.SQLConnectionString;
         }
 
-        public async Task AppendEventAsync(IDomainEvent domainEvent, CancellationToken cancellationToken = default)
+        public async Task AppendEventAsync(IDomainEvent domainEvent, CancellationToken cancellationToken)
         {
             var serializedData = JsonSerializer.Serialize(domainEvent);
 
@@ -43,7 +44,7 @@ namespace AppilicationProcesserAPI.AggregateStates
             await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
         }
 
-        public async Task<List<IDomainEvent>> GetEventsAsync(Guid aggregateId, CancellationToken cancellationToken = default)
+        public async Task<List<IDomainEvent>> GetEventsAsync(Guid aggregateId, CancellationToken cancellationToken)
         {
             var loadedEvents = new List<IDomainEvent>();
 
@@ -69,7 +70,7 @@ namespace AppilicationProcesserAPI.AggregateStates
             return loadedEvents;
         }
 
-        public async Task<List<Guid>> GetApplicationsForUserAsync(Guid userId, CancellationToken cancellationToken = default)
+        public async Task<List<Guid>> GetApplicationsForUserAsync(Guid userId, CancellationToken cancellationToken)
         {
             var applicationIds = new List<Guid>();
             using var sqlConnection = new SqlConnection(_connectionString);
@@ -88,7 +89,7 @@ namespace AppilicationProcesserAPI.AggregateStates
             return applicationIds;
         }
 
-        public async Task InsertApplication(Guid applicationId, ApplicationData applicationData, CancellationToken cancellationToken = default)
+        public async Task InsertApplication(Guid applicationId, ApplicationData applicationData, CancellationToken cancellationToken)
         {
             var serializedQuestionaire = JsonSerializer.Serialize(applicationData.Questionnaire);
 
@@ -104,7 +105,7 @@ namespace AppilicationProcesserAPI.AggregateStates
             await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
         }
 
-        public async Task<List<Guid>> GetAllApplicationsForClub(Guid clubId, CancellationToken cancellationToken = default)
+        public async Task<List<Guid>> GetAllApplicationsForClub(Guid clubId, CancellationToken cancellationToken)
         {
             var applicationIds = new List<Guid>();
             using var sqlConnection = new SqlConnection(_connectionString);
@@ -134,10 +135,8 @@ namespace AppilicationProcesserAPI.AggregateStates
                     return typeof(ApplicationApprovedEvent);
                 case DomainEventEnum.ApplicationApprovalDecremented:
                     return typeof(ApplicationRejectedEvent);
-                case DomainEventEnum.ApplicationInterviewProposed:
-                    return typeof(SendInterviewProposalEvent);
-                case DomainEventEnum.ApplicationInterviewAccepted:
-                    return typeof(InterviewProposalAcceptedEvent);
+                case DomainEventEnum.BookInterviewSlot:
+                    return typeof(BookInterviewSlotEvent);
                 case DomainEventEnum.ApplicationInterviewRejected:
                     return typeof(InterviewProposalRejectedEvent);
                 default:

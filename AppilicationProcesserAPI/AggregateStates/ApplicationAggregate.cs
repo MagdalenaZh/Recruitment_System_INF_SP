@@ -1,4 +1,5 @@
-﻿using AppilicationProcesserAPI.DomainEvents;
+﻿using AppilicationProcesserAPI.Data;
+using AppilicationProcesserAPI.DomainEvents;
 using AppilicationProcesserAPI.Visitors;
 
 namespace AppilicationProcesserAPI.AggregateStates;
@@ -34,9 +35,9 @@ public class ApplicationAggregate : IApplicationAggregate
         _state = new ProcessingApplicationState(aggregateId, requiredNumberOfApprovals);
     }
 
-    public void TransitionToInterviewScheduledState(Guid aggregateId, DateTimeOffset scheduledInterviewDateTime)
+    public void TransitionToInterviewScheduledState(Guid aggregateId, InterviewSlot scheduledInterviewSlot)
     {
-        _state = new HibernatedApplicationState(aggregateId, scheduledInterviewDateTime);
+        _state = new HibernatedApplicationState(aggregateId, scheduledInterviewSlot);
     }   
 
     public void TransitionToApprovedState(Guid aggregateId)
@@ -44,8 +45,8 @@ public class ApplicationAggregate : IApplicationAggregate
         _state = new ApplicationApprovedState(aggregateId);
     }
 
-    public void TransitionToConcludedState(Guid aggregateId, string conclusionResult)
+    public void TransitionToConcludedState(Guid aggregateId, ApplicationStatus status)
     {
-        _state = new ApplicationConcludedState(aggregateId, conclusionResult);
+        _state = new ApplicationConcludedState(aggregateId, status);
     }
 }

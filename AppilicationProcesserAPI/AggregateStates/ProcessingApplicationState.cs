@@ -45,9 +45,14 @@ public class ProcessingApplicationState : IApplicationState
                     }
                 }
                 break;
-            case ApplicationRejectedEvent applicationRejectedEvent:
+            case ApplicationDisapprovedEvent applicationRejectedEvent:
                 {
                     _userDecisionsMap[applicationRejectedEvent.UserId] = false;
+                }
+                break;
+            case ApplicationRejectedEvent applicationRejectedEvent:
+                {
+                    applicationAggregate.TransitionToConcludedState(applicationRejectedEvent.AggregateId, ApplicationStatus.Rejected);
                 }
                 break;
         }

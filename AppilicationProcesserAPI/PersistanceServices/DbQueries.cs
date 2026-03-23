@@ -1,4 +1,4 @@
-﻿namespace AppilicationProcesserAPI.AggregateStates
+﻿namespace AppilicationProcesserAPI.PersistanceServices
 {
     internal static class DbQueries
     {

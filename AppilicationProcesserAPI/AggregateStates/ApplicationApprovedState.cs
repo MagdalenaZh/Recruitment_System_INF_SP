@@ -5,20 +5,16 @@ namespace AppilicationProcesserAPI.AggregateStates;
 
 public class ApplicationApprovedState : IApplicationState
 {
-    private readonly HashSet<DateTimeOffset> _interviewTimesProposals;
-
     private readonly Guid _aggregateId;
 
     public ApplicationApprovedState(Guid aggregateId)
     {
         _aggregateId = aggregateId;
-        _interviewTimesProposals = new HashSet<DateTimeOffset>();
     }
 
     public void AcceptVisitor(IStateVisitor stateVisitor)
     {
         stateVisitor.PropertyBag.Set("ApplicationId", _aggregateId);
-        stateVisitor.PropertyBag.Set("InterviewTimesProposals", _interviewTimesProposals.ToList());
         stateVisitor.Visit(this);
     }
 
@@ -29,24 +25,14 @@ public class ApplicationApprovedState : IApplicationState
 
         switch (domainEvent)
         {
-            case SendInterviewProposalEvent sendInterviewProposalEvent:
+            case BookInterviewSlotEvent interviewProposalAcceptedEvent:
                 {
-                    _interviewTimesProposals.Add(sendInterviewProposalEvent.ProposedInterviewDateTime);
-                }
-                break;
-            case RemoveInterviewProposalEvent removeInterviewProposalEvent:
-                {
-                    _interviewTimesProposals.Remove(removeInterviewProposalEvent.RemovedInterviewDateTime);
-                }
-                break;
-            case InterviewProposalAcceptedEvent interviewProposalAcceptedEvent:
-                {
-                    applicationAggregate.TransitionToInterviewScheduledState(_aggregateId, interviewProposalAcceptedEvent.AcceptedDateTime);
+                    applicationAggregate.TransitionToInterviewScheduledState(_aggregateId, interviewProposalAcceptedEvent.BookedSlot);
                 }
                 break;
             case InterviewProposalRejectedEvent:
                 {
-                    applicationAggregate.TransitionToConcludedState(_aggregateId, "Rejected");
+                    applicationAggregate.TransitionToConcludedState(_aggregateId, ApplicationStatus.Rejected);
                 }
                 break;
         }

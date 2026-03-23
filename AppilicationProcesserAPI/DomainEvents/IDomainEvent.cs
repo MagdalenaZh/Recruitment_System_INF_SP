@@ -1,4 +1,7 @@
-﻿namespace AppilicationProcesserAPI.DomainEvents;
+﻿using AppilicationProcesserAPI.AggregateStates;
+using AppilicationProcesserAPI.Data;
+
+namespace AppilicationProcesserAPI.DomainEvents;
 
 public interface IDomainEvent
 {
@@ -47,11 +50,11 @@ public class ApplicationApprovedEvent : DomainEvent
     public override DomainEventEnum EventType => DomainEventEnum.ApplicationApprovalIncremented;
 }
 
-public class ApplicationRejectedEvent : DomainEvent
+public class ApplicationDisapprovedEvent : DomainEvent
 {
     public Guid UserId { get; }
 
-    public ApplicationRejectedEvent(Guid aggregateId, Guid userId) : base(aggregateId)
+    public ApplicationDisapprovedEvent(Guid aggregateId, Guid userId) : base(aggregateId)
     {
         UserId = userId;
     }
@@ -59,40 +62,14 @@ public class ApplicationRejectedEvent : DomainEvent
     public override DomainEventEnum EventType => DomainEventEnum.ApplicationApprovalDecremented;
 }
 
-public class SendInterviewProposalEvent : DomainEvent
+public class BookInterviewSlotEvent : DomainEvent
 {
-    public string InterviewLocation { get; }
-    public DateTimeOffset ProposedInterviewDateTime { get; }
-
-    public SendInterviewProposalEvent(Guid aggregateId, string interviewLocation, DateTimeOffset proposedTime) : base(aggregateId)
+    public InterviewSlot BookedSlot { get; }
+    public BookInterviewSlotEvent(Guid aggregateId, InterviewSlot interviewSlot) : base(aggregateId)
     {
-        InterviewLocation = interviewLocation;
-        ProposedInterviewDateTime = proposedTime;
+        BookedSlot = interviewSlot;
     }
-
-    public override DomainEventEnum EventType => DomainEventEnum.ApplicationInterviewProposed;
-}
-
-public class RemoveInterviewProposalEvent : DomainEvent
-{
-    public string InterviewLocation { get; }
-    public DateTimeOffset RemovedInterviewDateTime { get; }
-    public RemoveInterviewProposalEvent(Guid aggregateId, string interviewLocation, DateTimeOffset removeDateTime) : base(aggregateId)
-    {
-        InterviewLocation = interviewLocation;
-        RemovedInterviewDateTime = removeDateTime;
-    }
-    public override DomainEventEnum EventType => DomainEventEnum.ApplicationInterviewProposalAmended;
-}
-
-public class InterviewProposalAcceptedEvent : DomainEvent
-{
-    public DateTimeOffset AcceptedDateTime { get; }
-    public InterviewProposalAcceptedEvent(Guid aggregateId, DateTimeOffset acceptedDateTime) : base(aggregateId)
-    {
-       AcceptedDateTime = acceptedDateTime;
-    }
-    public override DomainEventEnum EventType => DomainEventEnum.ApplicationInterviewAccepted;
+    public override DomainEventEnum EventType => DomainEventEnum.BookInterviewSlot;
 }
 
 public class InterviewProposalRejectedEvent : DomainEvent
@@ -101,6 +78,24 @@ public class InterviewProposalRejectedEvent : DomainEvent
     {
     }
     public override DomainEventEnum EventType => DomainEventEnum.ApplicationInterviewRejected;
-}   
+}
+
+public class ApplicationAcceptedEvent : DomainEvent
+{
+    public ApplicationAcceptedEvent(Guid aggregateId) : base(aggregateId)
+    {
+    }
+
+    public override DomainEventEnum EventType => DomainEventEnum.ApplicationAccepted;
+}
+
+public class ApplicationRejectedEvent : DomainEvent
+{
+    public ApplicationRejectedEvent(Guid aggregateId) : base(aggregateId)
+    {
+    }
+
+    public override DomainEventEnum EventType => DomainEventEnum.ApplicationRejected;
+} 
 
 
