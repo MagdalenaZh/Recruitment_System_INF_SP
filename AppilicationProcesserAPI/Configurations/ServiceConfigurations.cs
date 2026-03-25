@@ -30,7 +30,7 @@ namespace AppilicationProcesserAPI.Configurations
             services.AddSingleton<ICalendarProvider, CalendarProviderCacheDecorator>(sp =>
             {
                return new CalendarProviderCacheDecorator(
-                    new CalendarProvider(sp.GetRequiredService<ServiceConfiguration>()),
+                    new CalendarProvider(sp.GetRequiredService<ServiceConfiguration>(), sp.GetRequiredService<ILogger<CalendarProvider>>()),
                     sp.GetRequiredService<IMemoryCache>()
                     );
             });

@@ -8,7 +8,7 @@ namespace AppilicationProcesserAPI.PersistanceServices
     public interface IEventStore
     {
         Task AppendEventAsync(IDomainEvent domainEvent, CancellationToken cancellationToken);
-        Task InsertApplication(Guid applicationId, ApplicationData applicationData, CancellationToken cancellationToken);
+        Task CreateApplication(Guid applicationId, ApplicationData applicationData, CancellationToken cancellationToken);
         Task<List<IDomainEvent>> GetEventsAsync(Guid aggregateId, CancellationToken cancellationToken);
         Task<List<Guid>> GetApplicationsForUserAsync(Guid userId, CancellationToken cancellationToken);
         Task<List<Guid>> GetAllApplicationsForClub(Guid clubId, CancellationToken cancellationToken);
@@ -22,10 +22,12 @@ namespace AppilicationProcesserAPI.PersistanceServices
         };
 
         private readonly string _connectionString;
+        private readonly ILogger<EventStore> _logger;
 
-        public EventStore(ServiceConfiguration configuration)
+        public EventStore(ServiceConfiguration configuration, ILogger<EventStore> logger)
         {
             _connectionString = configuration.SQLConnectionString;
+            _logger = logger;
         }
 
         public async Task AppendEventAsync(IDomainEvent domainEvent, CancellationToken cancellationToken)
@@ -41,7 +43,16 @@ namespace AppilicationProcesserAPI.PersistanceServices
             command.Parameters.AddWithValue("@eventType", domainEvent.EventType);
             command.Parameters.AddWithValue("@payload", serializedData);
             command.Parameters.AddWithValue("@timeStamp", domainEvent.Timestamp);
-            await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+
+            try
+            {
+                await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+            }
+            catch (SqlException ex)
+            {
+                _logger.LogError(ex, "Filed Insert in Events table");
+                throw new Exception("Event not registered");
+            }
         }
 
         public async Task<List<IDomainEvent>> GetEventsAsync(Guid aggregateId, CancellationToken cancellationToken)
@@ -89,7 +100,7 @@ namespace AppilicationProcesserAPI.PersistanceServices
             return applicationIds;
         }
 
-        public async Task InsertApplication(Guid applicationId, ApplicationData applicationData, CancellationToken cancellationToken)
+        public async Task CreateApplication(Guid applicationId, ApplicationData applicationData, CancellationToken cancellationToken)
         {
             var serializedQuestionaire = JsonSerializer.Serialize(applicationData.Questionnaire);
 
@@ -102,7 +113,16 @@ namespace AppilicationProcesserAPI.PersistanceServices
             command.Parameters.AddWithValue("@departmentId", applicationData.DepartmentId);
             command.Parameters.AddWithValue("@questionnaire", serializedQuestionaire);
             command.Parameters.AddWithValue("@status", applicationData.Status);
-            await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+
+            try
+            {
+                await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+            }
+            catch (SqlException ex)
+            {
+                _logger.LogError(ex, "Filed Insert in Applications table");
+                throw new Exception("Application not registered");
+            }
         }
 
         public async Task<List<Guid>> GetAllApplicationsForClub(Guid clubId, CancellationToken cancellationToken)

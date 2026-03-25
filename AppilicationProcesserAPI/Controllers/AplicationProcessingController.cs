@@ -27,7 +27,7 @@ namespace AppilicationProcesserAPI.Controllers
         {
             var applicationId = Guid.NewGuid();
 
-            await _eventStore.InsertApplication(applicationId, applicationData, cancellationToken).ConfigureAwait(false);
+            await _eventStore.CreateApplication(applicationId, applicationData, cancellationToken).ConfigureAwait(false);
 
             //get number of approvals from Clubs table
             var domainEvent = new ApplicationSubmittedEvent(applicationId, 3);
@@ -72,15 +72,10 @@ namespace AppilicationProcesserAPI.Controllers
             }
         }
 
-        [HttpPut("api/book-interview-slot/{applicationId}/{slotId}")]
-        public async Task<IActionResult> BookInterviewSlot([FromRoute] Guid applicationId, [FromRoute] Guid slotId, CancellationToken cancellationToken)
+        [HttpPut("api/book-interview-slot/{applicationId}")]
+        public async Task<IActionResult> BookInterviewSlot([FromRoute] Guid applicationId, [FromBody] InterviewSlot interviewSlot, CancellationToken cancellationToken)
         {
-            if (!await _calendarProvider.IsSlotAvailableAsync(slotId, cancellationToken).ConfigureAwait(false))
-            {
-                return BadRequest("Slot already booked");
-            }
-
-            var interviewSlot = await _calendarProvider.BookInterviewSlotAsync(slotId, applicationId, cancellationToken).ConfigureAwait(false);
+            await _calendarProvider.BookInterviewSlotAsync(interviewSlot.SlotId, applicationId, cancellationToken).ConfigureAwait(false);
 
             var domainEvent = new BookInterviewSlotEvent(applicationId, interviewSlot);
 

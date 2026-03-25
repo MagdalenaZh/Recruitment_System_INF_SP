@@ -1,40 +1,65 @@
-﻿using AppilicationProcesserAPI.AggregateStates;
-using AppilicationProcesserAPI.Data;
+﻿using AppilicationProcesserAPI.Data;
+using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Caching.Memory;
 
 namespace AppilicationProcesserAPI.PersistanceServices
 {
     public interface ICalendarProvider
     {
-        Task<bool> IsSlotAvailableAsync(Guid slotId, CancellationToken cancellationToken);
+        Task<List<InterviewSlot>> GetAvailableInterviewSlotsForClubAsync(Guid clubId, CancellationToken cancellationToken);
 
-        Task<List<InterviewSlot>> GetAvailableSlotsAsync(Guid applicationId, CancellationToken cancellationToken);
-
-        Task<InterviewSlot> BookInterviewSlotAsync(Guid slotId, Guid applicationId, CancellationToken cancellationToken);
+        Task BookInterviewSlotAsync(Guid slotId, Guid applicationId, CancellationToken cancellationToken);
     }
 
     public class CalendarProvider : ICalendarProvider
     {
         private readonly string _connectionString;
+        private readonly ILogger<CalendarProvider> _logger;
 
-        public CalendarProvider(ServiceConfiguration serviceConfiguration) 
+        public CalendarProvider(ServiceConfiguration serviceConfiguration, ILogger<CalendarProvider> logger) 
         {
             _connectionString = serviceConfiguration.SQLConnectionString;
         }
 
-        public Task<InterviewSlot> BookInterviewSlotAsync(Guid slotId, Guid applicationId, CancellationToken cancellationToken)
+        public async Task BookInterviewSlotAsync(Guid slotId, Guid applicationId, CancellationToken cancellationToken)
         {
-            throw new NotImplementedException();
+            using var sqlConnection = new SqlConnection(_connectionString);
+            await sqlConnection.OpenAsync(cancellationToken).ConfigureAwait(false);
+
+            using var command = new SqlCommand(DbQueries.InsertBookedInterviewSlot, sqlConnection);
+            command.Parameters.AddWithValue("@slotId", slotId);
+            command.Parameters.AddWithValue("@aggregateId", applicationId);
+
+            try
+            {
+                await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+            }
+            catch (SqlException ex)
+            {
+                _logger.LogError(ex, "Filed Insert in Events table");
+                throw new Exception("Event not registered");
+            }
         }
 
-        public Task<List<InterviewSlot>> GetAvailableSlotsAsync(Guid applicationId, CancellationToken cancellationToken)
+        public async Task<List<InterviewSlot>> GetAvailableInterviewSlotsForClubAsync(Guid clubId, CancellationToken cancellationToken)
         {
-            throw new NotImplementedException();
-        }
+            var availableSlots = new List<InterviewSlot>();
+            using var sqlConnection = new SqlConnection(_connectionString);
+            await sqlConnection.OpenAsync(cancellationToken).ConfigureAwait(false);
 
-        public Task<bool> IsSlotAvailableAsync(Guid slotId, CancellationToken cancellationToken)
-        {
-            throw new NotImplementedException();
+            using var command = new SqlCommand(DbQueries.GetAllOpenInterviewSlotsForClub, sqlConnection);
+            command.Parameters.AddWithValue("@clubId", clubId);
+            using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+
+            while (reader.Read())
+            {
+                var slotId = reader.GetGuid(0);
+                var startTime = reader.GetDateTimeOffset(1);
+                var endTime = reader.GetDateTimeOffset(2);
+                availableSlots.Add(new InterviewSlot(slotId, startTime, endTime));
+            }
+
+            return availableSlots;
         }
     }
 
@@ -50,19 +75,14 @@ namespace AppilicationProcesserAPI.PersistanceServices
             _memoryCache = memoryCache;
         }
 
-        public Task<InterviewSlot> BookInterviewSlotAsync(Guid slotId, Guid applicationId, CancellationToken cancellationToken)
+        public Task BookInterviewSlotAsync(Guid slotId, Guid applicationId, CancellationToken cancellationToken)
         {
            return _wrappedCalendarprovider.BookInterviewSlotAsync(slotId, applicationId, cancellationToken);
         }
 
-        public Task<List<InterviewSlot>> GetAvailableSlotsAsync(Guid applicationId, CancellationToken cancellationToken)
+        public Task<List<InterviewSlot>> GetAvailableInterviewSlotsForClubAsync(Guid clubId, CancellationToken cancellationToken)
         {
-            return _wrappedCalendarprovider.GetAvailableSlotsAsync(applicationId, cancellationToken);
-        }
-
-        public Task<bool> IsSlotAvailableAsync(Guid slotId, CancellationToken cancellationToken)
-        {
-            return _wrappedCalendarprovider.IsSlotAvailableAsync(slotId, cancellationToken);
+            return _wrappedCalendarprovider.GetAvailableInterviewSlotsForClubAsync(clubId, cancellationToken);
         }
     }
 }
