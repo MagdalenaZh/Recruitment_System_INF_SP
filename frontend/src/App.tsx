@@ -23,6 +23,12 @@ import { ClubAdminDepartmentApplicationsPage } from "./features/clubAdmin/pages/
 import { ClubAdminApplicationDetailPage } from "./features/clubAdmin/pages/ClubAdminApplicationDetailPage.tsx";
 import { ClubAdminBoardMembersPage } from "./features/clubAdmin/pages/ClubAdminBoardMembersPage.tsx";
 
+import { SystemAdminLayout } from "./features/sysAdmin/pages/SystemAdminLayout.tsx";
+import { SystemAdminDashboardPage } from "./features/sysAdmin/pages/SystemAdminDashboardPage.tsx";
+import { SystemAdminClubsPage } from "./features/sysAdmin/pages/SystemAdminClubsPage.tsx";
+import { SystemAdminClubAdminsPage } from "./features/sysAdmin/pages/SystemAdminClubAdminsPage.tsx";
+import { SystemAdminCreateClubAdminsPage } from "./features/sysAdmin/pages/SystemAdminCreateClubAdminsPage.tsx";
+
 export default function App() {
   return (
     <Routes>
@@ -113,6 +119,23 @@ export default function App() {
           </ProtectedRoute>
         }
       />
+
+      <Route
+        path="/sys-admin"
+        element={
+          <ProtectedRoute>
+            <SystemAdminLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route index element={<SystemAdminDashboardPage />} />
+        <Route path="clubs" element={<SystemAdminClubsPage />} />
+        <Route
+          path="create-club-admins"
+          element={<SystemAdminCreateClubAdminsPage />}
+        />
+        <Route path="club-admins" element={<SystemAdminClubAdminsPage />} />
+      </Route>
     </Routes>
   );
 }
