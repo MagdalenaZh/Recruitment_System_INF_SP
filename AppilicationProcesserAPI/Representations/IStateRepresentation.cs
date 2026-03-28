@@ -1,4 +1,8 @@
-﻿namespace AppilicationProcesserAPI.Representations
+﻿using AppilicationProcesserAPI.AggregateStates;
+using AppilicationProcesserAPI.Data;
+using AppilicationProcesserAPI.DomainEvents;
+
+namespace AppilicationProcesserAPI.Representations
 {
     public interface IStateRepresentation
     {
@@ -25,20 +29,18 @@
     public class HibernatedStateRepresentation : IStateRepresentation
     {
         public required Guid ApplicationId { get; set; }
-        public required DateTimeOffset ScheduledTime { get; set; }
+        public required InterviewSlot ScheduledTime { get; set; }
     }
 
     public class ApprovedStateRepresentation : IStateRepresentation
     {
         public required Guid ApplicationId { get; set; }
-
-        public required List<DateTimeOffset> InterviewTimesProposals { get; set; }
     }
 
     public class ConcludedStateRepresentation : IStateRepresentation
     {
         public required Guid ApplicationId { get; set; }
 
-        public required string ConclusionResult { get; set; }
+        public required ApplicationStatus ConclusionResult { get; set; }
     }
 }

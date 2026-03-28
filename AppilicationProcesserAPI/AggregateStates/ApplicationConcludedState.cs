@@ -6,9 +6,9 @@ namespace AppilicationProcesserAPI.AggregateStates
     public class ApplicationConcludedState : IApplicationState
     {
         private readonly Guid _aggregateId;
-        private readonly string _conclusionResult;
+        private readonly ApplicationStatus _conclusionResult;
 
-        public ApplicationConcludedState(Guid aggregateId, string conclusionResult)
+        public ApplicationConcludedState(Guid aggregateId, ApplicationStatus conclusionResult)
         {
             _aggregateId = aggregateId;
             _conclusionResult = conclusionResult;

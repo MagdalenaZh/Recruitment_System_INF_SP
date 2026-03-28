@@ -1,5 +1,6 @@
 ﻿using AppilicationProcesserAPI.DomainEvents;
 using AppilicationProcesserAPI.MessageQueue;
+using AppilicationProcesserAPI.PersistanceServices;
 using AppilicationProcesserAPI.Visitors;
 using System.Collections.Concurrent;
 

@@ -1,4 +1,6 @@
 ﻿using AppilicationProcesserAPI.AggregateStates;
+using AppilicationProcesserAPI.Data;
+using AppilicationProcesserAPI.DomainEvents;
 using AppilicationProcesserAPI.Representations;
 
 namespace AppilicationProcesserAPI.Visitors
@@ -65,7 +67,7 @@ namespace AppilicationProcesserAPI.Visitors
             _stateRepresentation = new HibernatedStateRepresentation
             {
                 ApplicationId = PropertyBag.Get<Guid>("ApplicationId"),
-                ScheduledTime = PropertyBag.Get<DateTimeOffset>("ScheduledTime")
+                ScheduledTime = PropertyBag.Get<InterviewSlot>("ScheduledTime")
             };
         }
 
@@ -73,8 +75,7 @@ namespace AppilicationProcesserAPI.Visitors
         {
             _stateRepresentation = new ApprovedStateRepresentation
             {
-                ApplicationId = PropertyBag.Get<Guid>("ApplicationId"),
-                InterviewTimesProposals = PropertyBag.Get<List<DateTimeOffset>>("InterviewTimesProposals")
+                ApplicationId = PropertyBag.Get<Guid>("ApplicationId")
             };
         }
 
@@ -83,7 +84,7 @@ namespace AppilicationProcesserAPI.Visitors
             _stateRepresentation = new ConcludedStateRepresentation
             {
                 ApplicationId = PropertyBag.Get<Guid>("ApplicationId"),
-                ConclusionResult = PropertyBag.Get<string>("ConclusionResult")
+                ConclusionResult = PropertyBag.Get<ApplicationStatus>("ConclusionResult")
             };
         }
     }

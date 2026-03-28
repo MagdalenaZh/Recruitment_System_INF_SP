@@ -1,4 +1,5 @@
-﻿using AppilicationProcesserAPI.DomainEvents;
+﻿using AppilicationProcesserAPI.Data;
+using AppilicationProcesserAPI.DomainEvents;
 using AppilicationProcesserAPI.Visitors;
 
 namespace AppilicationProcesserAPI.AggregateStates;
@@ -7,9 +8,9 @@ public class HibernatedApplicationState : IApplicationState
 {
     private readonly Guid _aggregateId;
 
-    private readonly DateTimeOffset _scheduledTime;
+    private readonly InterviewSlot _scheduledTime;
 
-    public HibernatedApplicationState(Guid aggregateId, DateTimeOffset scheduledInterviewTime)
+    public HibernatedApplicationState(Guid aggregateId, InterviewSlot scheduledInterviewTime)
     {
         _aggregateId = aggregateId;
         _scheduledTime = scheduledInterviewTime;
@@ -24,6 +25,18 @@ public class HibernatedApplicationState : IApplicationState
 
     public void HandleEvent(ApplicationAggregate applicationAggregate, IDomainEvent domainEvent)
     {
-        //wait for the scheduled time to transition to the next state
+        //skip all events before the scheduled interview slot
+        if(domainEvent.Timestamp > _scheduledTime.EndTime)
+        {
+            switch (domainEvent)
+            {
+                case ApplicationRejectedEvent applicationRejectedEvent:
+                    applicationAggregate.TransitionToConcludedState(applicationRejectedEvent.AggregateId, ApplicationStatus.Rejected); 
+                    break;
+                case ApplicationAcceptedEvent applicationAcceptedEvent:
+                    applicationAggregate.TransitionToConcludedState(applicationAcceptedEvent.AggregateId, ApplicationStatus.Accepted);
+                    break;
+            }
+        }
     }
 }

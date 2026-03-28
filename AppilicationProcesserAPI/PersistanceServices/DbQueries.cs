@@ -1,0 +1,35 @@
+﻿namespace AppilicationProcesserAPI.PersistanceServices
+{
+    internal static class DbQueries
+    {
+        #region SELECT QUERIES
+        internal const string GetAllEventsForAggregate = "SELECT [EventType], [PayLoad] FROM [Events] WHERE [AggregateId] = @aggregateId ORDER BY [TimeStamp]";
+        internal const string GetAllApplicationsForUser = "SELECT [AggregateId] FROM [Applications] WHERE [UserId] = @userId";
+        internal const string GetAllApplicationsForClub = """
+            SELECT appl.[AggregateId] 
+            FROM [Applications] AS appl 
+            INNER JOIN [Departments] AS deprt ON appl.[DepartmentId] = deprt.[DepartmentId] 
+            INNER JOIN [Clubs] AS clb ON deprt.[ClubId] = clb.[ClubId]
+            WHERE clb.[ClubId] = @clubId
+            """;
+        internal const string GetAllOpenInterviewSlotsForClub = """
+            SELECT s.[SlotId], s.[StartTime], s.[EndTime]
+            FROM [InterviewSlots] AS s 
+            WHERE s.ClubId = @clubId
+              AND NOT EXISTS
+              (
+                  SELECT 1
+                  FROM BookedSlots AS b
+                  WHERE b.SlotId = s.SlotId
+              )
+            ORDER BY s.StartTime
+            """;
+        #endregion
+
+        #region INSERT QUERIES
+        internal const string InsertEvent = "INSERT INTO [Events] ([EventId], [AggregateId], [EventType], [PayLoad], [TimeStamp]) VALUES (@eventId, @aggregateId, @eventType, @payload, @timeStamp)";
+        internal const string InsertApplication = "INSERT INTO [Applications] ([AggregateId], [UserId], [DepartmentId], [Questionnaire] [Status]) VALUES (@aggregateId, @userId, @departmentId, @questionnaire, @status)";
+        internal const string InsertBookedInterviewSlot = "INSERT INTO [BookedSlots] ([SlotId], [AggregateId]) VALUES (@slotId, @aggregateId)";
+        #endregion
+    }
+}

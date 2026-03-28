@@ -1,4 +1,5 @@
 ﻿using AppilicationProcesserAPI.DomainEvents;
+using AppilicationProcesserAPI.PersistanceServices;
 using AppilicationProcesserAPI.Representations;
 using AppilicationProcesserAPI.Visitors;
 
@@ -6,7 +7,7 @@ namespace AppilicationProcesserAPI.AggregateStates
 {
     public interface IAggregateReconstructor
     {
-        Task<IEnumerable<IStateRepresentation>> GetLatestAggregateStatesForUser(Guid userId, CancellationToken cancellationToken);
+        Task<List<IStateRepresentation>> GetLatestAggregateStatesForUser(Guid userId, CancellationToken cancellationToken);
     }
 
     public class AggregateReconstructor : IAggregateReconstructor
@@ -20,10 +21,10 @@ namespace AppilicationProcesserAPI.AggregateStates
             _stateVisitorFactory = stateVisitorFactory;
         }
 
-        public async Task<IEnumerable<IStateRepresentation>> GetLatestAggregateStatesForUser(Guid userId, CancellationToken cancellationToken)
+        public async Task<List<IStateRepresentation>> GetLatestAggregateStatesForUser(Guid userId, CancellationToken cancellationToken)
         {
-            // select from applications by userId
-            var foundAggregates = new List<Guid>();
+            var foundAggregates = await _eventStore.GetApplicationsForUserAsync(userId, cancellationToken).ConfigureAwait(false);
+
             Task<IStateRepresentation>[] reconstructionTasks = [];
 
             for (int i = 0; i < foundAggregates.Count; i++)
@@ -33,7 +34,7 @@ namespace AppilicationProcesserAPI.AggregateStates
             }
 
             var representations = await Task.WhenAll(reconstructionTasks).ConfigureAwait(false);
-            return representations;
+            return [.. representations];
         }
 
         private Task<IStateRepresentation> PopulateAggregate(IEnumerable<IDomainEvent> events)

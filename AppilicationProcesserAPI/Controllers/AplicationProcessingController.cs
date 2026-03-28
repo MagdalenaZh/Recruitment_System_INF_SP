@@ -1,6 +1,7 @@
-﻿using AppilicationProcesserAPI.AggregateStates;
+﻿using AppilicationProcesserAPI.Data;
 using AppilicationProcesserAPI.DomainEvents;
 using AppilicationProcesserAPI.MessageQueue;
+using AppilicationProcesserAPI.PersistanceServices;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AppilicationProcesserAPI.Controllers
@@ -9,22 +10,29 @@ namespace AppilicationProcesserAPI.Controllers
     public class AplicationProcessingController : ControllerBase
     {
         private readonly IEventStore _eventStore;
+        private readonly ICalendarProvider _calendarProvider;
         private readonly IMessageBroker _messageBroker;
         private readonly ILogger<AplicationProcessingController> _logger;
 
-        public AplicationProcessingController(IEventStore eventStore, IMessageBroker messageBroker, ILogger<AplicationProcessingController> logger)
+        public AplicationProcessingController(IEventStore eventStore, ICalendarProvider calendarProvider, IMessageBroker messageBroker, ILogger<AplicationProcessingController> logger)
         {
             _eventStore = eventStore;
+            _calendarProvider = calendarProvider;
             _messageBroker = messageBroker;
             _logger = logger;
         }
 
         [HttpPost("api/submit-application")]
-        public async Task<IActionResult> ProcessApplication(CancellationToken cancellationToken)
+        public async Task<IActionResult> SubmitApplication([FromBody] ApplicationData applicationData, CancellationToken cancellationToken)
         {
-            var domainEvent = new ApplicationSubmittedEvent(3);
+            var applicationId = Guid.NewGuid();
 
-            await _eventStore.AppendEventAsync(domainEvent).ConfigureAwait(false);
+            await _eventStore.CreateApplication(applicationId, applicationData, cancellationToken).ConfigureAwait(false);
+
+            //get number of approvals from Clubs table
+            var domainEvent = new ApplicationSubmittedEvent(applicationId, 3);
+
+            await _eventStore.AppendEventAsync(domainEvent, cancellationToken).ConfigureAwait(false);
 
             var message = new MessageEnvelope(domainEvent);
 
@@ -41,20 +49,89 @@ namespace AppilicationProcesserAPI.Controllers
             }
         }
 
-        [HttpPost("api/approve-application/{aggregateId}")]
-        public async Task<IActionResult> ApproveApplication([FromRoute]Guid aggregateId, CancellationToken cancellationToken)
+        [HttpPost("api/approve-application/{applicationId}")]
+        public async Task<IActionResult> ApproveApplication([FromRoute] Guid applicationId, CancellationToken cancellationToken)
         {
-            var domainEvent = new ApplicationApprovedEvent(aggregateId, 2, Guid.NewGuid());
+            //get userId from claims
+            var domainEvent = new ApplicationApprovedEvent(applicationId, Guid.NewGuid());
 
-            await _eventStore.AppendEventAsync(domainEvent).ConfigureAwait(false);
+            await _eventStore.AppendEventAsync(domainEvent, cancellationToken).ConfigureAwait(false);
 
             var message = new MessageEnvelope(domainEvent);
 
             try
             {
                 await _messageBroker.PublishAsync(message, cancellationToken);
-                _logger.LogInformation("Application processing message published for ApplicationId: {ApplicationId}", message.EventData.AggregateId);
-                return Accepted(new { message = "Application processing started.", applicationId = message.EventData.AggregateId });
+                _logger.LogInformation("Application processing message published for ApplicationId: {ApplicationId}", applicationId);
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error publishing application processing message for ApplicationId: {ApplicationId}", message.EventData.AggregateId);
+                return StatusCode(500, "An error occurred while processing the application.");
+            }
+        }
+
+        [HttpPut("api/book-interview-slot/{applicationId}")]
+        public async Task<IActionResult> BookInterviewSlot([FromRoute] Guid applicationId, [FromBody] InterviewSlot interviewSlot, CancellationToken cancellationToken)
+        {
+            await _calendarProvider.BookInterviewSlotAsync(interviewSlot.SlotId, applicationId, cancellationToken).ConfigureAwait(false);
+
+            var domainEvent = new BookInterviewSlotEvent(applicationId, interviewSlot);
+
+            await _eventStore.AppendEventAsync(domainEvent, cancellationToken).ConfigureAwait(false);
+
+            var message = new MessageEnvelope(domainEvent);
+
+            try
+            {
+                await _messageBroker.PublishAsync(message, cancellationToken);
+                _logger.LogInformation("Interview Slot booked for ApplicationId: {ApplicationId}", applicationId);
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error publishing application processing message for ApplicationId: {ApplicationId}", message.EventData.AggregateId);
+                return StatusCode(500, "An error occurred while processing the application.");
+            }
+        }
+
+        [HttpPut("api/conclude-reject-application/{applicationId}")]
+        public async Task<IActionResult> ConcludeRejectedApplication([FromRoute] Guid applicationId, CancellationToken cancellationToken)
+        {
+           var domainEvent = new ApplicationRejectedEvent(applicationId);
+
+            await _eventStore.AppendEventAsync(domainEvent, cancellationToken).ConfigureAwait(false);
+
+            var message = new MessageEnvelope(domainEvent);
+
+            try
+            {
+                await _messageBroker.PublishAsync(message, cancellationToken);
+                _logger.LogInformation("Application Ended for ApplicationId: {ApplicationId}", applicationId);
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error publishing application processing message for ApplicationId: {ApplicationId}", message.EventData.AggregateId);
+                return StatusCode(500, "An error occurred while processing the application.");
+            }
+        }
+
+        [HttpPut("api/conclude-accept-application/{applicationId}")]
+        public async Task<IActionResult> ConcludeAcceptedApplication([FromRoute] Guid applicationId, CancellationToken cancellationToken)
+        {
+            var domainEvent = new ApplicationAcceptedEvent(applicationId);
+
+            await _eventStore.AppendEventAsync(domainEvent, cancellationToken).ConfigureAwait(false);
+
+            var message = new MessageEnvelope(domainEvent);
+
+            try
+            {
+                await _messageBroker.PublishAsync(message, cancellationToken);
+                _logger.LogInformation("Application Ended for ApplicationId: {ApplicationId}", applicationId);
+                return Ok();
             }
             catch (Exception ex)
             {
