@@ -1,6 +1,7 @@
 import { Navbar } from "../../../components/layout/Navbar/Navbar";
 import { DepartmentCardGrid } from "../components/DepartmentCardGrid";
 import { useBoardDepartments } from "../hooks/useBoardDepartments";
+import { BoardSectionNav } from "../components/BoardSectionNav";
 
 export function BoardHomePage() {
   const { data, loading, error, refetch } = useBoardDepartments();
@@ -28,6 +29,8 @@ export function BoardHomePage() {
               Refresh
             </button>
           </div>
+
+          <BoardSectionNav />
 
           <div className="mt-10">
             {loading ? (

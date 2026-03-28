@@ -16,6 +16,7 @@ import ApplicationFormPage from "./features/applications/pages/ApplicationFormPa
 import { BoardHomePage } from "./features/board/pages/BoardHomePage.tsx";
 import { BoardDepartmentApplicationsPage } from "./features/board/pages/BoardDepartmentApplicationsPage.tsx";
 import { BoardApplicationDetailPage } from "./features/board/pages/BoardApplicationDetailPage.tsx";
+import { BoardInterviewsHomePage } from "./features/board/pages/BoardInterviewsHomePage.tsx";
 
 import { ClubAdminHomePage } from "./features/clubAdmin/pages/ClubAdminHomePage.tsx";
 import { ClubAdminDepartmentApplicationsPage } from "./features/clubAdmin/pages/ClubAdminDepartmentApplicationsPage.tsx";
@@ -68,6 +69,14 @@ export default function App() {
         element={
           <ProtectedRoute>
             <BoardApplicationDetailPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/board/interviews"
+        element={
+          <ProtectedRoute>
+            <BoardInterviewsHomePage />
           </ProtectedRoute>
         }
       />

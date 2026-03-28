@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { PersonalInfo } from "../../../../types/application/application";
+import type { PersonalInfo } from "../../../types/application/application";
 
 export type Step = 0 | 1 | 2;
 

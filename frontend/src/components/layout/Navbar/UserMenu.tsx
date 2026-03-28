@@ -4,6 +4,45 @@ import { useAuth } from "../../../features/auth/components/AuthContext";
 import { useUserProfile } from "../../../features/account/hooks/useUserProfile";
 import { Button } from "../../ui/Button";
 
+type MenuItem = {
+  label: string;
+  to: string;
+  showDot?: boolean;
+};
+
+function getMenuItems(
+  role: string | null | undefined,
+  hasApplicationUpdates: boolean,
+): MenuItem[] {
+  if (role === "BoardMember") {
+    return [
+      { label: "My Profile", to: "/account" },
+      { label: "Club Applications", to: "/board" },
+      { label: "Interview Stage", to: "/board/interviews" },
+    ];
+  }
+
+  if (role === "ClubAdmin" || role === "Admin") {
+    return [
+      { label: "My Profile", to: "/account" },
+      { label: "Club Applications", to: "/board" },
+      { label: "Final Decisions", to: "/board/decisions" },
+      { label: "Interview Stage", to: "/board/interviews" },
+      { label: "Manage Club", to: "/club-admin" },
+    ];
+  }
+
+  // Default: regular User / Applicant
+  return [
+    { label: "My Profile", to: "/account" },
+    {
+      label: "My Applications",
+      to: "/account/applications",
+      showDot: hasApplicationUpdates,
+    },
+  ];
+}
+
 export function UserMenu() {
   const nav = useNavigate();
   const { isAuthenticated, role, logout } = useAuth();
@@ -18,6 +57,14 @@ export function UserMenu() {
 
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement | null>(null);
+
+  const hasApplicationUpdates =
+    isAuthenticated &&
+    role !== "BoardMember" &&
+    role !== "ClubAdmin" &&
+    role !== "Admin";
+
+  const menuItems = getMenuItems(role, hasApplicationUpdates);
 
   useEffect(() => {
     function onClickOutside(e: MouseEvent) {
@@ -43,7 +90,7 @@ export function UserMenu() {
       </button>
 
       {open && (
-        <div className="absolute right-0 mt-2 w-64 overflow-hidden rounded-2xl bg-zinc-900/95 text-white shadow-xl ring-1 ring-white/10 backdrop-blur">
+        <div className="absolute right-0 mt-2 w-72 overflow-hidden rounded-2xl bg-zinc-900/95 text-white shadow-xl ring-1 ring-white/10 backdrop-blur">
           <div className="px-4 py-3">
             {loading ? (
               <div className="text-sm text-white/70">Loading...</div>
@@ -60,49 +107,19 @@ export function UserMenu() {
           <div className="h-px bg-white/10" />
 
           <div className="p-2 space-y-1">
-            <Link
-              to="/account"
-              className="block rounded-xl px-3 py-2 text-sm hover:bg-white/10"
-              onClick={() => setOpen(false)}
-            >
-              My profile
-            </Link>
-
-            <Link
-              to="/account/applications"
-              className="block rounded-xl px-3 py-2 text-sm hover:bg-white/10"
-              onClick={() => setOpen(false)}
-            >
-              My applications
-            </Link>
-
-            <Link
-              to="/account/inbox"
-              className="block rounded-xl px-3 py-2 text-sm hover:bg-white/10"
-              onClick={() => setOpen(false)}
-            >
-              My inbox
-            </Link>
-
-            {(role === "Board" || role === "ClubAdmin" || role === "Admin") && (
+            {menuItems.map((item) => (
               <Link
-                to="/board"
-                className="block rounded-xl px-3 py-2 text-sm hover:bg-white/10"
+                key={item.label}
+                to={item.to}
+                className="flex items-center justify-between rounded-xl px-3 py-2 text-sm hover:bg-white/10"
                 onClick={() => setOpen(false)}
               >
-                Review applications
+                <span>{item.label}</span>
+                {item.showDot ? (
+                  <span className="inline-block h-2.5 w-2.5 rounded-full bg-red-500" />
+                ) : null}
               </Link>
-            )}
-
-            {role === "ClubAdmin" && (
-              <Link
-                to="/account/club"
-                className="block rounded-xl px-3 py-2 text-sm hover:bg-white/10"
-                onClick={() => setOpen(false)}
-              >
-                Club panel
-              </Link>
-            )}
+            ))}
 
             <div className="my-2 h-px bg-white/10" />
 

@@ -4,21 +4,21 @@ export const ACCOUNT_NAV_SECTIONS: AccountNavSection[] = [
   {
     title: "Account",
     items: [
-        {
+      {
         key: "your profile",
         label: "Your profile",
         description: "View and edit your personal information",
         to: "/account",
         icon: "user",
-        roles: ["Applicant", "Board", "ClubAdmin", "Admin", "User"],
-        },
+        roles: ["Applicant", "BoardMember", "ClubAdmin", "Admin", "User"],
+      },
       {
         key: "inbox",
         label: "Inbox",
         description: "Updates about your applications",
         to: "/account/inbox",
         icon: "inbox",
-        roles: ["Applicant", "Board", "ClubAdmin", "Admin", "User"],
+        roles: ["Applicant", "BoardMember", "ClubAdmin", "Admin", "User"],
       },
       {
         key: "applications",
@@ -26,12 +26,10 @@ export const ACCOUNT_NAV_SECTIONS: AccountNavSection[] = [
         description: "Statuses, interviews, decisions",
         to: "/account/applications",
         icon: "file",
-        roles: ["Applicant", "User"], 
+        roles: ["Applicant", "User"],
       },
     ],
   },
-
-  // future: board/review tasks
   {
     title: "Board tools",
     items: [
@@ -41,7 +39,7 @@ export const ACCOUNT_NAV_SECTIONS: AccountNavSection[] = [
         description: "Assigned applications to review",
         to: "/account/tasks",
         icon: "shield",
-        roles: ["Board", "ClubAdmin", "Admin"],
+        roles: ["BoardMember", "ClubAdmin", "Admin"],
       },
       {
         key: "clubPanel",

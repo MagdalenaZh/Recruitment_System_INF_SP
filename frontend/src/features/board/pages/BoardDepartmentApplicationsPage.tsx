@@ -2,6 +2,7 @@ import { Link, useParams } from "react-router-dom";
 import { ApplicationStackList } from "../components/ApplicationStackList";
 import { useDepartmentApplications } from "../hooks/useDepartmentApplications";
 import type { ApplicationStatus } from "../types/boardTypes";
+import { BoardSectionNav } from "../components/BoardSectionNav";
 
 export function BoardDepartmentApplicationsPage() {
   const { departmentId } = useParams<{ departmentId: string }>();
@@ -55,6 +56,8 @@ export function BoardDepartmentApplicationsPage() {
           </button>
         </div>
 
+        <BoardSectionNav />
+
         <div className="mt-8 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md p-4 shadow-[0_10px_30px_-12px_rgba(0,0,0,0.65)]">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="relative w-full sm:w-[26rem]">
@@ -94,6 +97,7 @@ export function BoardDepartmentApplicationsPage() {
             </div>
           </div>
         </div>
+
         <div className="mt-6">
           {loading ? (
             <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md p-6 text-slate-200 shadow-[0_10px_30px_-12px_rgba(0,0,0,0.65)]">
