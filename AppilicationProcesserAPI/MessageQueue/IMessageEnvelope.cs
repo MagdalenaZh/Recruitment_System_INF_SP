@@ -1,19 +1,31 @@
 ﻿using AppilicationProcesserAPI.DomainEvents;
+using AppilicationProcesserAPI.Representations;
 
 namespace AppilicationProcesserAPI.MessageQueue
 {
-    public interface IMessageEnvelope
+    public interface IMessageEnvelope<T> where T : class
     {
-        public IDomainEvent EventData { get; }
+        public T MessageData { get; }
     }
 
-    public class MessageEnvelope : IMessageEnvelope
+    public abstract class MessageEnvelope<T> : IMessageEnvelope<T> where T : class
     {
-        public  IDomainEvent EventData { get; }
-
-        public MessageEnvelope(IDomainEvent domainEvent)
+        public T MessageData { get; }
+        protected MessageEnvelope(T messageData)
         {
-           EventData = domainEvent;
+            MessageData = messageData;
         }
+    }   
+
+    public class EventEnvelope : MessageEnvelope<IDomainEvent>
+    {
+        public EventEnvelope(IDomainEvent domainEvent) : base(domainEvent)
+        {}
+    }
+
+    public class StatusUpdateEnvelope : MessageEnvelope<IStateRepresentation>
+    {
+        public StatusUpdateEnvelope(IStateRepresentation statusUpdate) : base(statusUpdate)
+        { }
     }
 }

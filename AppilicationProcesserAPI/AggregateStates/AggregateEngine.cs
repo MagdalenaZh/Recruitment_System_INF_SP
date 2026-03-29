@@ -13,20 +13,23 @@ namespace AppilicationProcesserAPI.AggregateStates
 
     public class AggregateEngine : IAggregateEngine
     {
+        
         private readonly IRepresentationEmitter _messageEmitter;
         private readonly IEventStore _eventStore;
         private readonly IStateVisitorFactory _stateVisitorFactory;
         private readonly ConcurrentDictionary<Guid, IApplicationAggregate> _aggregates;
+        private readonly IApplicationStatusManager _applicationStatusManager;
         private readonly ILogger<AggregateEngine> _logger;
 
         public AggregateEngine(IRepresentationEmitter messageEmitter, IEventStore eventStore,
-            IStateVisitorFactory stateVisitorFactory, ILogger<AggregateEngine> logger)
+            IStateVisitorFactory stateVisitorFactory, IApplicationStatusManager applicationStatusManager, ILogger<AggregateEngine> logger)
         {
             _aggregates = new ConcurrentDictionary<Guid, IApplicationAggregate>();
             _eventStore = eventStore;
             _messageEmitter = messageEmitter;
             _logger = logger;
             _stateVisitorFactory = stateVisitorFactory;
+            _applicationStatusManager = applicationStatusManager;
         }
 
         public async Task HandleEvent(IDomainEvent domainEvent, CancellationToken cancellationToken = default)
@@ -42,9 +45,7 @@ namespace AppilicationProcesserAPI.AggregateStates
             }
             else
             {
-#warning Revert after proper db connection established
-                //var events = await _eventStore.GetEventsAsync(aggregateId, cancellationToken).ConfigureAwait(false);
-                var events = new List<IDomainEvent>();
+                var events = await _eventStore.GetEventsAsync(aggregateId, cancellationToken).ConfigureAwait(false);
                 var aggregate = new ApplicationAggregate();
                 foreach (var evt in events)
                 {
@@ -57,7 +58,11 @@ namespace AppilicationProcesserAPI.AggregateStates
                 aggregate.AllowVisitor(stateVisitor);
             }
 
-            await _messageEmitter.EmmitApplicationStateChanges(stateVisitor.GetStateRepresentation(), DateTimeOffset.UtcNow, cancellationToken).ConfigureAwait(false);
+            var stateRepresentation = stateVisitor.GetStateRepresentation();
+
+            await _messageEmitter.EmmitApplicationStateChanges(stateRepresentation, DateTimeOffset.UtcNow, cancellationToken).ConfigureAwait(false);
+
+            await _applicationStatusManager.UpdateApplicationStatus(stateRepresentation, cancellationToken).ConfigureAwait(false);
         }
     }
 }

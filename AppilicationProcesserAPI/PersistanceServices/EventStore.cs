@@ -146,7 +146,6 @@ namespace AppilicationProcesserAPI.PersistanceServices
 
         private static Type GetEventType(DomainEventEnum eventEnum)
         {
-#warning complete with missing events 
             switch (eventEnum)
             {
                 case DomainEventEnum.ApplicationCreated:
@@ -154,11 +153,15 @@ namespace AppilicationProcesserAPI.PersistanceServices
                 case DomainEventEnum.ApplicationApprovalIncremented:
                     return typeof(ApplicationApprovedEvent);
                 case DomainEventEnum.ApplicationApprovalDecremented:
-                    return typeof(ApplicationRejectedEvent);
+                    return typeof(ApplicationDisapprovedEvent);
                 case DomainEventEnum.BookInterviewSlot:
                     return typeof(BookInterviewSlotEvent);
                 case DomainEventEnum.ApplicationInterviewRejected:
                     return typeof(InterviewProposalRejectedEvent);
+                case DomainEventEnum.ApplicationAccepted:
+                    return typeof(ApplicationAcceptedEvent);
+                case DomainEventEnum.ApplicationRejected:
+                    return typeof(ApplicationRejectedEvent);
                 default:
                     throw new ArgumentOutOfRangeException(nameof(eventEnum));
             }

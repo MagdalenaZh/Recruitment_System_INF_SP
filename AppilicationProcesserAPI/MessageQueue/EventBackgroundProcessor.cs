@@ -2,13 +2,13 @@
 
 namespace AppilicationProcesserAPI.MessageQueue
 {
-    public class MessageBackgroundProcessor : BackgroundService
+    public class EventBackgroundProcessor : BackgroundService
     {
-        private readonly IMessageBroker _messageBroker;
+        private readonly IEventBroker _messageBroker;
         private readonly IAggregateEngine _aggregateEngine;
-        private readonly ILogger<MessageBackgroundProcessor> _logger;
+        private readonly ILogger<EventBackgroundProcessor> _logger;
 
-        public MessageBackgroundProcessor(IMessageBroker messageBroker, IAggregateEngine aggregateEngine, ILogger<MessageBackgroundProcessor> logger)
+        public EventBackgroundProcessor(IEventBroker messageBroker, IAggregateEngine aggregateEngine, ILogger<EventBackgroundProcessor> logger)
         {
             _messageBroker = messageBroker;
             _aggregateEngine = aggregateEngine;
@@ -24,7 +24,7 @@ namespace AppilicationProcesserAPI.MessageQueue
                     var message = await _messageBroker.ConsumeAsync(stoppingToken);
                     if (message != null)
                     {
-                       await _aggregateEngine.HandleEvent(message.EventData, stoppingToken).ConfigureAwait(false);
+                       await _aggregateEngine.HandleEvent(message.MessageData, stoppingToken).ConfigureAwait(false);
                     }
                 }
                 catch (OperationCanceledException)

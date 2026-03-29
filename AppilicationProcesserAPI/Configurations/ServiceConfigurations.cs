@@ -10,18 +10,18 @@ namespace AppilicationProcesserAPI.Configurations
     {
         public static void ConfigureMessageBus(this IServiceCollection services)
         {
-            services.AddSingleton<IMessageBroker, MessageBroker>();
+            services.AddSingleton<IEventBroker, EventBroker>();
             services.AddSingleton<IRepresentationEmitter, RepresentationEmitter>();
+            services.AddSingleton<IApplicationStatusManager, ApplicationStatusManager>();
 
-            services.AddHostedService<MessageBackgroundProcessor>();
+            services.AddHostedService<EventBackgroundProcessor>();
+            services.AddHostedService<EmailManagerBackgroundProcessor>();
         }
 
         public static void ConfigureAggregateManagment(this IServiceCollection services)
         {
             services.AddSingleton<IStateVisitorFactory, StateVisitorFactory>();
-            services.AddSingleton<IEventStore, EventStore>();
             services.AddSingleton<IAggregateEngine, AggregateEngine>();
-
             services.AddScoped<IAggregateReconstructor, AggregateReconstructor>();
         }
 
@@ -29,11 +29,17 @@ namespace AppilicationProcesserAPI.Configurations
         {
             services.AddSingleton<ICalendarProvider, CalendarProviderCacheDecorator>(sp =>
             {
-               return new CalendarProviderCacheDecorator(
-                    new CalendarProvider(sp.GetRequiredService<ServiceConfiguration>(), sp.GetRequiredService<ILogger<CalendarProvider>>()),
-                    sp.GetRequiredService<IMemoryCache>()
-                    );
+                return new CalendarProviderCacheDecorator(
+                     new CalendarProvider(sp.GetRequiredService<ServiceConfiguration>(), sp.GetRequiredService<ILogger<CalendarProvider>>()),
+                     sp.GetRequiredService<IMemoryCache>()
+                     );
             });
+        }
+
+        public static void ConfigurePersistance(this IServiceCollection services)
+        {
+            services.AddSingleton<IEventStore, EventStore>();
+            services.AddSingleton<ISystemManagementProvider, SystemManagementProvider>();
         }
     }
 }

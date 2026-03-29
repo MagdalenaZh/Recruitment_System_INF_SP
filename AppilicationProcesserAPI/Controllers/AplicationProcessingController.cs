@@ -11,10 +11,10 @@ namespace AppilicationProcesserAPI.Controllers
     {
         private readonly IEventStore _eventStore;
         private readonly ICalendarProvider _calendarProvider;
-        private readonly IMessageBroker _messageBroker;
+        private readonly IEventBroker _messageBroker;
         private readonly ILogger<AplicationProcessingController> _logger;
 
-        public AplicationProcessingController(IEventStore eventStore, ICalendarProvider calendarProvider, IMessageBroker messageBroker, ILogger<AplicationProcessingController> logger)
+        public AplicationProcessingController(IEventStore eventStore, ICalendarProvider calendarProvider, IEventBroker messageBroker, ILogger<AplicationProcessingController> logger)
         {
             _eventStore = eventStore;
             _calendarProvider = calendarProvider;
@@ -29,22 +29,22 @@ namespace AppilicationProcesserAPI.Controllers
 
             await _eventStore.CreateApplication(applicationId, applicationData, cancellationToken).ConfigureAwait(false);
 
-            //get number of approvals from Clubs table
+#warning Get required number of approvals from Club table
             var domainEvent = new ApplicationSubmittedEvent(applicationId, 3);
 
             await _eventStore.AppendEventAsync(domainEvent, cancellationToken).ConfigureAwait(false);
 
-            var message = new MessageEnvelope(domainEvent);
+            var message = new EventEnvelope(domainEvent);
 
             try
             {
                 await _messageBroker.PublishAsync(message, cancellationToken);
-                _logger.LogInformation("Application processing message published for ApplicationId: {ApplicationId}", message.EventData.AggregateId);
-                return Accepted(new { message = "Application processing started.", applicationId = message.EventData.AggregateId });
+                _logger.LogInformation("Application processing message published for ApplicationId: {ApplicationId}", message.MessageData.AggregateId);
+                return Accepted(new { message = "Application processing started.", applicationId = message.MessageData.AggregateId });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error publishing application processing message for ApplicationId: {ApplicationId}", message.EventData.AggregateId);
+                _logger.LogError(ex, "Error publishing application processing message for ApplicationId: {ApplicationId}", message.MessageData.AggregateId);
                 return StatusCode(500, "An error occurred while processing the application.");
             }
         }
@@ -52,12 +52,12 @@ namespace AppilicationProcesserAPI.Controllers
         [HttpPost("api/approve-application/{applicationId}")]
         public async Task<IActionResult> ApproveApplication([FromRoute] Guid applicationId, CancellationToken cancellationToken)
         {
-            //get userId from claims
+#warning In a real implementation, the UserId would come from the authenticated user context, not generated randomly.
             var domainEvent = new ApplicationApprovedEvent(applicationId, Guid.NewGuid());
 
             await _eventStore.AppendEventAsync(domainEvent, cancellationToken).ConfigureAwait(false);
 
-            var message = new MessageEnvelope(domainEvent);
+            var message = new EventEnvelope(domainEvent);
 
             try
             {
@@ -67,7 +67,52 @@ namespace AppilicationProcesserAPI.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error publishing application processing message for ApplicationId: {ApplicationId}", message.EventData.AggregateId);
+                _logger.LogError(ex, "Error publishing application processing message for ApplicationId: {ApplicationId}", message.MessageData.AggregateId);
+                return StatusCode(500, "An error occurred while processing the application.");
+            }
+        }
+
+        [HttpPost("api/disapprove-application/{applicationId}")]
+        public async Task<IActionResult> DisapproveApplication([FromRoute] Guid applicationId, CancellationToken cancellationToken)
+        {
+#warning In a real implementation, the UserId would come from the authenticated user context, not generated randomly.
+            var domainEvent = new ApplicationDisapprovedEvent(applicationId, Guid.NewGuid());
+
+            await _eventStore.AppendEventAsync(domainEvent, cancellationToken).ConfigureAwait(false);
+
+            var message = new EventEnvelope(domainEvent);
+
+            try
+            {
+                await _messageBroker.PublishAsync(message, cancellationToken);
+                _logger.LogInformation("Application processing message published for ApplicationId: {ApplicationId}", applicationId);
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error publishing application processing message for ApplicationId: {ApplicationId}", message.MessageData.AggregateId);
+                return StatusCode(500, "An error occurred while processing the application.");
+            }
+        }
+
+        [HttpPost("api/reject-interview-proposal/{applicationId}")]
+        public async Task<IActionResult> RejectInterviewProposal([FromRoute] Guid applicationId, CancellationToken cancellationToken)
+        {
+            var domainEvent = new InterviewProposalRejectedEvent(applicationId);
+
+            await _eventStore.AppendEventAsync(domainEvent, cancellationToken).ConfigureAwait(false);
+
+            var message = new EventEnvelope(domainEvent);
+
+            try
+            {
+                await _messageBroker.PublishAsync(message, cancellationToken);
+                _logger.LogInformation("Application processing message published for ApplicationId: {ApplicationId}", applicationId);
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error publishing application processing message for ApplicationId: {ApplicationId}", message.MessageData.AggregateId);
                 return StatusCode(500, "An error occurred while processing the application.");
             }
         }
@@ -81,7 +126,7 @@ namespace AppilicationProcesserAPI.Controllers
 
             await _eventStore.AppendEventAsync(domainEvent, cancellationToken).ConfigureAwait(false);
 
-            var message = new MessageEnvelope(domainEvent);
+            var message = new EventEnvelope(domainEvent);
 
             try
             {
@@ -91,7 +136,7 @@ namespace AppilicationProcesserAPI.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error publishing application processing message for ApplicationId: {ApplicationId}", message.EventData.AggregateId);
+                _logger.LogError(ex, "Error publishing application processing message for ApplicationId: {ApplicationId}", message.MessageData.AggregateId);
                 return StatusCode(500, "An error occurred while processing the application.");
             }
         }
@@ -103,7 +148,7 @@ namespace AppilicationProcesserAPI.Controllers
 
             await _eventStore.AppendEventAsync(domainEvent, cancellationToken).ConfigureAwait(false);
 
-            var message = new MessageEnvelope(domainEvent);
+            var message = new EventEnvelope(domainEvent);
 
             try
             {
@@ -113,7 +158,7 @@ namespace AppilicationProcesserAPI.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error publishing application processing message for ApplicationId: {ApplicationId}", message.EventData.AggregateId);
+                _logger.LogError(ex, "Error publishing application processing message for ApplicationId: {ApplicationId}", message.MessageData.AggregateId);
                 return StatusCode(500, "An error occurred while processing the application.");
             }
         }
@@ -125,7 +170,7 @@ namespace AppilicationProcesserAPI.Controllers
 
             await _eventStore.AppendEventAsync(domainEvent, cancellationToken).ConfigureAwait(false);
 
-            var message = new MessageEnvelope(domainEvent);
+            var message = new EventEnvelope(domainEvent);
 
             try
             {
@@ -135,7 +180,7 @@ namespace AppilicationProcesserAPI.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error publishing application processing message for ApplicationId: {ApplicationId}", message.EventData.AggregateId);
+                _logger.LogError(ex, "Error publishing application processing message for ApplicationId: {ApplicationId}", message.MessageData.AggregateId);
                 return StatusCode(500, "An error occurred while processing the application.");
             }
         }

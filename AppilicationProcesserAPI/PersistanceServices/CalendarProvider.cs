@@ -19,6 +19,7 @@ namespace AppilicationProcesserAPI.PersistanceServices
         public CalendarProvider(ServiceConfiguration serviceConfiguration, ILogger<CalendarProvider> logger) 
         {
             _connectionString = serviceConfiguration.SQLConnectionString;
+            _logger = logger;
         }
 
         public async Task BookInterviewSlotAsync(Guid slotId, Guid applicationId, CancellationToken cancellationToken)
@@ -36,7 +37,7 @@ namespace AppilicationProcesserAPI.PersistanceServices
             }
             catch (SqlException ex)
             {
-                _logger.LogError(ex, "Filed Insert in Events table");
+                _logger.LogError(ex, "Failed Insert in Events table");
                 throw new Exception("Event not registered");
             }
         }
