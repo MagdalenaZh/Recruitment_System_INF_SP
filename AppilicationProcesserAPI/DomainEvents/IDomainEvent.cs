@@ -1,5 +1,5 @@
 ﻿using AppilicationProcesserAPI.AggregateStates;
-using AppilicationProcesserAPI.Data;
+using AppilicationProcesserAPI.Models;
 
 namespace AppilicationProcesserAPI.DomainEvents;
 

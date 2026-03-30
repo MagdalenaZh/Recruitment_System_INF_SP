@@ -40,6 +40,7 @@ namespace AppilicationProcesserAPI.Configurations
         {
             services.AddSingleton<IEventStore, EventStore>();
             services.AddSingleton<ISystemManagementProvider, SystemManagementProvider>();
+            services.AddSingleton<IRecruitmentDataProvider, RecruitmentDataProvider>();
         }
     }
 }

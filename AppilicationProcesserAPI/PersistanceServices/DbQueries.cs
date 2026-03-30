@@ -4,13 +4,17 @@
     {
         #region SELECT QUERIES
         internal const string GetAllEventsForAggregate = "SELECT [EventType], [PayLoad] FROM [Events] WHERE [AggregateId] = @aggregateId ORDER BY [TimeStamp]";
-        internal const string GetAllApplicationsForUser = "SELECT [AggregateId] FROM [Applications] WHERE [UserId] = @userId";
+        internal const string GetAllApplicationsForUser = "SELECT [AggregateId], [DepartmentId], [Questionnaire], [Status] FROM [Applications] WHERE [UserId] = @userId";
         internal const string GetAllApplicationsForClub = """
-            SELECT appl.[AggregateId] 
+            SELECT appl.[AggregateId], appl.[UserId], appl.[DepartmentId], appl.[Questionnaire], appl.[Status] 
             FROM [Applications] AS appl 
             INNER JOIN [Departments] AS deprt ON appl.[DepartmentId] = deprt.[DepartmentId] 
-            INNER JOIN [Clubs] AS clb ON deprt.[ClubId] = clb.[ClubId]
+            INNER JOIN [Clubs] AS clb ON deprt.[ClubId] = clb.[ClubId] 
             WHERE clb.[ClubId] = @clubId
+            """;
+        internal const string GetAllApplicationsForDepartment = """
+            SELECT [AggregateId], [UserId], [Questionnaire], [Status] 
+            FROM [Applications] WHERE [DepartmentId] = @departmentId
             """;
         internal const string GetAllOpenInterviewSlotsForClub = """
             SELECT s.[SlotId], s.[StartTime], s.[EndTime]
@@ -24,6 +28,10 @@
               )
             ORDER BY s.StartTime
             """;
+
+        internal const string GetAllClubsDetails = "SELECT [ClubId], [Information], [AdmissionQuestions] FROM [Clubs]";
+
+        internal const string GetDepartmentsForClub = "SELECT [DepartmentId], [Information], [OpenPositions] FROM [Departments] WHERE [ClubId] = @clubId";
         #endregion
 
         #region INSERT QUERIES

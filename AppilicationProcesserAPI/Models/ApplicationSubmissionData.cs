@@ -1,15 +1,15 @@
 ﻿using AppilicationProcesserAPI.DomainEvents;
 
-namespace AppilicationProcesserAPI.Data
+namespace AppilicationProcesserAPI.Models
 {
-    public class ApplicationData
+    public class ApplicationSubmissionData
     {
         public Guid UserId { get; }
         public Guid DepartmentId { get; }
         public Dictionary<string, string> Questionnaire { get; }
         public ApplicationStatus Status { get; }
 
-        public ApplicationData(Guid userId, Guid departmentId, Dictionary<string, string> questionnaire)
+        public ApplicationSubmissionData(Guid userId, Guid departmentId, Dictionary<string, string> questionnaire)
         {
             UserId = userId;
             DepartmentId = departmentId;

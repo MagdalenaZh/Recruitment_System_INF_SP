@@ -1,6 +1,5 @@
-﻿using AppilicationProcesserAPI.AggregateStates;
-using AppilicationProcesserAPI.Data;
-using AppilicationProcesserAPI.DomainEvents;
+﻿using AppilicationProcesserAPI.DomainEvents;
+using AppilicationProcesserAPI.Models;
 
 namespace AppilicationProcesserAPI.Representations
 {

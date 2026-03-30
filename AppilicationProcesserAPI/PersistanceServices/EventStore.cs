@@ -1,5 +1,5 @@
-﻿using AppilicationProcesserAPI.Data;
-using AppilicationProcesserAPI.DomainEvents;
+﻿using AppilicationProcesserAPI.DomainEvents;
+using AppilicationProcesserAPI.Models;
 using Microsoft.Data.SqlClient;
 using System.Text.Json;
 
@@ -8,10 +8,8 @@ namespace AppilicationProcesserAPI.PersistanceServices
     public interface IEventStore
     {
         Task AppendEventAsync(IDomainEvent domainEvent, CancellationToken cancellationToken);
-        Task CreateApplication(Guid applicationId, ApplicationData applicationData, CancellationToken cancellationToken);
+        Task CreateApplication(Guid applicationId, ApplicationSubmissionData applicationData, CancellationToken cancellationToken);
         Task<List<IDomainEvent>> GetEventsAsync(Guid aggregateId, CancellationToken cancellationToken);
-        Task<List<Guid>> GetApplicationsForUserAsync(Guid userId, CancellationToken cancellationToken);
-        Task<List<Guid>> GetAllApplicationsForClub(Guid clubId, CancellationToken cancellationToken);
     }
 
     public class EventStore : IEventStore
@@ -81,26 +79,7 @@ namespace AppilicationProcesserAPI.PersistanceServices
             return loadedEvents;
         }
 
-        public async Task<List<Guid>> GetApplicationsForUserAsync(Guid userId, CancellationToken cancellationToken)
-        {
-            var applicationIds = new List<Guid>();
-            using var sqlConnection = new SqlConnection(_connectionString);
-            await sqlConnection.OpenAsync(cancellationToken).ConfigureAwait(false);
-
-            using var command = new SqlCommand(DbQueries.GetAllApplicationsForUser, sqlConnection);
-            command.Parameters.AddWithValue("@userId", userId);
-            using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
-
-            while (reader.Read())
-            {
-                var applicationId = reader.GetGuid(0);
-                applicationIds.Add(applicationId);
-            }
-
-            return applicationIds;
-        }
-
-        public async Task CreateApplication(Guid applicationId, ApplicationData applicationData, CancellationToken cancellationToken)
+        public async Task CreateApplication(Guid applicationId, ApplicationSubmissionData applicationData, CancellationToken cancellationToken)
         {
             var serializedQuestionaire = JsonSerializer.Serialize(applicationData.Questionnaire);
 
@@ -123,25 +102,6 @@ namespace AppilicationProcesserAPI.PersistanceServices
                 _logger.LogError(ex, "Filed Insert in Applications table");
                 throw new Exception("Application not registered");
             }
-        }
-
-        public async Task<List<Guid>> GetAllApplicationsForClub(Guid clubId, CancellationToken cancellationToken)
-        {
-            var applicationIds = new List<Guid>();
-            using var sqlConnection = new SqlConnection(_connectionString);
-            await sqlConnection.OpenAsync(cancellationToken).ConfigureAwait(false);
-
-            using var command = new SqlCommand(DbQueries.GetAllApplicationsForUser, sqlConnection);
-            command.Parameters.AddWithValue("@clubId", clubId);
-            using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
-
-            while (reader.Read())
-            {
-                var applicationId = reader.GetGuid(0);
-                applicationIds.Add(applicationId);
-            }
-
-            return applicationIds;
         }
 
         private static Type GetEventType(DomainEventEnum eventEnum)

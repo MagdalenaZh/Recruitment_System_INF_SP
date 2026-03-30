@@ -15,6 +15,7 @@ public enum ApplicationStatus
 {
     ApplicationSubmited = 1,
     InProgress = 2,
-    Rejected = 3,
-    Accepted = 4,
+    InterviewScheduled = 3,
+    Rejected = 4,
+    Accepted = 5,
 }

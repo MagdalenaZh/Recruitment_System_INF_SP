@@ -1,5 +1,4 @@
-﻿using AppilicationProcesserAPI.DomainEvents;
-using Microsoft.Data.SqlClient;
+﻿using Microsoft.Data.SqlClient;
 using System.Text.Json;
 
 namespace AppilicationProcesserAPI.PersistanceServices

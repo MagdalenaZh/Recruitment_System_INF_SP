@@ -1,6 +1,6 @@
-﻿using AppilicationProcesserAPI.Data;
-using AppilicationProcesserAPI.DomainEvents;
+﻿using AppilicationProcesserAPI.DomainEvents;
 using AppilicationProcesserAPI.MessageQueue;
+using AppilicationProcesserAPI.Models;
 using AppilicationProcesserAPI.PersistanceServices;
 using Microsoft.AspNetCore.Mvc;
 
@@ -23,7 +23,7 @@ namespace AppilicationProcesserAPI.Controllers
         }
 
         [HttpPost("api/submit-application")]
-        public async Task<IActionResult> SubmitApplication([FromBody] ApplicationData applicationData, CancellationToken cancellationToken)
+        public async Task<IActionResult> SubmitApplication([FromBody] ApplicationSubmissionData applicationData, CancellationToken cancellationToken)
         {
             var applicationId = Guid.NewGuid();
 

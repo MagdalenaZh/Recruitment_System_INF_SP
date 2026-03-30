@@ -7,7 +7,7 @@ namespace AppilicationProcesserAPI.AggregateStates
 {
     public interface IAggregateReconstructor
     {
-        Task<List<IStateRepresentation>> GetLatestAggregateStatesForUser(Guid userId, CancellationToken cancellationToken);
+        Task<List<IStateRepresentation>> GetLatestAggregateStates(List<Guid> aggregateIds, CancellationToken cancellationToken);
     }
 
     public class AggregateReconstructor : IAggregateReconstructor
@@ -21,15 +21,13 @@ namespace AppilicationProcesserAPI.AggregateStates
             _stateVisitorFactory = stateVisitorFactory;
         }
 
-        public async Task<List<IStateRepresentation>> GetLatestAggregateStatesForUser(Guid userId, CancellationToken cancellationToken)
+        public async Task<List<IStateRepresentation>> GetLatestAggregateStates(List<Guid> aggregateIds, CancellationToken cancellationToken)
         {
-            var foundAggregates = await _eventStore.GetApplicationsForUserAsync(userId, cancellationToken).ConfigureAwait(false);
-
             Task<IStateRepresentation>[] reconstructionTasks = [];
 
-            for (int i = 0; i < foundAggregates.Count; i++)
+            for (int i = 0; i < aggregateIds.Count; i++)
             {
-                var events = await _eventStore.GetEventsAsync(foundAggregates[i], cancellationToken);
+                var events = await _eventStore.GetEventsAsync(aggregateIds[i], cancellationToken);
                 reconstructionTasks[i] = PopulateAggregate(events);
             }
 
