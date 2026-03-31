@@ -17,7 +17,9 @@ namespace AppilicationProcesserAPI.Visitors
 
         public void Visit(ApplicationApprovedState approvedState);
 
-        public void Visit(ApplicationConcludedState concludedState);
+        public void Visit(ApplicationConcludedStateAccepted concludedState);
+
+        public void Visit(ApplicationConcludedStateRejected concludedState);
 
         public IStateRepresentation GetStateRepresentation();
     }
@@ -79,7 +81,16 @@ namespace AppilicationProcesserAPI.Visitors
             };
         }
 
-        public void Visit(ApplicationConcludedState concludedState)
+        public void Visit(ApplicationConcludedStateAccepted concludedState)
+        {
+            _stateRepresentation = new ConcludedStateRepresentation
+            {
+                ApplicationId = PropertyBag.Get<Guid>("ApplicationId"),
+                ConclusionResult = PropertyBag.Get<ApplicationStatus>("ConclusionResult")
+            };
+        }
+
+        public void Visit(ApplicationConcludedStateRejected concludedState)
         {
             _stateRepresentation = new ConcludedStateRepresentation
             {

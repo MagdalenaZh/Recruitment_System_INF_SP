@@ -1,4 +1,5 @@
-﻿using Microsoft.Data.SqlClient;
+﻿using AppilicationProcesserAPI.MessageQueue;
+using Microsoft.Data.SqlClient;
 using System.Text.Json;
 
 namespace AppilicationProcesserAPI.PersistanceServices
@@ -9,6 +10,7 @@ namespace AppilicationProcesserAPI.PersistanceServices
         Task CreateDepartmentAsync(Guid clubId, string departmentName, int numberOfOpenPositions, string description, CancellationToken cancellationToken);
         Task CreateInterviewSlot(Guid clubId, DateTimeOffset startTime, DateTimeOffset endTime, CancellationToken cancellationToken);
 
+        Task UpdateApplicationStatusAsync(StatusUpdateEnvelope statusUpdateEnvelope, CancellationToken cancellationToken);
         Task UpdateApplicationQuestions(Guid clubId, List<string> applicationQuestions, CancellationToken cancellationToken);
         Task UpdateOpenPositionsForDepartmentAsync(Guid departmentId, int numberOfOpenPositions, CancellationToken cancellationToken);
         Task UpdateInterviewSlotAsync(Guid slotId, DateTimeOffset newStartTime, DateTimeOffset newEndTime, CancellationToken cancellationToken);
@@ -124,6 +126,30 @@ namespace AppilicationProcesserAPI.PersistanceServices
             catch (SqlException ex)
             {
                 _logger.LogError(ex, "Failed Update in Clubs table");
+                throw new Exception("Event not registered");
+            }
+        }
+
+        public async Task UpdateApplicationStatusAsync(StatusUpdateEnvelope statusUpdateEnvelope, CancellationToken cancellationToken)
+        {
+            using var sqlConnection = new SqlConnection(_connectionString);
+            await sqlConnection.OpenAsync(cancellationToken).ConfigureAwait(false);
+
+            using var command = new SqlCommand(DbQueries.UpdateApplicationStatus, sqlConnection);
+            command.Parameters.AddWithValue("@status", statusUpdateEnvelope.MessageData.ApplicationStatus);
+            command.Parameters.AddWithValue("@aggregateId", statusUpdateEnvelope.MessageData.ApplicationId);
+
+            try
+            {
+                var rowsAffected = await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+                if (rowsAffected == 0)
+                {
+                    throw new Exception("Update failed");
+                }
+            }
+            catch (SqlException ex)
+            {
+                _logger.LogError(ex, "Failed Update in InterviewSlots table");
                 throw new Exception("Event not registered");
             }
         }

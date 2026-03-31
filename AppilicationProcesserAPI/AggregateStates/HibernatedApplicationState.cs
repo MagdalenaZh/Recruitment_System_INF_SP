@@ -31,10 +31,10 @@ public class HibernatedApplicationState : IApplicationState
             switch (domainEvent)
             {
                 case ApplicationRejectedEvent applicationRejectedEvent:
-                    applicationAggregate.TransitionToConcludedState(applicationRejectedEvent.AggregateId, ApplicationStatus.Rejected); 
+                    applicationAggregate.TransitionToRejectedConcludedState(applicationRejectedEvent.AggregateId); 
                     break;
                 case ApplicationAcceptedEvent applicationAcceptedEvent:
-                    applicationAggregate.TransitionToConcludedState(applicationAcceptedEvent.AggregateId, ApplicationStatus.Accepted);
+                    applicationAggregate.TransitionToRejectedConcludedState(applicationAcceptedEvent.AggregateId);
                     break;
             }
         }

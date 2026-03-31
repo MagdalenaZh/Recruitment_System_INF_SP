@@ -3,15 +3,15 @@ using AppilicationProcesserAPI.Visitors;
 
 namespace AppilicationProcesserAPI.AggregateStates
 {
-    public class ApplicationConcludedState : IApplicationState
+    public class ApplicationConcludedStateRejected : IApplicationState
     {
         private readonly Guid _aggregateId;
         private readonly ApplicationStatus _conclusionResult;
 
-        public ApplicationConcludedState(Guid aggregateId, ApplicationStatus conclusionResult)
+        public ApplicationConcludedStateRejected(Guid aggregateId)
         {
             _aggregateId = aggregateId;
-            _conclusionResult = conclusionResult;
+            _conclusionResult = ApplicationStatus.Rejected;
         }
 
         public void AcceptVisitor(IStateVisitor stateVisitor)

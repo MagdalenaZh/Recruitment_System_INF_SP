@@ -1,5 +1,6 @@
 ﻿using AppilicationProcesserAPI.MessageQueue;
 using AppilicationProcesserAPI.Representations;
+using AppilicationProcesserAPI.Visitors;
 using System.Threading.Channels;
 
 namespace AppilicationProcesserAPI.AggregateStates
@@ -33,11 +34,31 @@ namespace AppilicationProcesserAPI.AggregateStates
         {
             if (representation == null) throw new ArgumentNullException(nameof(representation));
 
-            var message = new StatusUpdateEnvelope(representation);
+            var statusUpdate = ConvertToStatusUpdateRepresentation(representation);
+
+            if (statusUpdate is null) return;
+
+            var message = new StatusUpdateEnvelope(statusUpdate);
 
             await _queue.Writer.WriteAsync(message, cancellationToken);
 
             return;
+        }
+
+        private static IStatusRepresentation? ConvertToStatusUpdateRepresentation(IStateRepresentation representation)
+        {
+            if (representation is null) throw new ArgumentNullException(nameof(representation));
+
+            switch (representation)
+            {
+                case InitialRepresentation:
+                    return new InProgressStatusRepresentation(representation.ApplicationId);
+                case HibernatedStateRepresentation:
+                    return new PendingInterviewStatusRepresentation(representation.ApplicationId);
+                case ConcludedStateRepresentation concludedStateRepresentation:
+                    return new ConcludedStatusRepresentation(concludedStateRepresentation.ApplicationId, concludedStateRepresentation.ConclusionResult);
+                default: return null;
+            }
         }
     }
 }

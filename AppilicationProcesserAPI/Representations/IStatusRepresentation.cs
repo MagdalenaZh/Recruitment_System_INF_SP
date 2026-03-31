@@ -8,31 +8,20 @@ namespace AppilicationProcesserAPI.Representations
         ApplicationStatus ApplicationStatus { get; }
     }
 
-    public class AcceptedStatusRepresentation : IStatusRepresentation
+    public class ConcludedStatusRepresentation : IStatusRepresentation
     {
-        public AcceptedStatusRepresentation(Guid applicationId)
+        public ConcludedStatusRepresentation(Guid applicationId, ApplicationStatus applicationStatus)
         {
             ApplicationId = applicationId;
-        }
-
-        public Guid ApplicationId { get; }
-
-        public ApplicationStatus ApplicationStatus => ApplicationStatus.Accepted;
-    }
-
-    public class RejectedStatusRepresentation : IStatusRepresentation
-    {
-        public RejectedStatusRepresentation(Guid applicationId)
-        {
-            ApplicationId = applicationId;
+            ApplicationStatus = applicationStatus;
         }
         public Guid ApplicationId { get; }
-        public ApplicationStatus ApplicationStatus => ApplicationStatus.Rejected;
+        public ApplicationStatus ApplicationStatus { get; }
     }
 
-    public class PendingStatusRepresentation : IStatusRepresentation
+    public class PendingInterviewStatusRepresentation : IStatusRepresentation
     {
-        public PendingStatusRepresentation(Guid applicationId)
+        public PendingInterviewStatusRepresentation(Guid applicationId)
         {
             ApplicationId = applicationId;
         }

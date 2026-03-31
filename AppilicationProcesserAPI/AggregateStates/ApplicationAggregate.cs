@@ -45,8 +45,13 @@ public class ApplicationAggregate : IApplicationAggregate
         _state = new ApplicationApprovedState(aggregateId);
     }
 
-    public void TransitionToConcludedState(Guid aggregateId, ApplicationStatus status)
+    public void TransitionToAcceptedConcludedState(Guid aggregateId)
     {
-        _state = new ApplicationConcludedState(aggregateId, status);
+        _state = new ApplicationConcludedStateAccepted(aggregateId);
+    }
+
+    public void TransitionToRejectedConcludedState(Guid aggregateId)
+    {
+        _state = new ApplicationConcludedStateRejected(aggregateId);
     }
 }

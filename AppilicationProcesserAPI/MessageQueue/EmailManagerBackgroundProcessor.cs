@@ -1,14 +1,17 @@
 ﻿using AppilicationProcesserAPI.AggregateStates;
+using AppilicationProcesserAPI.PersistanceServices;
 
 namespace AppilicationProcesserAPI.MessageQueue
 {
     public class EmailManagerBackgroundProcessor : BackgroundService
     {
+        private readonly ISystemManagementProvider _systemManagementProvider;
         private readonly IApplicationStatusManager _applicationStatusManager;
         private readonly ILogger<EmailManagerBackgroundProcessor> _logger;
 
-        public EmailManagerBackgroundProcessor(IApplicationStatusManager applicationStatusManager, ILogger<EmailManagerBackgroundProcessor> logger)
+        public EmailManagerBackgroundProcessor(ISystemManagementProvider systemManagementProvider, IApplicationStatusManager applicationStatusManager, ILogger<EmailManagerBackgroundProcessor> logger)
         {
+            _systemManagementProvider = systemManagementProvider;
             _applicationStatusManager = applicationStatusManager;
             _logger = logger;
         }
@@ -22,7 +25,7 @@ namespace AppilicationProcesserAPI.MessageQueue
                     var message = await _applicationStatusManager.GetApplicationStatus(stoppingToken);
                     if (message != null)
                     {
-#warning Implement email sending logic here based on the application status in the message
+                        await _systemManagementProvider.UpdateApplicationStatusAsync(message, stoppingToken).ConfigureAwait(false);
                         _logger.LogInformation("Received application status update for ApplicationId: {ApplicationId}", message.MessageData.ApplicationId);
                     }
                 }

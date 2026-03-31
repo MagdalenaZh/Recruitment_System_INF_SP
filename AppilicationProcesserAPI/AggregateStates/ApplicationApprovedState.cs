@@ -32,7 +32,7 @@ public class ApplicationApprovedState : IApplicationState
                 break;
             case InterviewProposalRejectedEvent:
                 {
-                    applicationAggregate.TransitionToConcludedState(_aggregateId, ApplicationStatus.Rejected);
+                    applicationAggregate.TransitionToRejectedConcludedState(_aggregateId);
                 }
                 break;
         }

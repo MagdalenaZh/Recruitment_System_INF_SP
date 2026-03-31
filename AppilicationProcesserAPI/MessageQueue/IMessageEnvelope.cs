@@ -23,9 +23,9 @@ namespace AppilicationProcesserAPI.MessageQueue
         {}
     }
 
-    public class StatusUpdateEnvelope : MessageEnvelope<IStateRepresentation>
+    public class StatusUpdateEnvelope : MessageEnvelope<IStatusRepresentation>
     {
-        public StatusUpdateEnvelope(IStateRepresentation statusUpdate) : base(statusUpdate)
+        public StatusUpdateEnvelope(IStatusRepresentation statusUpdate) : base(statusUpdate)
         { }
     }
 }

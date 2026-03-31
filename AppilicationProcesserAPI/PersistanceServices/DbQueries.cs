@@ -64,6 +64,8 @@
         internal const string UpdateInterviewSlot = "UPDATE [InterviewSlots] SET [StartTime] = @startTime, [EndTime] = @endTime WHERE [SlotId] = @slotId";
 
         internal const string UpdateUserRole = "UPDATE [Users] SET [RoleId] = @roleId WHERE [UserId] = @userId";
+
+        internal const string UpdateApplicationStatus = "UPDATE [Applications] SET [Status] = @status WHERE [AggregateId] = @aggregateId";
         #endregion
     }
 }

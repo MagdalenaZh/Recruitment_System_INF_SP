@@ -52,7 +52,7 @@ public class ProcessingApplicationState : IApplicationState
                 break;
             case ApplicationRejectedEvent applicationRejectedEvent:
                 {
-                    applicationAggregate.TransitionToConcludedState(applicationRejectedEvent.AggregateId, ApplicationStatus.Rejected);
+                    applicationAggregate.TransitionToRejectedConcludedState(applicationRejectedEvent.AggregateId);
                 }
                 break;
         }
