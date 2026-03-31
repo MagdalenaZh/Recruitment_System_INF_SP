@@ -7,12 +7,14 @@ namespace AppilicationProcesserAPI.Models
         public Guid ClubId { get; }
         public string ClubName { get; }
         public List<string> AdmissionQuestions { get; }
+        public string Description { get; }
 
-        public ClubDatabaseModel(Guid clubId, string clubName, List<string> admissionQuestions)
+        public ClubDatabaseModel(Guid clubId, string clubName, List<string> admissionQuestions, string description)
         {
             ClubId = clubId;
             ClubName = clubName;
             AdmissionQuestions = admissionQuestions;
+            Description = description;
         }
     }
 
@@ -22,12 +24,14 @@ namespace AppilicationProcesserAPI.Models
         public Guid ClubId { get; }
         public string DepartmentName { get; }
         public int NumberOfOpenPositions { get; }
-        public DepartmentDatabaseModel(Guid departmentId, Guid clubId, string departmentName, int numberOfOpenPositions)
+        public string Description { get; }
+        public DepartmentDatabaseModel(Guid departmentId, Guid clubId, string departmentName, int numberOfOpenPositions, string description)
         {
             DepartmentId = departmentId;
             ClubId = clubId;
             DepartmentName = departmentName;
             NumberOfOpenPositions = numberOfOpenPositions;
+            Description = description;
         }
     }
 
@@ -54,11 +58,11 @@ namespace AppilicationProcesserAPI.Models
         public DateTimeOffset StartTime { get; }
         public DateTimeOffset EndTime { get; }
 
-        public InterviewSlot(Guid slotId, DateTimeOffset start, DateTimeOffset end)
+        public InterviewSlot(Guid slotId, DateTimeOffset startTime, DateTimeOffset endTime)
         {
             SlotId = slotId;
-            StartTime = start;
-            EndTime = end;
+            StartTime = startTime;
+            EndTime = endTime;
         }
     }
 }

@@ -135,7 +135,7 @@ namespace AppilicationProcesserAPI.Controllers
         {
             try
             {
-                await _systemManagementProvider.CreateClubAsync(request.ClubName, request.AdmissionQuestions, cancellationToken).ConfigureAwait(false);
+                await _systemManagementProvider.CreateClubAsync(request.ClubName, request.AdmissionQuestions, request.RequiredNumberOfApprovals, request.Description,  cancellationToken).ConfigureAwait(false);
                 return Ok(new { message = "Club created successfully." });
             }
             catch (Exception ex)
@@ -150,7 +150,7 @@ namespace AppilicationProcesserAPI.Controllers
         {
             try
             {
-                await _systemManagementProvider.CreateDepartmentAsync(request.ClubId, request.DepartmentName, request.NumberOfOpenPositions, cancellationToken).ConfigureAwait(false);
+                await _systemManagementProvider.CreateDepartmentAsync(request.ClubId, request.DepartmentName, request.NumberOfOpenPositions, request.Description, cancellationToken).ConfigureAwait(false);
                 return Ok(new { message = "Department created successfully." });
             }
             catch (Exception ex)
@@ -180,7 +180,7 @@ namespace AppilicationProcesserAPI.Controllers
         {
             try
             {
-                await _systemManagementProvider.UpdateAdmissionQuestions(clubId, admissionQuestions, cancellationToken).ConfigureAwait(false);
+                await _systemManagementProvider.UpdateApplicationQuestions(clubId, admissionQuestions, cancellationToken).ConfigureAwait(false);
                 return Ok(new { message = "Admission questions updated successfully." });
             }
             catch (Exception ex)

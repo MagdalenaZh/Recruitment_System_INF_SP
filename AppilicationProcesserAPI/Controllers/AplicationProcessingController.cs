@@ -12,13 +12,16 @@ namespace AppilicationProcesserAPI.Controllers
         private readonly IEventStore _eventStore;
         private readonly ICalendarProvider _calendarProvider;
         private readonly IEventBroker _messageBroker;
+        private readonly IRecruitmentDataProvider _recruitmentDataProvider;
         private readonly ILogger<AplicationProcessingController> _logger;
 
-        public AplicationProcessingController(IEventStore eventStore, ICalendarProvider calendarProvider, IEventBroker messageBroker, ILogger<AplicationProcessingController> logger)
+        public AplicationProcessingController(IEventStore eventStore, ICalendarProvider calendarProvider,
+            IEventBroker messageBroker, IRecruitmentDataProvider recruitmentDataProvider, ILogger<AplicationProcessingController> logger)
         {
             _eventStore = eventStore;
             _calendarProvider = calendarProvider;
             _messageBroker = messageBroker;
+            _recruitmentDataProvider = recruitmentDataProvider;
             _logger = logger;
         }
 
@@ -29,8 +32,9 @@ namespace AppilicationProcesserAPI.Controllers
 
             await _eventStore.CreateApplication(applicationId, applicationData, cancellationToken).ConfigureAwait(false);
 
-#warning Get required number of approvals from Club table
-            var domainEvent = new ApplicationSubmittedEvent(applicationId, 3);
+            var requiredNumberOfApprovals = await _recruitmentDataProvider.GetRequiredNumberOfApprovalsForDepartmentAsync(applicationData.DepartmentId, cancellationToken).ConfigureAwait(false);
+
+            var domainEvent = new ApplicationSubmittedEvent(applicationId, requiredNumberOfApprovals);
 
             await _eventStore.AppendEventAsync(domainEvent, cancellationToken).ConfigureAwait(false);
 

@@ -91,7 +91,7 @@ namespace AppilicationProcesserAPI.PersistanceServices
             command.Parameters.AddWithValue("@userId", applicationData.UserId);
             command.Parameters.AddWithValue("@departmentId", applicationData.DepartmentId);
             command.Parameters.AddWithValue("@questionnaire", serializedQuestionaire);
-            command.Parameters.AddWithValue("@status", applicationData.Status);
+            command.Parameters.AddWithValue("@status", ApplicationStatus.ApplicationSubmited);
 
             try
             {

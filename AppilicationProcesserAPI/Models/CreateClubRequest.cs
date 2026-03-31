@@ -5,10 +5,16 @@
         public string ClubName { get; }
         public List<string> AdmissionQuestions { get; }
 
-        public CreateClubRequest(string clubName, List<string> admissionQuestions)
+        public int RequiredNumberOfApprovals { get; }
+
+        public string Description { get; }
+
+        public CreateClubRequest(string clubName, List<string> admissionQuestions, int requiredNumberOfApprovals, string description)
         {
             ClubName = clubName;
             AdmissionQuestions = admissionQuestions;
+            RequiredNumberOfApprovals = requiredNumberOfApprovals;
+            Description = description;
         }
     }
 
@@ -17,11 +23,14 @@
         public Guid ClubId { get; }
         public string DepartmentName { get; }
         public int NumberOfOpenPositions { get; }
-        public CreateDepartmentRequest(Guid clubId, string departmentName, int numberOfOpenPositions)
+        public string Description { get; }
+
+        public CreateDepartmentRequest(Guid clubId, string departmentName, int numberOfOpenPositions, string description)
         {
             ClubId = clubId;
             DepartmentName = departmentName;
             NumberOfOpenPositions = numberOfOpenPositions;
+            Description = description;
         }
     }
 

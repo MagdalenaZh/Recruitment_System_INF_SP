@@ -5,11 +5,11 @@ namespace AppilicationProcesserAPI.PersistanceServices
 {
     public interface ISystemManagementProvider
     {
-        Task CreateClubAsync(string clubName, List<string> admissionQuestions, CancellationToken cancellationToken);
-        Task CreateDepartmentAsync(Guid clubId, string departmentName, int numberOfOpenPositions, CancellationToken cancellationToken);
+        Task CreateClubAsync(string clubName, List<string> applicationQuestions, int requiredApprovals, string description, CancellationToken cancellationToken);
+        Task CreateDepartmentAsync(Guid clubId, string departmentName, int numberOfOpenPositions, string description, CancellationToken cancellationToken);
         Task CreateInterviewSlot(Guid clubId, DateTimeOffset startTime, DateTimeOffset endTime, CancellationToken cancellationToken);
 
-        Task UpdateAdmissionQuestions(Guid clubId, List<string> admissionQuestions, CancellationToken cancellationToken);
+        Task UpdateApplicationQuestions(Guid clubId, List<string> applicationQuestions, CancellationToken cancellationToken);
         Task UpdateOpenPositionsForDepartmentAsync(Guid departmentId, int numberOfOpenPositions, CancellationToken cancellationToken);
         Task UpdateInterviewSlotAsync(Guid slotId, DateTimeOffset newStartTime, DateTimeOffset newEndTime, CancellationToken cancellationToken);
 
@@ -32,9 +32,9 @@ namespace AppilicationProcesserAPI.PersistanceServices
             _logger = logger;
         }
 
-        public async Task CreateClubAsync(string clubName, List<string> admissionQuestions, CancellationToken cancellationToken)
+        public async Task CreateClubAsync(string clubName, List<string> applicationQuestions, int requiredApprovals, string description, CancellationToken cancellationToken)
         {
-            var serializedData = JsonSerializer.Serialize(admissionQuestions, _serializerOptions);
+            var serializedData = JsonSerializer.Serialize(applicationQuestions, _serializerOptions);
 
             using var sqlConnection = new SqlConnection(_connectionString);
             await sqlConnection.OpenAsync(cancellationToken).ConfigureAwait(false);
@@ -42,7 +42,9 @@ namespace AppilicationProcesserAPI.PersistanceServices
             using var command = new SqlCommand(DbQueries.InsertClub, sqlConnection);
             command.Parameters.AddWithValue("@clubId", Guid.NewGuid());
             command.Parameters.AddWithValue("@clubName", clubName);
-            command.Parameters.AddWithValue("@admissionQuestions", serializedData);
+            command.Parameters.AddWithValue("@applicationQuestions", serializedData);
+            command.Parameters.AddWithValue("@requiredApprovals", requiredApprovals);
+            command.Parameters.AddWithValue("@description", description);
 
             try
             {
@@ -55,7 +57,7 @@ namespace AppilicationProcesserAPI.PersistanceServices
             }
         }
 
-        public async Task CreateDepartmentAsync(Guid clubId, string departmentName, int numberOfOpenPositions, CancellationToken cancellationToken)
+        public async Task CreateDepartmentAsync(Guid clubId, string departmentName, int numberOfOpenPositions, string description, CancellationToken cancellationToken)
         {
             using var sqlConnection = new SqlConnection(_connectionString);
             await sqlConnection.OpenAsync(cancellationToken).ConfigureAwait(false);
@@ -65,6 +67,7 @@ namespace AppilicationProcesserAPI.PersistanceServices
             command.Parameters.AddWithValue("@clubId", clubId);
             command.Parameters.AddWithValue("@departmentName", departmentName);
             command.Parameters.AddWithValue("@openPositions", numberOfOpenPositions);
+            command.Parameters.AddWithValue("@description", description);
 
             try
             {
@@ -99,16 +102,16 @@ namespace AppilicationProcesserAPI.PersistanceServices
             }
         }
 
-        public async Task UpdateAdmissionQuestions(Guid clubId, List<string> admissionQuestions, CancellationToken cancellationToken)
+        public async Task UpdateApplicationQuestions(Guid clubId, List<string> applicationQuestions, CancellationToken cancellationToken)
         {
-            var serializedData = JsonSerializer.Serialize(admissionQuestions, _serializerOptions);
+            var serializedData = JsonSerializer.Serialize(applicationQuestions, _serializerOptions);
 
             using var sqlConnection = new SqlConnection(_connectionString);
             await sqlConnection.OpenAsync(cancellationToken).ConfigureAwait(false);
 
             using var command = new SqlCommand(DbQueries.UpdateClubAdmissionQuestions, sqlConnection);
             command.Parameters.AddWithValue("@clubId", clubId);
-            command.Parameters.AddWithValue("@admissionQuestions", serializedData);
+            command.Parameters.AddWithValue("@applicationQuestions", serializedData);
 
             try
             {
