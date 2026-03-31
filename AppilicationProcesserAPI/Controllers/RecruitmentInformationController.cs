@@ -13,14 +13,16 @@ namespace AppilicationProcesserAPI.Controllers
         private readonly IAggregateReconstructor _aggregateReconstructor;
         private readonly IRecruitmentDataProvider _recruitmentDataProvider;
         private readonly ISystemManagementProvider _systemManagementProvider;
+        private readonly ICalendarProvider _calendarProvider;
         private readonly ILogger<RecruitmentInformationController> _logger;
 
         public RecruitmentInformationController(IAggregateReconstructor aggregateReconstructor, IRecruitmentDataProvider recruitmentDataProvider,
-            ISystemManagementProvider systemManagementProvider, ILogger<RecruitmentInformationController> logger)
+            ISystemManagementProvider systemManagementProvider, ICalendarProvider calendarProvider, ILogger<RecruitmentInformationController> logger)
         {
             _aggregateReconstructor = aggregateReconstructor;
             _recruitmentDataProvider = recruitmentDataProvider;
             _systemManagementProvider = systemManagementProvider;
+            _calendarProvider = calendarProvider;
             _logger = logger;
         }
 
@@ -39,6 +41,23 @@ namespace AppilicationProcesserAPI.Controllers
                 throw new Exception("An error occurred while retrieving the latest application states.");
             }
         }
+
+        [HttpGet("api/available-interview-slots/{clubId}")]
+        public async Task<List<InterviewSlot>> GetAvailableInterviewSlotsForClub([FromRoute] Guid clubId, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var slots = await _calendarProvider.GetAvailableInterviewSlotsForClubAsync(clubId, cancellationToken).ConfigureAwait(false);
+                return slots;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving available interview slots for ClubId: {ClubId}", clubId);
+                throw new Exception("An error occurred while retrieving available interview slots for the club.");
+            }
+        }
+
+
 
         [HttpGet("api/applications-user/{userId}")]
         public async Task<List<ApplicationDatabaseModel>> GetAllApplicationsForUser([FromRoute] Guid userId, CancellationToken cancellationToken)
