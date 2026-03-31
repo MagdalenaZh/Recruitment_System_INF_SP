@@ -11,7 +11,7 @@ export function ClubSearch({ value, onChange }: Props) {
       tone="dark"
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      placeholder="Search clubs..."
+      placeholder="Search by club name or description..."
     />
   );
 }

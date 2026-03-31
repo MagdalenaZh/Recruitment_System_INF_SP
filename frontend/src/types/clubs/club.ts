@@ -1,33 +1,22 @@
-export type ClubCategory =
-  | "Tech"
-  | "Sports"
-  | "Arts"
-  | "Business"
-  | "Science"
-  | "Community"
-  | "Entertainment"
-  | "Other";
+export type ClubListItem = {
+  clubId: string;
+  clubName: string;
+  admissionQuestions: string[];
+  description: string;
+};
 
 export type ClubDepartment = {
-  id: string;
-  name: string;
-  description: string;
-};
-
-export type ClubEvent = {
-  id: string;
-  title: string;
-  dateText: string; 
-  description: string;
-};
-
-export type Club = {
+  departmentId: string;
   clubId: string;
-  name: string;
-  shortDescription: string;
-  category: ClubCategory;
-  isRecruiting: boolean;
-  about?: string;
-  departments?: ClubDepartment[];
-  events?: ClubEvent[];
+  departmentName: string;
+  numberOfOpenPositions: number;
+  description: string;
+};
+
+export type ClubDetails = {
+  clubId: string;
+  clubName: string;
+  description: string;
+  admissionQuestions: string[];
+  departments: ClubDepartment[];
 };

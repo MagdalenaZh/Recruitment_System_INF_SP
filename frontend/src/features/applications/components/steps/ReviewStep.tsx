@@ -1,14 +1,16 @@
-import type { ApplicationQuestion } from "../../../../types/application/application";
-import type { PersonalInfo } from "../../../../types/application/application";
-
+import type {
+  ApplicationQuestion,
+  PersonalInfo,
+} from "../../../../types/application/application";
 import { SummaryCard } from "../SummaryCard";
 
 export function ReviewStep(props: {
   personal: PersonalInfo;
   questions: ApplicationQuestion[];
   answers: Record<string, string>;
+  departmentName: string;
 }) {
-  const { personal, questions, answers } = props;
+  const { personal, questions, answers, departmentName } = props;
 
   return (
     <div className="mt-8 grid gap-6">
@@ -17,6 +19,10 @@ export function ReviewStep(props: {
           {personal.firstName} {personal.lastName} • {personal.email}
           {personal.phone?.trim() ? ` • ${personal.phone}` : null}
         </div>
+      </SummaryCard>
+
+      <SummaryCard title="Department">
+        <div className="text-sm text-slate-700">{departmentName || "—"}</div>
       </SummaryCard>
 
       <SummaryCard title="Your answers">

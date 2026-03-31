@@ -1,47 +1,76 @@
 import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useLocation } from "react-router-dom";
 
 import { HeaderSection } from "./sections/HeaderSection";
 import { AboutSection } from "./sections/AboutSection";
 import { DepartmentsSection } from "./sections/DepartmentsSection";
-import { EventsSection } from "./sections/EventsSection";
 import { ApplySection } from "./sections/ApplySection";
 
 import { Navbar } from "../../../components/layout/Navbar/Navbar";
 import { Footer } from "../../../components/layout/Footer";
 import { Container } from "../../../components/layout/Container";
 
-import type { Club } from "../../../types/clubs/club";
-
-import { getClubById } from "../../../services/clubs/clubs.api";
+import type { ClubDepartment, ClubListItem } from "../../../types/clubs/club";
+import {
+  getDepartmentsByClubId,
+  getClubById,
+} from "../../../services/clubs/clubs.api";
 
 import { usePageTitle } from "../hooks/usePageTitle";
 
+type LocationState = {
+  club?: ClubListItem;
+};
+
 export default function ClubDetailsPage() {
   const { clubId } = useParams();
+  const location = useLocation();
+  const state = location.state as LocationState | null;
+
   const [search, setSearch] = useState("");
-  const [club, setClub] = useState<Club | null>(null);
+  const [club, setClub] = useState<ClubListItem | null>(state?.club ?? null);
+  const [departments, setDepartments] = useState<ClubDepartment[]>([]);
   const [loading, setLoading] = useState(true);
 
-  usePageTitle(club ? club.name : "Club details");
+  usePageTitle(club ? club.clubName : "Club details");
 
   useEffect(() => {
     let cancelled = false;
 
     async function load() {
-      setLoading(true);
-      const res = clubId ? await getClubById(clubId) : null;
-      if (!cancelled) {
-        setClub(res);
+      if (!clubId) {
         setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+
+        let currentClub = state?.club ?? null;
+
+        if (!currentClub) {
+          currentClub = await getClubById(clubId);
+        }
+
+        const departmentsData = await getDepartmentsByClubId(clubId);
+
+        if (!cancelled) {
+          setClub(currentClub);
+          setDepartments(departmentsData);
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
     }
 
     load();
+
     return () => {
       cancelled = true;
     };
-  }, [clubId]);
+  }, [clubId, state?.club]);
 
   return (
     <div className="min-h-screen bg-slate-950 text-white">
@@ -71,13 +100,22 @@ export default function ClubDetailsPage() {
           </Container>
         ) : (
           <>
-            <HeaderSection club={club} />
-            <AboutSection about={club.about} />
-            <DepartmentsSection departments={club.departments} />
-            <EventsSection events={club.events} />
+            <HeaderSection
+              club={{
+                clubId: club.clubId,
+                clubName: club.clubName,
+                description: club.description,
+                admissionQuestions: club.admissionQuestions,
+                departments,
+              }}
+            />
+            <AboutSection about={club.description} />
+            <DepartmentsSection departments={departments} />
             <ApplySection
               clubId={club.clubId}
-              isRecruiting={club.isRecruiting}
+              clubName={club.clubName}
+              clubDescription={club.description}
+              admissionQuestions={club.admissionQuestions}
             />
           </>
         )}

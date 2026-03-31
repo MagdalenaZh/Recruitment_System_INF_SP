@@ -52,7 +52,14 @@ export default function App() {
       </Route>
 
       <Route path="/clubs/:clubId" element={<ClubDetailsPage />} />
-      <Route path="/clubs/:clubId/apply" element={<ApplicationFormPage />} />
+      <Route
+        path="/clubs/:clubId/apply"
+        element={
+          <ProtectedRoute>
+            <ApplicationFormPage />
+          </ProtectedRoute>
+        }
+      />
 
       <Route
         path="/board"
@@ -136,6 +143,8 @@ export default function App() {
         />
         <Route path="club-admins" element={<SystemAdminClubAdminsPage />} />
       </Route>
+
+      <Route path="*" element={<Navigate to="/home" replace />} />
     </Routes>
   );
 }

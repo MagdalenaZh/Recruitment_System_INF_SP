@@ -1,35 +1,45 @@
 import { Link } from "react-router-dom";
 
-import { Button } from "../../../../components/ui/Button";
-import { Container } from "../../../../components/layout/Container";
+type Props = {
+  clubId: string;
+  clubName: string;
+  clubDescription: string;
+  admissionQuestions: string[];
+};
 
 export function ApplySection({
   clubId,
-  isRecruiting,
-}: {
-  clubId: string;
-  isRecruiting: boolean;
-}) {
+  clubName,
+  clubDescription,
+  admissionQuestions,
+}: Props) {
   return (
-    <section className="bg-slate-50 pb-16 text-slate-900">
-      <Container>
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-            <div>
-              <div className="text-lg font-semibold">Want to join?</div>
-              <p className="mt-1 text-sm text-slate-600">
-                Fill out the application form for this club.
-              </p>
-            </div>
-
-            <Link to={`/clubs/${clubId}/apply`} className="inline-flex">
-              <Button disabled={!isRecruiting} type="button">
-                {isRecruiting ? "Apply now" : "Applications closed"}
-              </Button>
-            </Link>
+    <section className="bg-slate-50 pb-14 text-slate-900">
+      <div className="mx-auto max-w-6xl px-4">
+        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm flex items-center justify-between">
+          <div>
+            <h2 className="text-xl font-semibold">Apply</h2>
+            <p className="mt-2 text-sm text-slate-600">
+              Ready to apply to {clubName}?
+            </p>
           </div>
+
+          <Link
+            to={`/clubs/${clubId}/apply`}
+            state={{
+              club: {
+                clubId,
+                clubName,
+                description: clubDescription,
+                admissionQuestions,
+              },
+            }}
+            className="shrink-0 rounded-full bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-700"
+          >
+            Apply now
+          </Link>
         </div>
-      </Container>
+      </div>
     </section>
   );
 }

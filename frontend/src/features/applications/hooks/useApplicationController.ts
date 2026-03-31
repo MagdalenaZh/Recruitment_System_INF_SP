@@ -1,13 +1,21 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
-import { isFormValid, validateAnswers, validatePersonal, type Errors } from "../pages/validation/application.validation";
+import {
+  isFormValid,
+  validateAnswers,
+  validatePersonal,
+  type Errors,
+} from "../pages/validation/application.validation";
 
-import { submitApplicationDraft } from "../../../services/applications/applicationSubmit";
+import { submitApplication } from "../../../services/applications/applications.api";
+import { getCurrentUser, getStoredUserId } from "../../../services/auth/auth.api";
 
-import type { ApplicationDraft, ApplicationQuestion, PersonalInfo } from "../../../types/application/application";
+import type {
+  ApplicationQuestion,
+  PersonalInfo,
+} from "../../../types/application/application";
 
 import type { Step } from "./useApplicationState";
-
 
 export function useApplicationController(args: {
   clubId: string;
@@ -17,13 +25,45 @@ export function useApplicationController(args: {
   nextStep: () => void;
   prevStep: () => void;
   personal: PersonalInfo;
+  setPersonal: (p: PersonalInfo) => void;
   answers: Record<string, string>;
+  departmentId: string;
 }) {
-  const { clubId, questions, step, setStep, nextStep, prevStep, personal, answers } = args;
+  const {
+    questions,
+    step,
+    setStep,
+    nextStep,
+    prevStep,
+    personal,
+    setPersonal,
+    answers,
+    departmentId,
+  } = args;
 
-  const [errors, setErrors] = useState<Errors>({ personal: {}, answers: {} });
+  const [errors, setErrors] = useState<Errors & { department: string }>({
+    personal: {},
+    answers: {},
+    department: "",
+  });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+
+  // Auto-fill personal info from logged-in user on mount
+  useEffect(() => {
+    getCurrentUser()
+      .then((user) => {
+        setPersonal({
+          firstName: user.firstName,
+          lastName: user.lastName,
+          email: user.email,
+          phone: "",
+        });
+      })
+      .catch(() => {
+        // not logged in or request failed — leave fields as-is
+      });
+  }, []);
 
   function clearPersonalError(key: keyof PersonalInfo) {
     setErrors((e) => ({ ...e, personal: { ...e.personal, [key]: "" } }));
@@ -42,9 +82,10 @@ export function useApplicationController(args: {
     }
 
     if (step === 1) {
+      const dept = departmentId ? "" : "Please select a department.";
       const a = validateAnswers(questions, answers);
-      setErrors((e) => ({ ...e, answers: a }));
-      if (Object.keys(a).length === 0) nextStep();
+      setErrors((e) => ({ ...e, answers: a, department: dept }));
+      if (!dept && Object.keys(a).length === 0) nextStep();
       return;
     }
   }
@@ -53,31 +94,38 @@ export function useApplicationController(args: {
     prevStep();
   }
 
-  const canSubmit = useMemo(() => isFormValid(personal, questions, answers), [
-    personal,
-    questions,
-    answers,
-  ]);
+  const canSubmit = useMemo(
+    () => isFormValid(personal, questions, answers) && !!departmentId,
+    [personal, questions, answers, departmentId],
+  );
 
   async function submit() {
     const p = validatePersonal(personal);
     const a = validateAnswers(questions, answers);
-    setErrors({ personal: p, answers: a });
+    const dept = departmentId ? "" : "Please select a department.";
 
-    if (Object.keys(p).length > 0) {
-      setStep(0);
+    setErrors({ personal: p, answers: a, department: dept });
+
+    if (Object.keys(p).length > 0) { setStep(0); return; }
+    if (dept || Object.keys(a).length > 0) { setStep(1); return; }
+
+    const userId = getStoredUserId();
+    if (!userId) {
+      alert("You must be logged in to submit an application.");
       return;
     }
-    if (Object.keys(a).length > 0) {
-      setStep(1);
-      return;
+
+    const questionnaire: Record<string, string> = {};
+    for (const q of questions) {
+      questionnaire[q.label] = answers[q.id] ?? "";
     }
 
     setIsSubmitting(true);
     try {
-      const draft: ApplicationDraft = { clubId, personal, answers };
-      const res = await submitApplicationDraft(draft);
-      if (res?.ok) setIsSubmitted(true);
+      await submitApplication({ userId, departmentId, questionnaire });
+      setIsSubmitted(true);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Submission failed.");
     } finally {
       setIsSubmitting(false);
     }
@@ -88,11 +136,9 @@ export function useApplicationController(args: {
     isSubmitting,
     isSubmitted,
     canSubmit,
-
     goNext,
     goBack,
     submit,
-
     clearPersonalError,
     clearAnswerError,
   };

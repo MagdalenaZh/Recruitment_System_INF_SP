@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 
 import { Navbar } from "../../../components/layout/Navbar/Navbar";
@@ -9,7 +10,7 @@ export function ApplicationFormShell(props: {
   setSearch: (s: string) => void;
   clubId?: string;
   clubName?: string;
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   const { search, setSearch, clubId, clubName, children } = props;
 
@@ -20,6 +21,7 @@ export function ApplicationFormShell(props: {
       {clubId && clubName ? (
         <FormHeaderSection clubId={clubId} clubName={clubName} />
       ) : null}
+
       <main className="flex-1">
         <Container>
           <div className="pb-16 pt-10">{children}</div>
@@ -41,7 +43,7 @@ function FormHeaderSection({
   return (
     <section className="bg-slate-950 text-white">
       <Container>
-        <div className="pt-24 pb-8">
+        <div className="pb-8 pt-24">
           <Link
             to={`/clubs/${clubId}`}
             className="inline-flex text-sm text-white/70 hover:text-white"
@@ -55,7 +57,7 @@ function FormHeaderSection({
 
           <p className="mt-2 text-white/70">
             You’re applying for{" "}
-            <span className="text-white font-semibold">{clubName}</span>.
+            <span className="font-semibold text-white">{clubName}</span>.
           </p>
         </div>
       </Container>

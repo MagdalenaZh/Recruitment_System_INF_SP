@@ -6,6 +6,7 @@ export type ApplicationQuestion = {
   required?: boolean;
   type: ApplicationQuestionType;
   options?: string[];
+  placeholder?: string;
 };
 
 export type PersonalInfo = {
@@ -17,6 +18,13 @@ export type PersonalInfo = {
 
 export type ApplicationDraft = {
   clubId: string;
+  departmentId: string;
   personal: PersonalInfo;
   answers: Record<string, string>;
+};
+
+export type SubmitApplicationRequest = {
+  userId: string;
+  departmentId: string;
+  questionnaire: Record<string, string>;
 };

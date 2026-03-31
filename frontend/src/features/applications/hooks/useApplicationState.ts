@@ -14,6 +14,8 @@ export function useApplicationState(initial?: Partial<PersonalInfo>) {
   });
 
   const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [departmentId, setDepartmentId] = useState<string>("");
+  const [departmentName, setDepartmentName] = useState<string>("");
 
   function setPersonalField<K extends keyof PersonalInfo>(key: K, value: string) {
     setPersonal((p) => ({ ...p, [key]: value }));
@@ -36,13 +38,15 @@ export function useApplicationState(initial?: Partial<PersonalInfo>) {
     setStep,
     nextStep,
     prevStep,
-
     personal,
     setPersonal,
     setPersonalField,
-
     answers,
     setAnswers,
     setAnswer,
+    departmentId,
+    setDepartmentId,
+    departmentName,
+    setDepartmentName,
   };
 }

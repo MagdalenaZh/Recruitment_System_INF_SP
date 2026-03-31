@@ -1,29 +1,31 @@
 import { Link } from "react-router-dom";
-import type { Club } from "../../../../types/clubs/club";
-import { ClubStatusBadge } from "./ClubStatusBadge";
+import type { ClubListItem } from "../../../../types/clubs/club";
 
-export function ClubCard({ club }: { club: Club }) {
+export function ClubCard({ club }: { club: ClubListItem }) {
   return (
-    <Link
-      to={`/clubs/${club.clubId}`}
-      className="group rounded-lg border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
-    >
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <h3 className="text-base font-semibold text-slate-900 group-hover:text-blue-700">
-            {club.name}
-          </h3>
-          <p className="mt-1 text-sm text-slate-600">{club.shortDescription}</p>
-        </div>
-        <ClubStatusBadge isRecruiting={club.isRecruiting} />
-      </div>
+    <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md flex flex-col h-[200px]">
+      <Link
+        to={`/clubs/${club.clubId}`}
+        state={{ club }}
+        className="block group flex-1 min-h-0"
+      >
+        <h3 className="text-base font-semibold text-slate-900 group-hover:text-blue-700">
+          {club.clubName}
+        </h3>
+        <p className="mt-1 text-sm text-slate-600 line-clamp-2">
+          {club.description || "No description yet."}
+        </p>
+      </Link>
 
-      <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-4">
-        <span className="text-xs font-medium text-slate-500">
-          {club.category}
-        </span>
-        <span className="text-xs font-medium text-blue-700">View club →</span>
+      <div className="flex items-center justify-end border-t border-slate-100 pt-3 shrink-0">
+        <Link
+          to={`/clubs/${club.clubId}`}
+          state={{ club }}
+          className="inline-flex items-center gap-1.5 rounded-full bg-blue-600 px-4 py-1.5 text-xs font-semibold text-white hover:bg-blue-700 transition-colors"
+        >
+          View club →
+        </Link>
       </div>
-    </Link>
+    </div>
   );
 }

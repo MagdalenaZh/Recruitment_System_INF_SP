@@ -12,28 +12,34 @@ export function FormActions(props: {
 
   return (
     <div className="mt-10 flex items-center justify-between">
-      <Button
-        variant="secondary"
-        type="button"
-        onClick={onBack}
-        disabled={step === 0 || isSubmitting}
-      >
-        Back
-      </Button>
+      <div>
+        {step > 0 && (
+          <Button
+            variant="secondary"
+            type="button"
+            onClick={onBack}
+            disabled={isSubmitting}
+          >
+            ← Back
+          </Button>
+        )}
+      </div>
 
-      {step < 2 ? (
-        <Button type="button" onClick={onNext} disabled={isSubmitting}>
-          Next
-        </Button>
-      ) : (
-        <Button
-          type="button"
-          onClick={onSubmit}
-          disabled={!canSubmit || isSubmitting}
-        >
-          {isSubmitting ? "Submitting..." : "Submit application"}
-        </Button>
-      )}
+      <div>
+        {step < 2 ? (
+          <Button type="button" onClick={onNext} disabled={isSubmitting}>
+            Next →
+          </Button>
+        ) : (
+          <Button
+            type="button"
+            onClick={onSubmit}
+            disabled={!canSubmit || isSubmitting}
+          >
+            {isSubmitting ? "Submitting..." : "Submit application"}
+          </Button>
+        )}
+      </div>
     </div>
   );
 }

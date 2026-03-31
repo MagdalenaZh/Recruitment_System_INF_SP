@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useLocation, useParams } from "react-router-dom";
 
 import { ApplicationFormShell } from "../components/ApplicationFormShell";
 import { QuestionsStep } from "../components/steps/QuestionsStep";
@@ -8,32 +8,64 @@ import { ReviewStep } from "../components/steps/ReviewStep";
 import { FormActions } from "../components/FormActions";
 import { Stepper } from "../components/Stepper";
 
-import type { Club } from "../../../types/clubs/club";
 import type { ApplicationQuestion } from "../../../types/application/application";
-
-import { applicationQuestionsByClubId } from "../../../mocks/applicationQuestions.mock";
+import type { ClubListItem } from "../../../types/clubs/club";
 
 import { getClubById } from "../../../services/clubs/clubs.api";
-
 import { useApplicationState } from "../hooks/useApplicationState";
 import { useApplicationController } from "../hooks/useApplicationController";
 
+type LocationState = {
+  club?: ClubListItem;
+};
+
+function mapAdmissionQuestionsToFormQuestions(
+  questions: string[],
+): ApplicationQuestion[] {
+  return questions.map((question, index) => ({
+    id: `question-${index + 1}`,
+    label: question,
+    type: "textarea",
+    required: true,
+    placeholder: "Type your answer here...",
+  }));
+}
+
 export default function ApplicationFormPage() {
   const { clubId } = useParams();
-  const [search, setSearch] = useState("");
+  const location = useLocation();
+  const stateFromLocation = location.state as LocationState | null;
 
-  const [club, setClub] = useState<Club | null>(null);
+  const [search, setSearch] = useState("");
+  const [club, setClub] = useState<ClubListItem | null>(
+    stateFromLocation?.club ?? null,
+  );
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
 
     async function load() {
-      setLoading(true);
-      const res = clubId ? await getClubById(clubId) : null;
-      if (!cancelled) {
-        setClub(res);
+      if (!clubId) {
         setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+
+        if (stateFromLocation?.club) {
+          if (!cancelled) {
+            setClub(stateFromLocation.club);
+            setLoading(false);
+          }
+          return;
+        }
+
+        const res = await getClubById(clubId);
+        if (!cancelled) setClub(res);
+      } finally {
+        if (!cancelled) setLoading(false);
       }
     }
 
@@ -41,27 +73,26 @@ export default function ApplicationFormPage() {
     return () => {
       cancelled = true;
     };
-  }, [clubId]);
+  }, [clubId, stateFromLocation?.club]);
 
   const questions: ApplicationQuestion[] = useMemo(() => {
-    if (!clubId) return [];
-    return applicationQuestionsByClubId[clubId] ?? [];
-  }, [clubId]);
+    if (!club) return [];
+    return mapAdmissionQuestionsToFormQuestions(club.admissionQuestions);
+  }, [club]);
 
-  // TO DO: prefill personal info from user profile: const state = useApplicationState({ firstName: user.firstName, lastName: user.lastName, email: user.email });
   const state = useApplicationState();
 
   const controller = useApplicationController({
     clubId: clubId ?? "",
     questions,
-
     step: state.step,
     setStep: state.setStep,
     nextStep: state.nextStep,
     prevStep: state.prevStep,
-
     personal: state.personal,
+    setPersonal: state.setPersonal,
     answers: state.answers,
+    departmentId: state.departmentId,
   });
 
   if (!clubId) {
@@ -94,30 +125,14 @@ export default function ApplicationFormPage() {
     );
   }
 
-  if (!club.isRecruiting) {
-    return (
-      <ApplicationFormShell
-        search={search}
-        setSearch={setSearch}
-        clubId={club.clubId}
-        clubName={club.name}
-      >
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          Applications for <span className="font-semibold">{club.name}</span>{" "}
-          are closed.
-        </div>
-      </ApplicationFormShell>
-    );
-  }
-
   return (
     <ApplicationFormShell
       search={search}
       setSearch={setSearch}
       clubId={club.clubId}
-      clubName={club.name}
+      clubName={club.clubName}
     >
-      <div className=" rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <Stepper
           steps={["Personal info", "Questions", "Review"]}
           current={state.step}
@@ -125,7 +140,7 @@ export default function ApplicationFormPage() {
 
         {controller.isSubmitted ? (
           <div className="mt-8 rounded-xl bg-blue-50 p-5 text-sm text-blue-900 ring-1 ring-blue-100">
-            Application submitted (mock). Check the console.
+            Your application has been submitted successfully!
           </div>
         ) : (
           <>
@@ -140,10 +155,15 @@ export default function ApplicationFormPage() {
 
             {state.step === 1 && (
               <QuestionsStep
+                clubId={clubId}
                 questions={questions}
                 answers={state.answers}
                 setAnswer={state.setAnswer}
+                departmentId={state.departmentId}
+                setDepartmentId={state.setDepartmentId}
+                setDepartmentName={state.setDepartmentName}
                 errors={controller.errors.answers}
+                departmentError={controller.errors.department}
                 clearError={controller.clearAnswerError}
               />
             )}
@@ -153,6 +173,7 @@ export default function ApplicationFormPage() {
                 personal={state.personal}
                 questions={questions}
                 answers={state.answers}
+                departmentName={state.departmentName}
               />
             )}
 

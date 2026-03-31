@@ -1,5 +1,4 @@
 import { Container } from "../../../../components/layout/Container";
-
 import type { ClubDepartment } from "../../../../types/clubs/club";
 
 export function DepartmentsSection({
@@ -23,10 +22,12 @@ export function DepartmentsSection({
           ) : (
             departments!.map((d) => (
               <div
-                key={d.id}
+                key={d.departmentId}
                 className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
               >
-                <div className="text-base font-semibold">{d.name}</div>
+                <div className="text-base font-semibold">
+                  {d.departmentName}
+                </div>
                 <p className="mt-2 text-sm text-slate-600">{d.description}</p>
               </div>
             ))
