@@ -30,7 +30,7 @@ namespace AppilicationProcesserAPI.PersistanceServices
 
         public async Task AppendEventAsync(IDomainEvent domainEvent, CancellationToken cancellationToken)
         {
-            var serializedData = JsonSerializer.Serialize(domainEvent);
+            var serializedData = SerializeDomainEvent(domainEvent);
 
             using var sqlConnection = new SqlConnection(_connectionString);
             await sqlConnection.OpenAsync(cancellationToken).ConfigureAwait(false);
@@ -125,6 +125,28 @@ namespace AppilicationProcesserAPI.PersistanceServices
                 default:
                     throw new ArgumentOutOfRangeException(nameof(eventEnum));
             }
+        }
+
+        private static string SerializeDomainEvent(IDomainEvent domainEvent)
+        {
+            switch (domainEvent)
+            {
+                case ApplicationSubmittedEvent submittedEvent:
+                    return JsonSerializer.Serialize(submittedEvent, _serializerOptions);
+                case ApplicationApprovedEvent approvedEvent:
+                    return JsonSerializer.Serialize(approvedEvent, _serializerOptions);
+                case ApplicationDisapprovedEvent disapprovedEvent:
+                    return JsonSerializer.Serialize(disapprovedEvent, _serializerOptions);
+                case BookInterviewSlotEvent slotEvent:
+                    return JsonSerializer.Serialize(slotEvent, _serializerOptions);
+                case InterviewProposalRejectedEvent proposalRejectedEvent:
+                    return JsonSerializer.Serialize(proposalRejectedEvent, _serializerOptions);
+                case ApplicationAcceptedEvent acceptedEvent:
+                    return JsonSerializer.Serialize(acceptedEvent, _serializerOptions);
+                case ApplicationRejectedEvent rejectedEvent:
+                    return JsonSerializer.Serialize(rejectedEvent, _serializerOptions);
+            }
+            return JsonSerializer.Serialize(domainEvent, _serializerOptions);
         }
     }
 }
