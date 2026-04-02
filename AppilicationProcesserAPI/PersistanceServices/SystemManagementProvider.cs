@@ -6,7 +6,7 @@ namespace AppilicationProcesserAPI.PersistanceServices
 {
     public interface ISystemManagementProvider
     {
-        Task CreateClubAsync(string clubName, List<string> applicationQuestions, int requiredApprovals, string description, CancellationToken cancellationToken);
+        Task CreateClubAsync(string clubName, List<string> applicationQuestions, int requiredApprovals, string description, string category, CancellationToken cancellationToken);
         Task CreateDepartmentAsync(Guid clubId, string departmentName, int numberOfOpenPositions, string description, CancellationToken cancellationToken);
         Task CreateInterviewSlot(Guid clubId, DateTimeOffset startTime, DateTimeOffset endTime, CancellationToken cancellationToken);
 
@@ -34,7 +34,7 @@ namespace AppilicationProcesserAPI.PersistanceServices
             _logger = logger;
         }
 
-        public async Task CreateClubAsync(string clubName, List<string> applicationQuestions, int requiredApprovals, string description, CancellationToken cancellationToken)
+        public async Task CreateClubAsync(string clubName, List<string> applicationQuestions, int requiredApprovals, string description, string category, CancellationToken cancellationToken)
         {
             var serializedData = JsonSerializer.Serialize(applicationQuestions, _serializerOptions);
 

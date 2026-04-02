@@ -1,31 +1,35 @@
 import { Link } from "react-router-dom";
 import type { ClubListItem } from "../../../../types/clubs/club";
 
-export function ClubCard({ club }: { club: ClubListItem }) {
+type Props = {
+  club: ClubListItem;
+};
+
+export function ClubCard({ club }: Props) {
   return (
-    <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md flex flex-col h-[200px]">
-      <Link
-        to={`/clubs/${club.clubId}`}
-        state={{ club }}
-        className="block group flex-1 min-h-0"
-      >
-        <h3 className="text-base font-semibold text-slate-900 group-hover:text-blue-700">
+    <article className="group flex h-full flex-col rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-md">
+      <div className="flex items-start justify-between gap-3">
+        <h3 className="text-xl font-semibold text-slate-900">
           {club.clubName}
         </h3>
-        <p className="mt-1 text-sm text-slate-600 line-clamp-2">
-          {club.description || "No description yet."}
-        </p>
-      </Link>
 
-      <div className="flex items-center justify-end border-t border-slate-100 pt-3 shrink-0">
+        <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700">
+          {club.category}
+        </span>
+      </div>
+
+      <p className="mt-4 line-clamp-4 text-sm leading-6 text-slate-600">
+        {club.description}
+      </p>
+
+      <div className="mt-6">
         <Link
           to={`/clubs/${club.clubId}`}
-          state={{ club }}
-          className="inline-flex items-center gap-1.5 rounded-full bg-blue-600 px-4 py-1.5 text-xs font-semibold text-white hover:bg-blue-700 transition-colors"
+          className="inline-flex items-center rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-800"
         >
-          View club →
+          View details
         </Link>
       </div>
-    </div>
+    </article>
   );
 }

@@ -8,13 +8,15 @@ namespace AppilicationProcesserAPI.Models
         public string ClubName { get; }
         public List<string> AdmissionQuestions { get; }
         public string Description { get; }
+        public string Category { get; }
 
-        public ClubDatabaseModel(Guid clubId, string clubName, List<string> admissionQuestions, string description)
+        public ClubDatabaseModel(Guid clubId, string clubName, List<string> admissionQuestions, string description, string category)
         {
             ClubId = clubId;
             ClubName = clubName;
             AdmissionQuestions = admissionQuestions;
             Description = description;
+            Category = category;
         }
     }
 

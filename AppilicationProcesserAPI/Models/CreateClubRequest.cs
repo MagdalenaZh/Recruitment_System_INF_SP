@@ -9,12 +9,15 @@
 
         public string Description { get; }
 
-        public CreateClubRequest(string clubName, List<string> admissionQuestions, int requiredNumberOfApprovals, string description)
+        public string Category { get; set; } = string.Empty;
+
+        public CreateClubRequest(string clubName, List<string> admissionQuestions, int requiredNumberOfApprovals, string description, string category)
         {
             ClubName = clubName;
             AdmissionQuestions = admissionQuestions;
             RequiredNumberOfApprovals = requiredNumberOfApprovals;
             Description = description;
+            Category = category;
         }
     }
 

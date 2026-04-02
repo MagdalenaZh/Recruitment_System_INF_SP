@@ -3,6 +3,7 @@ export type ClubListItem = {
   clubName: string;
   admissionQuestions: string[];
   description: string;
+  category: string;
 };
 
 export type ClubDepartment = {
@@ -19,4 +20,5 @@ export type ClubDetails = {
   description: string;
   admissionQuestions: string[];
   departments: ClubDepartment[];
+  category: string;
 };

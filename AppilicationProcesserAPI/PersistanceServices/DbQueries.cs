@@ -29,7 +29,7 @@
             ORDER BY s.StartTime
             """;
 
-        internal const string GetAllClubsDetails = "SELECT [ClubId], [ClubName], [ApplicationQuestions], [Description] FROM [Clubs]";
+        internal const string GetAllClubsDetails = "SELECT [ClubId], [ClubName], [ApplicationQuestions], [Description], [Category] FROM [Clubs]";
 
         internal const string GetDepartmentsForClub = "SELECT [DepartmentId], [DepartmentName], [OpenPositions], [Description] FROM [Departments] WHERE [ClubId] = @clubId";
 
@@ -49,7 +49,7 @@
 
         internal const string InsertBookedInterviewSlot = "INSERT INTO [BookedSlots] ([SlotId], [AggregateId]) VALUES (@slotId, @aggregateId)";
 
-        internal const string InsertClub = "INSERT INTO [Clubs] ([ClubId], [ClubName], [ApplicationQuestions], [RequiredApprovals], [Description]) VALUES (@clubId, @clubName, @applicationQuestions, @requiredApprovals, @description)";
+        internal const string InsertClub = "INSERT INTO [Clubs] ([ClubId], [ClubName], [ApplicationQuestions], [RequiredApprovals], [Description], [Category]) VALUES (@clubId, @clubName, @applicationQuestions, @requiredApprovals, @description, @category)";
 
         internal const string InsertDepartment = "INSERT INTO [Departments] ([DepartmentId], [ClubId], [DepartmentName], [OpenPositions], [Description]) VALUES (@departmentId, @clubId, @departmentName, @openPositions, @description)";
 

@@ -142,6 +142,7 @@ namespace AppilicationProcesserAPI.PersistanceServices
                 var clubmentName = reader.GetString(1);
                 var applicationQuestions = reader.GetString(2);
                 var description = reader.GetString(3);
+                var category = reader.IsDBNull(4) ? string.Empty : reader.GetString(4);
 
                 var seriaizedQuestionaire = JsonSerializer.Deserialize<List<string>>(applicationQuestions, _serializerOptions);
 
@@ -150,7 +151,7 @@ namespace AppilicationProcesserAPI.PersistanceServices
                     throw new Exception($"Failed to deserialize admissionQuestions for club {clubId}");
                 }
 
-                clubs.Add(new ClubDatabaseModel(clubId, clubmentName, seriaizedQuestionaire, description));
+                clubs.Add(new ClubDatabaseModel(clubId, clubmentName, seriaizedQuestionaire, description, category));
             }
 
             return clubs;

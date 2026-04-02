@@ -154,7 +154,14 @@ namespace AppilicationProcesserAPI.Controllers
         {
             try
             {
-                await _systemManagementProvider.CreateClubAsync(request.ClubName, request.AdmissionQuestions, request.RequiredNumberOfApprovals, request.Description,  cancellationToken).ConfigureAwait(false);
+                await _systemManagementProvider.CreateClubAsync(
+                    request.ClubName,
+                    request.AdmissionQuestions,
+                    request.RequiredNumberOfApprovals,
+                    request.Description,
+                    request.Category,
+                    cancellationToken
+                ).ConfigureAwait(false);
                 return Ok(new { message = "Club created successfully." });
             }
             catch (Exception ex)
