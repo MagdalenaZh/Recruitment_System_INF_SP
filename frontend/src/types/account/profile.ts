@@ -6,13 +6,23 @@ export type UserProfile = {
   firstName: string;
   lastName: string;
   email: string;
-    avatarUrl?: string | null;
+  avatarUrl?: string | null;
+  academicYear?: string | null;
+  studyMajor?: string | null;
+  cvUrl?: string | null;
+  cvFileName?: string | null;
+  departmentId?: string | null;
+  departmentName?: string | null;
 };
 
 export type UpdateProfileRequest = {
   firstName: string;
   lastName: string;
-  avatarUrl?: string | null; 
+  avatarUrl?: string | null;
+  academicYear?: string | null;
+  studyMajor?: string | null;
+  cvUrl?: string | null;
+  cvFileName?: string | null;
 };
 
 export type UpdateProfileResponse = UserProfile;
