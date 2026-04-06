@@ -1,114 +1,52 @@
-import { useEffect, useState } from "react";
+import type {
+  UserApplicationDto,
+  ClubDto,
+  DepartmentDto,
+} from "../../types/account/accountApplications";
+import { getAuthToken, getStoredUserId } from "../auth/auth.api";
 
-import type { DepartmentDto, ClubDto, AccountApplicationCard, UserApplicationDto } from "../../types/account/accountApplications";
-import type { ApplicationStage } from "../../types/account/applicationStage";
+const API_BASE =
+  import.meta.env.VITE_API_URL?.replace(/\/$/, "") ?? "https://localhost:7113";
 
+async function apiFetch<T>(url: string): Promise<T> {
+  const token = getAuthToken();
 
-function mapApplicationStatusToStage(status: number): ApplicationStage {
-  switch (status) {
-    case 1:
-      return "Submitted";
-    case 2:
-      return "UnderReview";
-    case 3:
-      return "Interview";
-    case 4:
-      return "Rejected";
-    case 5:
-      return "Accepted";
-    default:
-      return "Submitted";
+  const response = await fetch(`${API_BASE}${url}`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  });
+
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(text || "Request failed.");
   }
+
+  return response.json() as Promise<T>;
 }
 
-function buildDepartmentMap(
-  departments: DepartmentDto[],
-  clubs: ClubDto[],
-): Map<string, { departmentName: string; clubName: string }> {
-  const clubMap = new Map(
-    clubs.map((club: ClubDto) => [club.clubId, club.clubName]),
+export async function getApplicationsForCurrentUser(): Promise<UserApplicationDto[]> {
+  const userId = getStoredUserId();
+
+  if (!userId) {
+    throw new Error("Missing user id.");
+  }
+
+  return apiFetch<UserApplicationDto[]>(
+    `/api/recruitmentInfo/api/applications-user/${userId}`,
   );
-
-  const result = new Map<string, { departmentName: string; clubName: string }>();
-
-  for (const dept of departments) {
-    result.set(dept.departmentId, {
-      departmentName: dept.departmentName,
-      clubName: clubMap.get(dept.clubId) ?? "Unknown Club",
-    });
-  }
-
-  return result;
 }
 
-export function useAccountApplications() {
-  const [applications, setApplications] = useState<AccountApplicationCard[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    async function load() {
-      try {
-        setLoading(true);
-        setError(null);
-
-        const [userApplications, clubs] = await Promise.all([
-          getApplicationsForCurrentUser(),
-          getAllClubs(),
-        ]);
-
-        const departmentLists = await Promise.all(
-          clubs.map((club: ClubDto) => getDepartmentsForClub(club.clubId)),
-        );
-
-        const allDepartments = departmentLists.flat();
-        const departmentMap = buildDepartmentMap(allDepartments, clubs);
-
-        const mapped: AccountApplicationCard[] = userApplications.map(
-          (application: UserApplicationDto) => {
-            const departmentInfo = departmentMap.get(application.departmentId);
-
-            return {
-              id: application.applicationId,
-              clubName: departmentInfo?.clubName ?? "Unknown Club",
-              departmentName:
-                departmentInfo?.departmentName ?? "Unknown Department",
-              stage: mapApplicationStatusToStage(application.applicationStatus),
-              updatedAt: new Date().toISOString(),
-            };
-          },
-        );
-
-        setApplications(mapped);
-      } catch (err) {
-        setError(
-          err instanceof Error ? err.message : "Failed to load applications.",
-        );
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    load();
-  }, []);
-
-  return {
-    applications,
-    loading,
-    error,
-  };
+export async function getAllClubs(): Promise<ClubDto[]> {
+  return apiFetch<ClubDto[]>(`/api/recruitmentInfo/api/clubs`);
 }
 
-function getApplicationsForCurrentUser(): any {
-  throw new Error("Function not implemented.");
-}
-
-
-function getAllClubs(): any {
-  throw new Error("Function not implemented.");
-}
-
-
-function getDepartmentsForClub(clubId: string) {
-  throw new Error("Function not implemented.");
+export async function getDepartmentsForClub(
+  clubId: string,
+): Promise<DepartmentDto[]> {
+  return apiFetch<DepartmentDto[]>(
+    `/api/recruitmentInfo/api/departments-club/${clubId}`,
+  );
 }

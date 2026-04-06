@@ -1,10 +1,9 @@
 import { useEffect, useState } from "react";
-
-
-
+import { getApplicationsForCurrentUser, getAllClubs, getDepartmentsForClub } from "../../../services/account/accountApplications.api";
+import type { DepartmentDto, ClubDto, AccountApplicationCard, UserApplicationDto } from "../../../types/account/accountApplications";
 import type { ApplicationStage } from "../../../types/account/applicationStage";
-import type { AccountApplicationCard, ClubDto, DepartmentDto, UserApplicationDto } from "../../../types/account/accountApplications";
-import { getApplicationsForCurrentUser, getAllClubs, getDepartmentsForClub } from "../../../services/applications/applicationStatusApi";
+
+
 
 function mapApplicationStatusToStage(status: number): ApplicationStage {
   switch (status) {
@@ -22,11 +21,14 @@ function mapApplicationStatusToStage(status: number): ApplicationStage {
       return "Submitted";
   }
 }
+
 function buildDepartmentMap(
   departments: DepartmentDto[],
   clubs: ClubDto[],
 ): Map<string, { departmentName: string; clubName: string }> {
-  const clubMap = new Map(clubs.map((club) => [club.clubId, club.clubName]));
+  const clubMap = new Map(
+    clubs.map((club: ClubDto) => [club.clubId, club.clubName]),
+  );
 
   const result = new Map<string, { departmentName: string; clubName: string }>();
 
@@ -57,7 +59,7 @@ export function useAccountApplications() {
         ]);
 
         const departmentLists = await Promise.all(
-          clubs.map((club) => getDepartmentsForClub(club.clubId)),
+          clubs.map((club: ClubDto) => getDepartmentsForClub(club.clubId)),
         );
 
         const allDepartments = departmentLists.flat();
@@ -70,7 +72,8 @@ export function useAccountApplications() {
             return {
               id: application.applicationId,
               clubName: departmentInfo?.clubName ?? "Unknown Club",
-              departmentName: departmentInfo?.departmentName ?? "Unknown Department",
+              departmentName:
+                departmentInfo?.departmentName ?? "Unknown Department",
               stage: mapApplicationStatusToStage(application.applicationStatus),
               updatedAt: new Date().toISOString(),
             };

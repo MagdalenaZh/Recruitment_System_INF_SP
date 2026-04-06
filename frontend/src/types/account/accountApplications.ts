@@ -1,4 +1,5 @@
 import type { ApplicationStage } from "./applicationStage";
+
 export type UserApplicationDto = {
   applicationId: string;
   userId: string;
