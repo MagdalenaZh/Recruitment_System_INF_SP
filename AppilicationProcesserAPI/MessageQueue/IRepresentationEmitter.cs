@@ -8,54 +8,79 @@ namespace AppilicationProcesserAPI.MessageQueue
 {
     public interface IRepresentationEmitter
     {
-        ValueTask EmmitApplicationStateChanges(IStateRepresentation representation, DateTimeOffset timestamp, CancellationToken cancellationToken = default);
+        ValueTask EmmitApplicationStateChanges(IStateRepresentation representation, DateTimeOffset timestamp, CancellationToken cancellationToken);
 
-        IAsyncEnumerable<IStateRepresentation> ReadRepresentationsStates(Guid clientId, string? lastEventId, CancellationToken cancellationToken = default);
+        IAsyncEnumerable<IStateRepresentation> ReadRepresentationsStates(Guid clientId, HashSet<Guid> applicationIds, string? lastEventId, CancellationToken cancellationToken);
     }
 
     public class RepresentationEmitter : IRepresentationEmitter
     {
-        private readonly ConcurrentQueue<SseItem<IStateRepresentation>> _buffer;
+        private readonly ConcurrentDictionary<Guid, ConcurrentQueue<SseItem<IStateRepresentation>>> _buffer;
+        private readonly ConcurrentDictionary<Guid, HashSet<Guid>> _applicationsToUsersMap;
         private readonly ConcurrentDictionary<Guid, Channel<IStateRepresentation>> _clientQueues;
         private readonly int _capacity;
         private readonly ILogger<RepresentationEmitter> _logger;
 
         public RepresentationEmitter(ILogger<RepresentationEmitter> logger, int capacity = 500)
         {
-            _buffer = new ConcurrentQueue<SseItem<IStateRepresentation>>();
+            _buffer = new ConcurrentDictionary<Guid, ConcurrentQueue<SseItem<IStateRepresentation>>>();
             _clientQueues = new ConcurrentDictionary<Guid, Channel<IStateRepresentation>>();
+            _applicationsToUsersMap = new ConcurrentDictionary<Guid, HashSet<Guid>>();
             _logger = logger;
             _capacity = capacity;
         }
 
-        public async ValueTask EmmitApplicationStateChanges(IStateRepresentation representation, DateTimeOffset timestamp, CancellationToken cancellationToken = default)
+        public async ValueTask EmmitApplicationStateChanges(IStateRepresentation representation, DateTimeOffset timestamp, CancellationToken cancellationToken)
         {
             if (representation == null) throw new ArgumentNullException(nameof(representation));
 
             var sseItem = new SseItem<IStateRepresentation>(representation)
             {
-                EventId = timestamp.ToString()
+                EventId = timestamp.ToString(),
+                ReconnectionInterval = TimeSpan.FromSeconds(30)
             };
 
-            _buffer.Enqueue(sseItem);
-
-            while (_buffer.Count >= _capacity)
+            if (_buffer.TryGetValue(representation.ApplicationId, out var queue))
             {
-                _buffer.TryDequeue(out _);
+                queue.Enqueue(sseItem);
+
+                while (_buffer.Count >= _capacity)
+                {
+                    queue.TryDequeue(out _);
+                }
+            }
+            else
+            {
+                var newQueue = new ConcurrentQueue<SseItem<IStateRepresentation>>();
+                newQueue.Enqueue(sseItem);
+                _buffer.TryAdd(representation.ApplicationId, newQueue);
             }
 
             var fanOutTasks = new List<Task>();
 
-            foreach (var clientQueue in _clientQueues)
+            foreach (var client in _applicationsToUsersMap[representation.ApplicationId])
             {
-                fanOutTasks.Add(clientQueue.Value.Writer.WriteAsync(representation, cancellationToken).AsTask());
+                fanOutTasks.Add(_clientQueues[client].Writer.WriteAsync(representation, cancellationToken).AsTask());
             }
 
             await Task.WhenAll(fanOutTasks).ConfigureAwait(false);
         }
 
-        public async IAsyncEnumerable<IStateRepresentation> ReadRepresentationsStates(Guid clientId, string? lastEventId, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+        public async IAsyncEnumerable<IStateRepresentation> ReadRepresentationsStates(Guid clientId, HashSet<Guid> applicationIds, string? lastEventId, [EnumeratorCancellation] CancellationToken cancellationToken)
         {
+            foreach (var applicationId in applicationIds)
+            {
+                if (_applicationsToUsersMap.TryGetValue(applicationId, out var subscribedUsers))
+                {
+                    subscribedUsers.Add(clientId);
+                }
+                else
+                {
+                    var newSet = new HashSet<Guid> { clientId };
+                    _applicationsToUsersMap.TryAdd(applicationId, newSet);
+                }
+            }
+
             _clientQueues.TryAdd(clientId, Channel.CreateBounded<IStateRepresentation>(new BoundedChannelOptions(_capacity)
             {
                 FullMode = BoundedChannelFullMode.DropOldest
@@ -65,14 +90,20 @@ namespace AppilicationProcesserAPI.MessageQueue
             {
                 if (!string.IsNullOrEmpty(lastEventId))
                 {
-                    var missedEvents = _buffer.SkipWhile(item => !string.Equals(item.EventId, lastEventId, StringComparison.InvariantCultureIgnoreCase)).Skip(1);
-                    foreach (var events in missedEvents)
-                        yield return events.Data;
+                    foreach (var applicationId in applicationIds)
+                    {
+                        if (_buffer.TryGetValue(applicationId, out var queue))
+                        {
+                            var missedEvents = queue.SkipWhile(item => !string.Equals(item.EventId, lastEventId, StringComparison.InvariantCultureIgnoreCase)).Skip(1);
+                            foreach (var events in missedEvents)
+                                yield return events.Data;
+                        }
+                    }
                 }
 
-                await foreach(var representation in _clientQueues[clientId].Reader.ReadAllAsync(cancellationToken).ConfigureAwait(false))
+                await foreach (var representation in _clientQueues[clientId].Reader.ReadAllAsync(cancellationToken).ConfigureAwait(false))
                 {
-                   yield return representation;
+                    yield return representation;
                 }
             }
             finally
