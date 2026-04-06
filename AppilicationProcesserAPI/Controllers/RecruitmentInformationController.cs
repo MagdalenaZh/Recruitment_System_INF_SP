@@ -33,7 +33,6 @@ namespace AppilicationProcesserAPI.Controllers
             {
                 var representations = await _aggregateReconstructor.GetLatestAggregateStates(applicationIds, cancellationToken).ConfigureAwait(false);
                 return representations;
-
             }
             catch (Exception ex)
             {

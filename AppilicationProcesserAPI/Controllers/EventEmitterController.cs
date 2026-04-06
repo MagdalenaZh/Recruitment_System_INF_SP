@@ -18,14 +18,12 @@ namespace AppilicationProcesserAPI.Controllers
             _messageEmitter = messageEmitter;
         }
 
-        [HttpGet("aplicationUpdates")]
-        public ServerSentEventsResult<IStateRepresentation> GetAplicationUpdates([FromHeader(Name = "Last-Event-ID")] string? lastEventId, CancellationToken cancellationToken)
+        [HttpGet("aplicationUpdates/{clientId}")]
+        public ServerSentEventsResult<IStateRepresentation> GetAplicationUpdates([FromRoute] Guid clientId, [FromHeader(Name = "Last-Event-ID")] string? lastEventId, [FromHeader] HashSet<Guid> applicationIds, CancellationToken cancellationToken)
         {
-            var client = Guid.NewGuid();
-
             try
             {
-                return TypedResults.ServerSentEvents(_messageEmitter.ReadRepresentationsStates(client, lastEventId, cancellationToken), "applicationUpdates");
+                return TypedResults.ServerSentEvents(_messageEmitter.ReadRepresentationsStates(clientId, applicationIds, lastEventId, cancellationToken), "applicationUpdates");
             }
             catch (Exception ex)
             {
