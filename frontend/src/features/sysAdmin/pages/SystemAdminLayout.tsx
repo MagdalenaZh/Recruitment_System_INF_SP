@@ -8,7 +8,7 @@ export function SystemAdminLayout() {
       <div className="relative min-h-screen overflow-hidden bg-gradient-to-b from-blue-950 via-slate-950 to-slate-950 text-white">
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
           <div className="absolute -top-40 right-[-8rem] h-[28rem] w-[28rem] rounded-full bg-sky-500/10 blur-3xl" />
-          <div className="absolute top-1/3 left-[-8rem] h-[24rem] w-[24rem] rounded-full bg-indigo-500/10 blur-3xl" />
+          <div className="absolute left-[-8rem] top-1/3 h-[24rem] w-[24rem] rounded-full bg-indigo-500/10 blur-3xl" />
           <div className="absolute bottom-[-8rem] right-1/4 h-[22rem] w-[22rem] rounded-full bg-cyan-400/10 blur-3xl" />
         </div>
 
@@ -21,8 +21,7 @@ export function SystemAdminLayout() {
               System admin panel
             </h1>
             <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-300 sm:text-base">
-              Manage clubs and assign club admins through a simple mock
-              interface.
+              Manage clubs and review the current system setup.
             </p>
           </div>
 

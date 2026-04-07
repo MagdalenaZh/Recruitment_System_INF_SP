@@ -1,121 +1,62 @@
 import {
   createContext,
   useContext,
-  useMemo,
+  useEffect,
   useState,
   type ReactNode,
 } from "react";
 
-import type {
-  ClubAdminAssignment,
-  CreateClubInput,
-  SysAdminClub,
-  SysAdminUser,
-} from "../types/sysAdminTypes";
-import {
-  mockClubAdminAssignments,
-  mockSysAdminClubs,
-  mockSysAdminUsers,
-} from "../../../mocks/sysAdminMock";
+import type { CreateClubInput, SysAdminClub } from "../types/sysAdminTypes";
+import { createClub, getSystemAdminClubs } from "../api/sysAdminApi";
 
 type SysAdminContextType = {
   clubs: SysAdminClub[];
-  users: SysAdminUser[];
-  assignments: ClubAdminAssignment[];
-  adminCandidates: SysAdminUser[];
-  promotableUsers: SysAdminUser[];
-  addClub: (input: CreateClubInput) => void;
-  assignClubAdmin: (clubId: string, adminId: string) => void;
-  promoteToClubAdmin: (userId: string) => void;
-  getAssignedAdmin: (clubId: string) => SysAdminUser | undefined;
+  loading: boolean;
+  error: string;
+  refresh: () => Promise<void>;
+  addClub: (input: CreateClubInput) => Promise<void>;
 };
 
 const SysAdminContext = createContext<SysAdminContextType | null>(null);
 
-function makeId(prefix: string) {
-  return `${prefix}-${Math.random().toString(36).slice(2, 10)}`;
-}
-
 export function SysAdminProvider({ children }: { children: ReactNode }) {
-  const [clubs, setClubs] = useState<SysAdminClub[]>(mockSysAdminClubs);
-  const [users, setUsers] = useState<SysAdminUser[]>(mockSysAdminUsers);
-  const [assignments, setAssignments] = useState<ClubAdminAssignment[]>(
-    mockClubAdminAssignments,
-  );
+  const [clubs, setClubs] = useState<SysAdminClub[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  const adminCandidates = useMemo(
-    () => users.filter((user) => user.role === "clubAdmin"),
-    [users],
-  );
+  async function refresh() {
+    setLoading(true);
+    setError("");
 
-  const promotableUsers = useMemo(
-    () => users.filter((user) => user.role === "applicant"),
-    [users],
-  );
-
-  function addClub(input: CreateClubInput) {
-    const newClub: SysAdminClub = {
-      id: makeId("club"),
-      name: input.name.trim(),
-      shortName: input.shortName.trim().toUpperCase(),
-      category: input.category.trim(),
-      description: input.description.trim(),
-      status: "active",
-      createdAt: new Date().toISOString(),
-    };
-
-    setClubs((prev) => [newClub, ...prev]);
+    try {
+      const clubsData = await getSystemAdminClubs();
+      setClubs(clubsData);
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Failed to load clubs.";
+      setError(message);
+    } finally {
+      setLoading(false);
+    }
   }
 
-  function assignClubAdmin(clubId: string, adminId: string) {
-    setAssignments((prev) => {
-      const existing = prev.find((item) => item.clubId === clubId);
+  useEffect(() => {
+    void refresh();
+  }, []);
 
-      if (existing) {
-        return prev.map((item) =>
-          item.clubId === clubId
-            ? { ...item, adminId, assignedAt: new Date().toISOString() }
-            : item,
-        );
-      }
-
-      return [
-        ...prev,
-        {
-          clubId,
-          adminId,
-          assignedAt: new Date().toISOString(),
-        },
-      ];
-    });
-  }
-
-  function promoteToClubAdmin(userId: string) {
-    setUsers((prev) =>
-      prev.map((user) =>
-        user.id === userId ? { ...user, role: "clubAdmin" } : user,
-      ),
-    );
-  }
-
-  function getAssignedAdmin(clubId: string) {
-    const assignment = assignments.find((item) => item.clubId === clubId);
-    if (!assignment) return undefined;
-    return users.find((user) => user.id === assignment.adminId);
+  async function addClub(input: CreateClubInput) {
+    await createClub(input);
+    await refresh();
   }
 
   return (
     <SysAdminContext.Provider
       value={{
         clubs,
-        users,
-        assignments,
-        adminCandidates,
-        promotableUsers,
+        loading,
+        error,
+        refresh,
         addClub,
-        assignClubAdmin,
-        promoteToClubAdmin,
-        getAssignedAdmin,
       }}
     >
       {children}

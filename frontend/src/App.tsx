@@ -27,8 +27,6 @@ import { ClubAdminApplicationManagementPage } from "./features/clubAdmin/pages/C
 import { SystemAdminLayout } from "./features/sysAdmin/pages/SystemAdminLayout.tsx";
 import { SystemAdminDashboardPage } from "./features/sysAdmin/pages/SystemAdminDashboardPage.tsx";
 import { SystemAdminClubsPage } from "./features/sysAdmin/pages/SystemAdminClubsPage.tsx";
-import { SystemAdminClubAdminsPage } from "./features/sysAdmin/pages/SystemAdminClubAdminsPage.tsx";
-import { SystemAdminCreateClubAdminsPage } from "./features/sysAdmin/pages/SystemAdminCreateClubAdminsPage.tsx";
 
 export default function App() {
   return (
@@ -150,11 +148,6 @@ export default function App() {
       >
         <Route index element={<SystemAdminDashboardPage />} />
         <Route path="clubs" element={<SystemAdminClubsPage />} />
-        <Route
-          path="create-club-admins"
-          element={<SystemAdminCreateClubAdminsPage />}
-        />
-        <Route path="club-admins" element={<SystemAdminClubAdminsPage />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/home" replace />} />
