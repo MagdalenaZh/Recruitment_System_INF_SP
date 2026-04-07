@@ -47,6 +47,7 @@ namespace AppilicationProcesserAPI.PersistanceServices
             command.Parameters.AddWithValue("@applicationQuestions", serializedData);
             command.Parameters.AddWithValue("@requiredApprovals", requiredApprovals);
             command.Parameters.AddWithValue("@description", description);
+            command.Parameters.AddWithValue("@category", category);
 
             try
             {
@@ -161,7 +162,7 @@ namespace AppilicationProcesserAPI.PersistanceServices
 
             using var command = new SqlCommand(DbQueries.UpdateInterviewSlot, sqlConnection);
             command.Parameters.AddWithValue("@slotId", slotId);
-            command.Parameters.AddWithValue("@startTime", newEndTime);
+            command.Parameters.AddWithValue("@startTime", newStartTime);
             command.Parameters.AddWithValue("@endTime", newEndTime);
 
             try

@@ -37,7 +37,7 @@ namespace AppilicationProcesserAPI.MessageQueue
             var sseItem = new SseItem<IStateRepresentation>(representation)
             {
                 EventId = timestamp.ToString(),
-                ReconnectionInterval = TimeSpan.FromSeconds(30)
+                ReconnectionInterval = TimeSpan.FromMinutes(5)
             };
 
             if (_buffer.TryGetValue(representation.ApplicationId, out var queue))

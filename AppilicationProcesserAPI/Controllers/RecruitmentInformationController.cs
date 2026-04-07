@@ -57,7 +57,6 @@ namespace AppilicationProcesserAPI.Controllers
         }
 
 
-
         [HttpGet("api/applications-user/{userId}")]
         public async Task<List<ApplicationDatabaseModel>> GetAllApplicationsForUser([FromRoute] Guid userId, CancellationToken cancellationToken)
         {
