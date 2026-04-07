@@ -4,6 +4,11 @@ import type { ApplicationListItem } from "../types/boardTypes";
 
 function formatDate(iso: string) {
   const d = new Date(iso);
+
+  if (Number.isNaN(d.getTime())) {
+    return "Unknown date";
+  }
+
   return d.toLocaleDateString(undefined, {
     year: "numeric",
     month: "short",
@@ -26,7 +31,6 @@ export function ApplicationStackItem({ item }: { item: ApplicationListItem }) {
         "focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/60",
       ].join(" ")}
     >
-      {/* hover glow */}
       <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
         <div className="absolute -top-24 -right-24 h-56 w-56 rounded-full bg-sky-400/10 blur-3xl" />
       </div>
@@ -37,15 +41,15 @@ export function ApplicationStackItem({ item }: { item: ApplicationListItem }) {
             {item.applicantName}
           </div>
           <div className="mt-1 text-sm text-slate-300">
+            User ID: {item.userId.slice(0, 8)}
+          </div>
+          <div className="mt-1 text-sm text-slate-300">
             Submitted: {formatDate(item.submittedAt)}
           </div>
         </div>
 
         <div className="flex items-center gap-2">
           <StatusPill status={item.status} />
-          <div className="rounded-full border border-white/10 bg-white/10 px-3 py-1 text-sm font-semibold text-white/85">
-            {item.approvalsCount}/{item.requiredApprovals}
-          </div>
         </div>
       </div>
 

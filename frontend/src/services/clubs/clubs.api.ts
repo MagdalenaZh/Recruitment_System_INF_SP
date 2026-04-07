@@ -65,5 +65,6 @@ export async function getClubDetailsById(
     description: club.description,
     admissionQuestions: club.admissionQuestions,
     departments,
+    category: club.category,
   };
 }

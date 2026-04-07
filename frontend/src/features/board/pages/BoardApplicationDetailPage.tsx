@@ -1,4 +1,5 @@
 import { Link, useParams } from "react-router-dom";
+import { Navbar } from "../../../components/layout/Navbar/Navbar";
 import { ApplicationAnswersSection } from "../components/ApplicationAnswersSection";
 import { ApplicationAttachmentsSection } from "../components/ApplicationAttachmentsSection";
 import { ApplicationDecisionBar } from "../components/ApplicationDecisionBar";
@@ -9,7 +10,7 @@ import type { BoardVote } from "../types/boardTypes";
 
 export function BoardApplicationDetailPage() {
   const { applicationId } = useParams<{ applicationId: string }>();
-  const { data, setData, loading, error, refetch } =
+  const { data, setData, loading, error } =
     useBoardApplicationDetail(applicationId);
   const {
     vote,
@@ -19,50 +20,55 @@ export function BoardApplicationDetailPage() {
 
   async function onVote(decision: BoardVote) {
     if (!data) return;
-    const res = await vote(data.id, decision);
-    if (!res) return;
+
+    console.log("[BoardApplicationDetailPage] before vote data:", data);
+
+    const result = await vote(data.id, decision, data);
+    if (!result) return;
 
     setData({
       ...data,
-      approvalsCount: res.approvalsCount,
-      requiredApprovals: res.requiredApprovals,
-      status: res.status,
-      myVote: res.myVote,
+      approvalsCount: result.approvalsCount,
+      requiredApprovals: result.requiredApprovals,
+      status: result.status,
+      myVote: result.myVote,
     });
+
+    console.log("[BoardApplicationDetailPage] optimistic UI updated:", result);
   }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-950 via-slate-950 to-slate-950">
-      <div className="mx-auto max-w-6xl p-4 sm:p-6 pb-24 pt-28">
-        <div className="flex items-center justify-between">
+      <Navbar />
+
+      <div className="mx-auto max-w-6xl p-4 pb-24 pt-28 sm:p-6">
+        <div className="flex items-center justify-between gap-4">
           <div>
             <Link
-              to="/board"
-              className="text-sm text-white font-semibold text-slate-700 hover:underline"
+              to={
+                data?.departmentId
+                  ? `/board/departments/${data.departmentId}/applications`
+                  : "/board"
+              }
+              className="text-sm font-semibold text-slate-300 hover:text-white"
             >
-              ← Back to departments
+              ← Back to applications
             </Link>
-            <div className="mt-1 text-white text-sm text-slate-600">
+            <div className="mt-1 text-sm text-slate-400">
               Application ID: {applicationId}
             </div>
           </div>
-
-          <button
-            onClick={refetch}
-            className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-800 hover:bg-slate-50"
-          >
-            Refresh
-          </button>
         </div>
 
         <div className="mt-4">
           {loading ? (
-            <div className="rounded-2xl border border-slate-200 bg-white p-6 text-slate-700 shadow-sm">
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-6 text-slate-200 shadow-sm">
               Loading application…
             </div>
           ) : error ? (
-            <div className="rounded-2xl border border-rose-200 bg-rose-50 p-6 text-rose-800">
-              {error}
+            <div className="rounded-2xl border border-rose-400/30 bg-rose-500/10 p-6 text-rose-200">
+              <div className="font-semibold">Could not load application.</div>
+              <div className="mt-2 text-sm">{error}</div>
             </div>
           ) : data ? (
             <div className="flex flex-col gap-4">
@@ -70,7 +76,11 @@ export function BoardApplicationDetailPage() {
               <ApplicationAnswersSection answers={data.answers} />
               <ApplicationAttachmentsSection attachments={data.attachments} />
             </div>
-          ) : null}
+          ) : (
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-6 text-slate-300">
+              Application not found.
+            </div>
+          )}
         </div>
 
         {data ? (

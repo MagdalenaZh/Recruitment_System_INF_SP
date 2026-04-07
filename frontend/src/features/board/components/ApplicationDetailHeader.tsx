@@ -3,6 +3,11 @@ import { StatusPill } from "./StatusPill";
 
 function formatDateTime(iso: string) {
   const d = new Date(iso);
+
+  if (Number.isNaN(d.getTime())) {
+    return "Unknown date";
+  }
+
   return d.toLocaleString(undefined, {
     year: "numeric",
     month: "short",
@@ -20,6 +25,9 @@ export function ApplicationDetailHeader({ app }: { app: ApplicationDetail }) {
           <h1 className="text-xl font-bold text-slate-900">
             {app.applicantName}
           </h1>
+          <div className="mt-1 text-sm text-slate-600">
+            User ID: {app.userId}
+          </div>
           <div className="mt-1 text-sm text-slate-600">
             Submitted: {formatDateTime(app.submittedAt)}
           </div>

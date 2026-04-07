@@ -23,7 +23,7 @@ export function ApplicationDecisionBar({
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-2">
             <div className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-sm font-semibold text-slate-800">
-              {app.approvalsCount}/{app.requiredApprovals} approvals
+              Status: {app.status}
             </div>
             <div className="text-sm text-slate-600">
               Your vote:{" "}
@@ -43,7 +43,7 @@ export function ApplicationDecisionBar({
               onClick={() => onVote("Approve")}
               disabled={loading}
             >
-              {approveActive ? "Approved (click to undo)" : "Approve"}
+              Approve
             </button>
 
             <button
@@ -55,7 +55,7 @@ export function ApplicationDecisionBar({
               onClick={() => onVote("Reject")}
               disabled={loading}
             >
-              {rejectActive ? "Rejected (click to undo)" : "Reject"}
+              Reject
             </button>
           </div>
         </div>

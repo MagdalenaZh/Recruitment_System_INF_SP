@@ -4,7 +4,7 @@ import type { BoardDepartment } from "../types/boardTypes";
 export function DepartmentCard({ d }: { d: BoardDepartment }) {
   return (
     <Link
-      to={`/board/departments/${d.id}/applications`}
+      to={`/board/departments/${d.departmentId}/applications`}
       className={[
         "group relative block overflow-hidden rounded-2xl",
         "bg-white/5 backdrop-blur-md",
@@ -22,14 +22,23 @@ export function DepartmentCard({ d }: { d: BoardDepartment }) {
       </div>
 
       <div className="relative p-6">
-        <div className="flex h-25 items-start justify-between gap-6">
+        <div className="flex min-h-[6.5rem] items-start justify-between gap-6">
           <div>
-            <h3 className="text-2xl font-semibold text-white/95">{d.name}</h3>
+            <h3 className="text-2xl font-semibold text-white/95">
+              {d.departmentName}
+            </h3>
 
             <p className="mt-2 text-sm text-slate-300">
               Total applications:{" "}
               <span className="font-semibold text-white/90">
-                {d.totalApplications}
+                {d.totalApplicants}
+              </span>
+            </p>
+
+            <p className="mt-2 text-sm text-slate-400">
+              Open positions:{" "}
+              <span className="font-semibold text-white/85">
+                {d.targetSpots}
               </span>
             </p>
           </div>
@@ -43,12 +52,35 @@ export function DepartmentCard({ d }: { d: BoardDepartment }) {
                 "group-hover:border-white/20 group-hover:bg-white/15",
               ].join(" ")}
             >
-              {d.pendingApplications} pending
+              {d.pendingCount} pending
             </div>
           </div>
         </div>
 
-        <div className="mt-10 flex items-center justify-end gap-2 text-sm text-slate-300">
+        <div className="mt-6 grid grid-cols-3 gap-2 text-xs text-slate-300">
+          <div className="rounded-xl border border-white/10 bg-slate-950/40 p-3">
+            <div className="text-slate-400">Approved</div>
+            <div className="mt-1 text-sm font-semibold text-emerald-200">
+              {d.approvedCount}
+            </div>
+          </div>
+
+          <div className="rounded-xl border border-white/10 bg-slate-950/40 p-3">
+            <div className="text-slate-400">Rejected</div>
+            <div className="mt-1 text-sm font-semibold text-rose-200">
+              {d.rejectedCount}
+            </div>
+          </div>
+
+          <div className="rounded-xl border border-white/10 bg-slate-950/40 p-3">
+            <div className="text-slate-400">Pending</div>
+            <div className="mt-1 text-sm font-semibold text-sky-200">
+              {d.pendingCount}
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-6 flex items-center justify-end gap-2 text-sm text-slate-300">
           <span className="transition-colors duration-300 group-hover:text-white/90">
             Click to review applications
           </span>

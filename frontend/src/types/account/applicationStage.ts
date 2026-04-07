@@ -7,6 +7,8 @@ export type ApplicationStage =
   | "Waitlisted";
 
 export type ApplicationListItem = {
+  departmentId: string;
+  status: string;
   id: string;
   clubName: string;
   stage: ApplicationStage;

@@ -1,58 +1,72 @@
-export type ApplicationStatus = "Pending" | "Approved" | "Rejected";
+export type ApplicationStatus =
+  | "Submitted"
+  | "Pending"
+  | "Approved"
+  | "Rejected"
+  | "Interview"
+  | "Unknown";
 
 export type BoardVote = "Approve" | "Reject";
 
-export interface BoardDepartment {
-  id: string;
-  name: string;
-  totalApplications: number;
-  pendingApplications: number;
-}
-
-export interface ApplicationListItem {
-  id: string;
-  applicantId: string;
-  applicantName: string;
-  submittedAt: string; // ISO string
-  status: ApplicationStatus;
-
-  departmentId: string;
-
-  approvalsCount: number; // e.g. 2
-  requiredApprovals: number; // e.g. 10
-
-  myVote?: BoardVote | null;
-}
-
-export interface ApplicationAnswer {
-  question: string;
-  answer: string;
-}
-
-export interface ApplicationAttachment {
-  id: string;
-  fileName: string;
-  fileSizeLabel: string; // "1.2 MB"
-  url: string; // backend later
-}
-
-export interface ApplicationDetail extends ApplicationListItem {
-  answers: ApplicationAnswer[];
-  attachments: ApplicationAttachment[];
-  notes?: string;
-}
-
-export interface VoteResult {
-  applicationId: string;
+export type VoteResult = {
   approvalsCount: number;
   requiredApprovals: number;
   status: ApplicationStatus;
   myVote: BoardVote | null;
-}
+};
 
-export interface BoardApi {
-  getDepartments(): Promise<BoardDepartment[]>;
-  getApplicationsByDepartment(departmentId: string): Promise<ApplicationListItem[]>;
-  getApplicationDetail(applicationId: string): Promise<ApplicationDetail>;
-  voteOnApplication(applicationId: string, vote: BoardVote): Promise<VoteResult>;
-}
+export type BoardDepartment = {
+  departmentId: string;
+  departmentName: string;
+  description: string;
+  targetSpots: number;
+  totalApplicants: number;
+  approvedCount: number;
+  rejectedCount: number;
+  pendingCount: number;
+  clubId: string;
+};
+
+export type ApplicationAnswer = {
+  question: string;
+  answer: string;
+};
+
+export type ApplicationAttachment = {
+  id: string;
+  fileName: string;
+  fileSizeLabel: string;
+  url: string;
+};
+
+export type ApplicationListItem = {
+  id: string;
+  applicantName: string;
+  applicantEmail: string;
+  status: ApplicationStatus;
+  submittedAt: string;
+  approvalsCount: number;
+  requiredApprovals: number;
+  departmentId: string;
+  departmentName: string;
+  userId: string;
+  myVote: BoardVote | null;
+};
+
+export type ApplicationDetail = {
+  id: string;
+  applicantName: string;
+  applicantEmail: string;
+  status: ApplicationStatus;
+  approvalsCount: number;
+  requiredApprovals: number;
+  myVote: BoardVote | null;
+  submittedAt: string;
+  departmentId: string;
+  departmentName: string;
+  clubId?: string;
+  userId: string;
+  answers: ApplicationAnswer[];
+  attachments: ApplicationAttachment[];
+  rawApplication?: unknown;
+};

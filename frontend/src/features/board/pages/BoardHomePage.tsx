@@ -20,11 +20,14 @@ export function BoardHomePage() {
               <p className="mt-6 text-lg font-medium text-slate-300">
                 Current Applications
               </p>
+              <p className="mt-2 text-sm text-slate-400">
+                Open a department to view applicants and vote on applications.
+              </p>
             </div>
 
             <button
               onClick={refetch}
-              className="w-fit rounded-xl bg-white/10 backdrop-blur border border-white/20 px-4 py-2 text-sm font-semibold text-white hover:bg-white/20 transition"
+              className="w-fit rounded-xl border border-white/20 bg-white/10 px-4 py-2 text-sm font-semibold text-white backdrop-blur transition hover:bg-white/20"
             >
               Refresh
             </button>
@@ -34,16 +37,26 @@ export function BoardHomePage() {
 
           <div className="mt-10">
             {loading ? (
-              <div className="rounded-2xl bg-white/10 backdrop-blur border border-white/10 p-6 text-slate-200 shadow">
+              <div className="rounded-2xl border border-white/10 bg-white/10 p-6 text-slate-200 shadow">
                 Loading departments…
               </div>
             ) : error ? (
-              <div className="rounded-2xl bg-red-500/10 border border-red-400/30 p-6 text-red-300">
-                {error}
+              <div className="rounded-2xl border border-red-400/30 bg-red-500/10 p-6 text-red-300">
+                <div className="font-semibold">
+                  Could not load board departments.
+                </div>
+                <div className="mt-2 text-sm">{error}</div>
+                <div className="mt-3 text-xs text-red-200/80">
+                  Open the browser console too — I added debug logs there.
+                </div>
               </div>
-            ) : data ? (
+            ) : data && data.length > 0 ? (
               <DepartmentCardGrid departments={data} />
-            ) : null}
+            ) : (
+              <div className="rounded-2xl border border-white/10 bg-white/5 p-6 text-slate-300">
+                No departments found for this board member.
+              </div>
+            )}
           </div>
         </div>
       </div>
