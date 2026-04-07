@@ -20,6 +20,14 @@ export const ACCOUNT_NAV_SECTIONS: AccountNavSection[] = [
         icon: "file",
         roles: ["Applicant", "User"],
       },
+      {
+        key: "interviews",
+        label: "Interview booking",
+        description: "Choose and book your interview slot",
+        to: "/account/interview-booking",
+        icon: "file",
+        roles: ["Applicant", "User"],
+      },
     ],
   },
   {

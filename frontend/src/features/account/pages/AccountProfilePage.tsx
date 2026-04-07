@@ -93,8 +93,7 @@ export function AccountProfilePage() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-semibold text-slate-900">Your profile</h2>
-        <p className="mt-1 text-sm text-slate-600">
+        <p className="mt-1 text-base text-slate-800">
           View and update your personal information.
         </p>
       </div>

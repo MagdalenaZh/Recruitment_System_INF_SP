@@ -9,6 +9,7 @@ import { AccountInboxPage } from "./features/account/pages/AccountInboxPage.tsx"
 import { AccountProfilePage } from "./features/account/pages/AccountProfilePage.tsx";
 import { AccountLayout } from "./features/account/components/AccountLayout/AccountLayout.tsx";
 import { AccountApplicationsPage } from "./features/account/pages/AccountApplicationsPage.tsx";
+import { AccountInterviewBookingPage } from "./features/account/pages/AccountInterviewBookingPage.tsx";
 
 import ClubDetailsPage from "./features/clubs/pages/ClubDetailsPage.tsx";
 import ApplicationFormPage from "./features/applications/pages/ApplicationFormPage.tsx";
@@ -49,6 +50,10 @@ export default function App() {
         <Route index element={<AccountProfilePage />} />
         <Route path="inbox" element={<AccountInboxPage />} />
         <Route path="applications" element={<AccountApplicationsPage />} />
+        <Route
+          path="interview-booking"
+          element={<AccountInterviewBookingPage />}
+        />
       </Route>
 
       <Route path="/clubs/:clubId" element={<ClubDetailsPage />} />
@@ -110,7 +115,6 @@ export default function App() {
           </ProtectedRoute>
         }
       />
-
       <Route
         path="/club-admin/applications/:applicationId"
         element={
@@ -135,11 +139,6 @@ export default function App() {
           </ProtectedRoute>
         }
       />
-
-      {/*
-        Keep this only if you still want the page around.
-        It is not part of the current club-admin scope you described.
-      */}
 
       <Route
         path="/sys-admin"

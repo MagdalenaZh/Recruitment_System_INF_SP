@@ -6,6 +6,7 @@ function titleFromPath(path: string) {
   if (path === "/account") return "Profile";
   if (path.includes("/account/inbox")) return "Inbox";
   if (path.includes("/account/applications")) return "My applications";
+  if (path.includes("/account/interview-booking")) return "Interview booking";
   if (path.includes("/account/tasks")) return "Review tasks";
   if (path.includes("/account/club")) return "Club panel";
   return "Account";
@@ -21,9 +22,6 @@ export function AccountTopBar() {
         <div className="hidden sm:block">
           <div className="text-2xl font-semibold text-slate-900">
             {titleFromPath(loc.pathname)}
-          </div>
-          <div className="text-sm text-slate-500">
-            Manage your profile and applications
           </div>
         </div>
       </div>
