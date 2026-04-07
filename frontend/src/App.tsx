@@ -19,9 +19,9 @@ import { BoardApplicationDetailPage } from "./features/board/pages/BoardApplicat
 import { BoardInterviewsHomePage } from "./features/board/pages/BoardInterviewsHomePage.tsx";
 
 import { ClubAdminHomePage } from "./features/clubAdmin/pages/ClubAdminHomePage.tsx";
-import { ClubAdminDepartmentApplicationsPage } from "./features/clubAdmin/pages/ClubAdminDepartmentApplicationsPage.tsx";
 import { ClubAdminApplicationDetailPage } from "./features/clubAdmin/pages/ClubAdminApplicationDetailPage.tsx";
-import { ClubAdminBoardMembersPage } from "./features/clubAdmin/pages/ClubAdminBoardMembersPage.tsx";
+import { ClubAdminClubInfoPage } from "./features/clubAdmin/pages/ClubAdminClubInfoPage.tsx";
+import { ClubAdminApplicationManagementPage } from "./features/clubAdmin/pages/ClubAdminApplicationManagementPage.tsx";
 
 import { SystemAdminLayout } from "./features/sysAdmin/pages/SystemAdminLayout.tsx";
 import { SystemAdminDashboardPage } from "./features/sysAdmin/pages/SystemAdminDashboardPage.tsx";
@@ -103,13 +103,14 @@ export default function App() {
         }
       />
       <Route
-        path="/club-admin/departments/:departmentId/applications"
+        path="/club-admin/applications"
         element={
           <ProtectedRoute>
-            <ClubAdminDepartmentApplicationsPage />
+            <BoardDepartmentApplicationsPage />
           </ProtectedRoute>
         }
       />
+
       <Route
         path="/club-admin/applications/:applicationId"
         element={
@@ -119,13 +120,26 @@ export default function App() {
         }
       />
       <Route
-        path="/club-admin/board-members"
+        path="/club-admin/club-info"
         element={
           <ProtectedRoute>
-            <ClubAdminBoardMembersPage />
+            <ClubAdminClubInfoPage />
           </ProtectedRoute>
         }
       />
+      <Route
+        path="/club-admin/application-management"
+        element={
+          <ProtectedRoute>
+            <ClubAdminApplicationManagementPage />
+          </ProtectedRoute>
+        }
+      />
+
+      {/*
+        Keep this only if you still want the page around.
+        It is not part of the current club-admin scope you described.
+      */}
 
       <Route
         path="/sys-admin"

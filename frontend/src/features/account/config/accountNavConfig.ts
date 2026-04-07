@@ -10,15 +10,7 @@ export const ACCOUNT_NAV_SECTIONS: AccountNavSection[] = [
         description: "View and edit your personal information",
         to: "/account",
         icon: "user",
-        roles: ["Applicant", "BoardMember", "ClubAdmin", "Admin", "User"],
-      },
-      {
-        key: "inbox",
-        label: "Inbox",
-        description: "Updates about your applications",
-        to: "/account/inbox",
-        icon: "inbox",
-        roles: ["Applicant", "BoardMember", "ClubAdmin", "Admin", "User"],
+        roles: ["Applicant", "BoardMember", "ClubAdmin", "SystemAdmin", "User"],
       },
       {
         key: "applications",
@@ -34,20 +26,12 @@ export const ACCOUNT_NAV_SECTIONS: AccountNavSection[] = [
     title: "Board tools",
     items: [
       {
-        key: "tasks",
-        label: "Review tasks",
-        description: "Assigned applications to review",
-        to: "/account/tasks",
-        icon: "shield",
-        roles: ["BoardMember", "ClubAdmin", "Admin"],
-      },
-      {
         key: "clubPanel",
         label: "Club panel",
         description: "Manage club recruitment settings",
         to: "/account/club",
         icon: "settings",
-        roles: ["ClubAdmin", "Admin"],
+        roles: ["ClubAdmin", "SystemAdmin"],
       },
     ],
   },
