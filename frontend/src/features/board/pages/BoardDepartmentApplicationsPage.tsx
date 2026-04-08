@@ -32,7 +32,7 @@ export function BoardDepartmentApplicationsPage() {
           <div>
             <Link
               to="/board"
-              className="inline-flex items-center gap-2 text-sm font-semibold text-slate-300 transition hover:text-white"
+              className="mt-20 inline-flex items-center gap-2 text-sm font-semibold text-slate-300 transition hover:text-white"
             >
               <span className="transition-transform duration-200 hover:-translate-x-0.5">
                 ←
@@ -40,7 +40,7 @@ export function BoardDepartmentApplicationsPage() {
               Back to departments
             </Link>
 
-            <h1 className="mt-3 text-3xl font-semibold text-white/95">
+            <h1 className="mt-6 text-3xl font-semibold text-white/95">
               Applications
             </h1>
             <p className="mt-1 text-sm text-slate-300">
