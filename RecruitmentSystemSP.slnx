@@ -1,3 +1,4 @@
 <Solution>
+  <Project Path="AppilicationProcesserAPI.Tests/AppilicationProcesserAPI.Tests.csproj" />
   <Project Path="AppilicationProcesserAPI/AppilicationProcesserAPI.csproj" />
 </Solution>
