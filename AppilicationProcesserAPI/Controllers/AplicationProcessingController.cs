@@ -31,6 +31,9 @@ namespace AppilicationProcesserAPI.Controllers
         [HttpPost("api/submit-application")]
         public async Task<IActionResult> SubmitApplication([FromBody] ApplicationSubmissionData applicationData, CancellationToken cancellationToken)
         {
+            if(User == null)
+                return Unauthorized();
+
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
             if (userIdClaim == null)
                 return Unauthorized();
@@ -66,6 +69,8 @@ namespace AppilicationProcesserAPI.Controllers
         [HttpPost("api/approve-application/{applicationId}")]
         public async Task<IActionResult> ApproveApplication([FromRoute] Guid applicationId, CancellationToken cancellationToken)
         {
+            if (User == null)
+                return Unauthorized();
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
             if (userIdClaim == null)
                 return Unauthorized();
@@ -95,6 +100,8 @@ namespace AppilicationProcesserAPI.Controllers
         [HttpPost("api/after-interview-approve-application/{applicationId}")]
         public async Task<IActionResult> AfterInterviewApproveApplication([FromRoute] Guid applicationId, CancellationToken cancellationToken)
         {
+            if (User == null)
+                return Unauthorized();
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
             if (userIdClaim == null)
                 return Unauthorized();
@@ -124,6 +131,8 @@ namespace AppilicationProcesserAPI.Controllers
         [HttpPost("api/after-interview-disapprove-application/{applicationId}")]
         public async Task<IActionResult> AfterInterviewDisapproveApplication([FromRoute] Guid applicationId, CancellationToken cancellationToken)
         {
+            if (User == null)
+                return Unauthorized();
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
             if (userIdClaim == null)
                 return Unauthorized();
@@ -152,6 +161,8 @@ namespace AppilicationProcesserAPI.Controllers
         [HttpPost("api/disapprove-application/{applicationId}")]
         public async Task<IActionResult> DisapproveApplication([FromRoute] Guid applicationId, CancellationToken cancellationToken)
         {
+            if (User == null)
+                return Unauthorized();
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
             if (userIdClaim == null)
                 return Unauthorized();
@@ -180,6 +191,13 @@ namespace AppilicationProcesserAPI.Controllers
         [HttpPost("api/reject-interview-proposal/{applicationId}")]
         public async Task<IActionResult> RejectInterviewProposal([FromRoute] Guid applicationId, CancellationToken cancellationToken)
         {
+            if (User == null)
+                return Unauthorized();
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (userIdClaim == null)
+                return Unauthorized();
+
+            var userId = Guid.Parse(userIdClaim.Value);
             var domainEvent = new InterviewProposalRejectedEvent(applicationId);
 
             await _eventStore.AppendEventAsync(domainEvent, cancellationToken).ConfigureAwait(false);
@@ -199,9 +217,17 @@ namespace AppilicationProcesserAPI.Controllers
             }
         }
 
+        [Authorize]
         [HttpPut("api/book-interview-slot/{applicationId}")]
         public async Task<IActionResult> BookInterviewSlot([FromRoute] Guid applicationId, [FromBody] InterviewSlot interviewSlot, CancellationToken cancellationToken)
         {
+            if (User == null)
+                return Unauthorized();
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (userIdClaim == null)
+                return Unauthorized();
+            var userId = Guid.Parse(userIdClaim.Value);
+
             await _calendarProvider.BookInterviewSlotAsync(interviewSlot.SlotId, applicationId, cancellationToken).ConfigureAwait(false);
 
             var domainEvent = new BookInterviewSlotEvent(applicationId, interviewSlot);
@@ -223,10 +249,17 @@ namespace AppilicationProcesserAPI.Controllers
             }
         }
 
+        [Authorize]
         [HttpPut("api/conclude-reject-application/{applicationId}")]
         public async Task<IActionResult> ConcludeRejectedApplication([FromRoute] Guid applicationId, CancellationToken cancellationToken)
         {
-           var domainEvent = new ApplicationRejectedEvent(applicationId);
+            if (User == null)
+                return Unauthorized();
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (userIdClaim == null)
+                return Unauthorized();
+
+            var domainEvent = new ApplicationRejectedEvent(applicationId);
 
             await _eventStore.AppendEventAsync(domainEvent, cancellationToken).ConfigureAwait(false);
 
@@ -245,9 +278,15 @@ namespace AppilicationProcesserAPI.Controllers
             }
         }
 
+        [Authorize]
         [HttpPut("api/conclude-accept-application/{applicationId}")]
         public async Task<IActionResult> ConcludeAcceptedApplication([FromRoute] Guid applicationId, CancellationToken cancellationToken)
         {
+            if (User == null)
+                return Unauthorized();
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (userIdClaim == null)
+                return Unauthorized();
             var domainEvent = new ApplicationAcceptedEvent(applicationId);
 
             await _eventStore.AppendEventAsync(domainEvent, cancellationToken).ConfigureAwait(false);
