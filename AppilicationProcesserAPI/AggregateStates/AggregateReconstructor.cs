@@ -23,13 +23,11 @@ namespace AppilicationProcesserAPI.AggregateStates
 
         public async Task<List<IStateRepresentation>> GetLatestAggregateStates(List<Guid> aggregateIds, CancellationToken cancellationToken)
         {
-            Task<IStateRepresentation>[] reconstructionTasks = [];
-
-            for (int i = 0; i < aggregateIds.Count; i++)
+            var reconstructionTasks = aggregateIds.Select(async aggregateId =>
             {
-                var events = await _eventStore.GetEventsAsync(aggregateIds[i], cancellationToken);
-                reconstructionTasks[i] = PopulateAggregate(events);
-            }
+                var events = await _eventStore.GetEventsAsync(aggregateId, cancellationToken);
+                return await PopulateAggregate(events);
+            });
 
             var representations = await Task.WhenAll(reconstructionTasks).ConfigureAwait(false);
             return [.. representations];

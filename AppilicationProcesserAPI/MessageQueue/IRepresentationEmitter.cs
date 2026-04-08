@@ -44,7 +44,7 @@ namespace AppilicationProcesserAPI.MessageQueue
             {
                 queue.Enqueue(sseItem);
 
-                while (_buffer.Count >= _capacity)
+                while (queue.Count >= _capacity)
                 {
                     queue.TryDequeue(out _);
                 }
@@ -56,14 +56,14 @@ namespace AppilicationProcesserAPI.MessageQueue
                 _buffer.TryAdd(representation.ApplicationId, newQueue);
             }
 
-            var fanOutTasks = new List<Task>();
-
-            foreach (var client in _applicationsToUsersMap[representation.ApplicationId])
+            if (_applicationsToUsersMap.TryGetValue(representation.ApplicationId, out var clients))
             {
-                fanOutTasks.Add(_clientQueues[client].Writer.WriteAsync(representation, cancellationToken).AsTask());
-            }
+                var fanOutTasks = clients
+                    .Where(clientId => _clientQueues.ContainsKey(clientId))
+                    .Select(clientId => _clientQueues[clientId].Writer.WriteAsync(representation, cancellationToken).AsTask());
 
-            await Task.WhenAll(fanOutTasks).ConfigureAwait(false);
+                await Task.WhenAll(fanOutTasks).ConfigureAwait(false);
+            }
         }
 
         public async IAsyncEnumerable<IStateRepresentation> ReadRepresentationsStates(Guid clientId, HashSet<Guid> applicationIds, string? lastEventId, [EnumeratorCancellation] CancellationToken cancellationToken)
@@ -109,6 +109,7 @@ namespace AppilicationProcesserAPI.MessageQueue
             finally
             {
                 _clientQueues.TryRemove(clientId, out _);
+                _applicationsToUsersMap.Values.ToList().ForEach(set => set.Remove(clientId));
             }
         }
     }
