@@ -38,4 +38,14 @@ namespace AppilicationProcesserAPI.Representations
         public Guid ApplicationId { get; }
         public ApplicationStatus ApplicationStatus => ApplicationStatus.InProgress;
     }
+
+    public class InReviewStatusRepresentation : IStatusRepresentation
+    {
+        public InReviewStatusRepresentation(Guid applicationId)
+        {
+            ApplicationId = applicationId;
+        }
+        public Guid ApplicationId { get; }
+        public ApplicationStatus ApplicationStatus => ApplicationStatus.InReview;
+    }
 }

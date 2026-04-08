@@ -9,6 +9,8 @@ public enum DomainEventEnum
     BookInterviewSlot = 5,
     ApplicationAccepted = 6,
     ApplicationRejected = 7,
+    AfterInterviewApprovedIncremented = 8,
+    AfterInterviewDisapprovedDecremented = 9
 }
 
 public enum ApplicationStatus
@@ -18,4 +20,5 @@ public enum ApplicationStatus
     InterviewScheduled = 3,
     Rejected = 4,
     Accepted = 5,
+    InReview = 6,
 }

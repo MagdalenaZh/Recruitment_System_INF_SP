@@ -28,12 +28,25 @@ namespace AppilicationProcesserAPI.Representations
     public class HibernatedStateRepresentation : IStateRepresentation
     {
         public required Guid ApplicationId { get; set; }
+        public required bool WaitingFinalDecision { get; set; }
+    }
+
+    public class AfterInterviewReviewStateRepresentation : IStateRepresentation
+    {
+        public required Guid ApplicationId { get; set; }
+        public required int RequiredNumberOfApprovals { get; set; }
+
+        public required int CurrentNumberOfPostInterviewApprovals { get; set; }
+
+        public required Dictionary<Guid, bool> UserDecisionsMap { get; set; }
+
         public required InterviewSlot ScheduledTime { get; set; }
     }
 
     public class ApprovedStateRepresentation : IStateRepresentation
     {
         public required Guid ApplicationId { get; set; }
+        public required bool ApplicationApproved { get; set; }
     }
 
     public class ConcludedStateRepresentation : IStateRepresentation

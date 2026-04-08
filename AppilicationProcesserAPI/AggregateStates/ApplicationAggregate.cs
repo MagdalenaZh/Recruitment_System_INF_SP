@@ -35,14 +35,19 @@ public class ApplicationAggregate : IApplicationAggregate
         _state = new ProcessingApplicationState(aggregateId, requiredNumberOfApprovals);
     }
 
-    public void TransitionToInterviewScheduledState(Guid aggregateId, InterviewSlot scheduledInterviewSlot)
+    public void TransitionToInterviewScheduledState(Guid aggregateId, InterviewSlot scheduledInterviewSlot, int requiredNumberOfApprovals)
     {
-        _state = new HibernatedApplicationState(aggregateId, scheduledInterviewSlot);
+        _state = new ReviewAfterInterviewState(aggregateId, scheduledInterviewSlot, requiredNumberOfApprovals);
     }   
 
-    public void TransitionToApprovedState(Guid aggregateId)
+    public void TransitionToApprovedState(Guid aggregateId, int requiredNumberOfApprovals)
     {
-        _state = new ApplicationApprovedState(aggregateId);
+        _state = new ApplicationApprovedState(aggregateId, requiredNumberOfApprovals);
+    }
+
+    public void TransitionToWaitForFinalDecisionState(Guid aggregateId)
+    {
+        _state = new HibernatedApplicationState(aggregateId);
     }
 
     public void TransitionToAcceptedConcludedState(Guid aggregateId)

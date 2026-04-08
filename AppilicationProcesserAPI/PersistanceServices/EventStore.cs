@@ -122,6 +122,10 @@ namespace AppilicationProcesserAPI.PersistanceServices
                     return typeof(ApplicationAcceptedEvent);
                 case DomainEventEnum.ApplicationRejected:
                     return typeof(ApplicationRejectedEvent);
+                case DomainEventEnum.AfterInterviewApprovedIncremented:
+                    return typeof(AfterInterviewApprovedEvent);
+                case DomainEventEnum.AfterInterviewDisapprovedDecremented:
+                    return typeof(AfterInterviewDisapprovedEvent);
                 default:
                     throw new ArgumentOutOfRangeException(nameof(eventEnum));
             }

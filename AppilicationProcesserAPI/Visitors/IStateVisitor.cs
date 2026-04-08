@@ -15,6 +15,8 @@ namespace AppilicationProcesserAPI.Visitors
 
         public void Visit(HibernatedApplicationState hibernatedState);
 
+        public void Visit(ReviewAfterInterviewState afterInterviewReviewState);
+
         public void Visit(ApplicationApprovedState approvedState);
 
         public void Visit(ApplicationConcludedStateAccepted concludedState);
@@ -64,12 +66,24 @@ namespace AppilicationProcesserAPI.Visitors
             };
         }
 
+        public void Visit(ReviewAfterInterviewState afterInterviewReviewState)
+        {
+            _stateRepresentation = new AfterInterviewReviewStateRepresentation
+            {
+                ApplicationId = PropertyBag.Get<Guid>("ApplicationId"),
+                CurrentNumberOfPostInterviewApprovals = PropertyBag.Get<int>("CurrentNumberOfPostInterviewApprovals"),
+                RequiredNumberOfApprovals = PropertyBag.Get<int>("RequiredNumberOfApprovals"),
+                UserDecisionsMap = PropertyBag.Get<Dictionary<Guid, bool>>("UserDecisionsMap"),
+                ScheduledTime = PropertyBag.Get<InterviewSlot>("ScheduledTime")
+            };
+        }
+
         public void Visit(HibernatedApplicationState hibernatedState)
         {
             _stateRepresentation = new HibernatedStateRepresentation
             {
                 ApplicationId = PropertyBag.Get<Guid>("ApplicationId"),
-                ScheduledTime = PropertyBag.Get<InterviewSlot>("ScheduledTime")
+                WaitingFinalDecision = PropertyBag.Get<bool>("WaitingFinalDecision")
             };
         }
 
@@ -77,7 +91,8 @@ namespace AppilicationProcesserAPI.Visitors
         {
             _stateRepresentation = new ApprovedStateRepresentation
             {
-                ApplicationId = PropertyBag.Get<Guid>("ApplicationId")
+                ApplicationId = PropertyBag.Get<Guid>("ApplicationId"),
+                ApplicationApproved = PropertyBag.Get<bool>("ApplicationApproved")
             };
         }
 

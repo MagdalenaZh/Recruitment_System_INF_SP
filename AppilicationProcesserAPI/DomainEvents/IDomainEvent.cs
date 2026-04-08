@@ -50,6 +50,30 @@ public class ApplicationApprovedEvent : DomainEvent
     public override DomainEventEnum EventType => DomainEventEnum.ApplicationApprovalIncremented;
 }
 
+public class AfterInterviewApprovedEvent : DomainEvent
+{
+    public Guid UserId { get; }
+
+    public AfterInterviewApprovedEvent(Guid aggregateId, Guid userId) : base(aggregateId)
+    {
+        UserId = userId;
+    }
+
+    public override DomainEventEnum EventType => DomainEventEnum.AfterInterviewApprovedIncremented;
+}
+
+public class AfterInterviewDisapprovedEvent : DomainEvent
+{
+    public Guid UserId { get; }
+
+    public AfterInterviewDisapprovedEvent(Guid aggregateId, Guid userId) : base(aggregateId)
+    {
+        UserId = userId;
+    }
+
+    public override DomainEventEnum EventType => DomainEventEnum.AfterInterviewDisapprovedDecremented;
+}
+
 public class ApplicationDisapprovedEvent : DomainEvent
 {
     public Guid UserId { get; }

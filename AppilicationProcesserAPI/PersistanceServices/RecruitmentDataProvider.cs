@@ -18,6 +18,8 @@ namespace AppilicationProcesserAPI.PersistanceServices
         Task<List<ClubDatabaseModel>> GetAllClubsInformationAsync(CancellationToken cancellationToken);
 
         Task<List<DepartmentDatabaseModel>> GetDepartmentsForClubAsync(Guid clubId, CancellationToken cancellationToken);
+
+        Task<UserDatabaseModel> GetApplicantUserInformationAsync(Guid userId, CancellationToken cancellationToken);
     }
 
     public class RecruitmentDataProvider : IRecruitmentDataProvider
@@ -152,6 +154,28 @@ namespace AppilicationProcesserAPI.PersistanceServices
             }
 
             return clubs;
+        }
+
+        public async Task<UserDatabaseModel> GetApplicantUserInformationAsync(Guid userId, CancellationToken cancellationToken)
+        {
+            using var sqlConnection = new SqlConnection(_connectionString);
+            await sqlConnection.OpenAsync(cancellationToken).ConfigureAwait(false);
+
+            using var command = new SqlCommand(DbQueries.GetUserInformation, sqlConnection);
+            command.Parameters.AddWithValue("@userId", userId);
+            using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+
+            while (reader.Read())
+            {
+                var id = reader.GetGuid(0);
+                var firstName = reader.GetString(1);
+                var lastName = reader.GetString(2);
+                var email = reader.GetString(3);
+                var academicYear = reader.GetString(4);
+                var studyMajor = reader.GetString(5);
+               return new UserDatabaseModel(id, firstName, lastName, email, academicYear, studyMajor);
+            }
+            throw new Exception($"User with id {userId} not found");
         }
 
         public async Task<List<DepartmentDatabaseModel>> GetDepartmentsForClubAsync(Guid clubId, CancellationToken cancellationToken)

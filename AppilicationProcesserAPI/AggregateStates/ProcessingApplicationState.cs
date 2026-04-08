@@ -41,7 +41,7 @@ public class ProcessingApplicationState : IApplicationState
                     _userDecisionsMap[applicationApprovedEvent.UserId] = true;
                     if (_numberOfApprovals >= _requiredNumberOfApprovals)
                     {
-                        applicationAggregate.TransitionToApprovedState(_aggregateId);
+                        applicationAggregate.TransitionToApprovedState(_aggregateId, _requiredNumberOfApprovals);
                     }
                 }
                 break;

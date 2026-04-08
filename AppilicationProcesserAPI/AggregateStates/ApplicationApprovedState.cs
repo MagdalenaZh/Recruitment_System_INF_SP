@@ -6,15 +6,18 @@ namespace AppilicationProcesserAPI.AggregateStates;
 public class ApplicationApprovedState : IApplicationState
 {
     private readonly Guid _aggregateId;
+    private readonly int _requiredNumberOfApprovals;
 
-    public ApplicationApprovedState(Guid aggregateId)
+    public ApplicationApprovedState(Guid aggregateId, int requiredNumberOfApprovals)
     {
         _aggregateId = aggregateId;
+        _requiredNumberOfApprovals = requiredNumberOfApprovals;
     }
 
     public void AcceptVisitor(IStateVisitor stateVisitor)
     {
         stateVisitor.PropertyBag.Set("ApplicationId", _aggregateId);
+        stateVisitor.PropertyBag.Set("ApplicationApproved", true);
         stateVisitor.Visit(this);
     }
 
@@ -27,12 +30,17 @@ public class ApplicationApprovedState : IApplicationState
         {
             case BookInterviewSlotEvent interviewProposalAcceptedEvent:
                 {
-                    applicationAggregate.TransitionToInterviewScheduledState(_aggregateId, interviewProposalAcceptedEvent.BookedSlot);
+                    applicationAggregate.TransitionToInterviewScheduledState(_aggregateId, interviewProposalAcceptedEvent.BookedSlot, _requiredNumberOfApprovals);
                 }
                 break;
             case InterviewProposalRejectedEvent:
                 {
                     applicationAggregate.TransitionToRejectedConcludedState(_aggregateId);
+                    break;
+                }
+            case ApplicationRejectedEvent applicationRejectedEvent:
+                {
+                    applicationAggregate.TransitionToRejectedConcludedState(applicationRejectedEvent.AggregateId);
                 }
                 break;
         }

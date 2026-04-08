@@ -92,6 +92,63 @@ namespace AppilicationProcesserAPI.Controllers
         }
 
         [Authorize]
+        [HttpPost("api/after-interview-approve-application/{applicationId}")]
+        public async Task<IActionResult> AfterInterviewApproveApplication([FromRoute] Guid applicationId, CancellationToken cancellationToken)
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (userIdClaim == null)
+                return Unauthorized();
+
+            var userId = Guid.Parse(userIdClaim.Value);
+
+            var domainEvent = new AfterInterviewApprovedEvent(applicationId, userId);
+
+            await _eventStore.AppendEventAsync(domainEvent, cancellationToken).ConfigureAwait(false);
+
+            var message = new EventEnvelope(domainEvent);
+
+            try
+            {
+                await _messageBroker.PublishAsync(message, cancellationToken);
+                _logger.LogInformation("Application processing message published for ApplicationId: {ApplicationId}", applicationId);
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error publishing application processing message for ApplicationId: {ApplicationId}", message.MessageData.AggregateId);
+                return StatusCode(500, "An error occurred while processing the application.");
+            }
+        }
+
+        [Authorize]
+        [HttpPost("api/after-interview-disapprove-application/{applicationId}")]
+        public async Task<IActionResult> AfterInterviewDisapproveApplication([FromRoute] Guid applicationId, CancellationToken cancellationToken)
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (userIdClaim == null)
+                return Unauthorized();
+
+            var userId = Guid.Parse(userIdClaim.Value);
+            var domainEvent = new AfterInterviewDisapprovedEvent(applicationId, userId);
+
+            await _eventStore.AppendEventAsync(domainEvent, cancellationToken).ConfigureAwait(false);
+
+            var message = new EventEnvelope(domainEvent);
+
+            try
+            {
+                await _messageBroker.PublishAsync(message, cancellationToken);
+                _logger.LogInformation("Application processing message published for ApplicationId: {ApplicationId}", applicationId);
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error publishing application processing message for ApplicationId: {ApplicationId}", message.MessageData.AggregateId);
+                return StatusCode(500, "An error occurred while processing the application.");
+            }
+        }
+
+        [Authorize]
         [HttpPost("api/disapprove-application/{applicationId}")]
         public async Task<IActionResult> DisapproveApplication([FromRoute] Guid applicationId, CancellationToken cancellationToken)
         {

@@ -2,6 +2,7 @@
 using AppilicationProcesserAPI.Models;
 using AppilicationProcesserAPI.PersistanceServices;
 using AppilicationProcesserAPI.Representations;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AppilicationProcesserAPI.Controllers
@@ -26,6 +27,23 @@ namespace AppilicationProcesserAPI.Controllers
             _logger = logger;
         }
 
+        [Authorize]
+        [HttpGet("api/user-information/{userId}")]
+        public async Task<UserDatabaseModel> GetUserInformation([FromRoute] Guid userId, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var userInfo = await _recruitmentDataProvider.GetApplicantUserInformationAsync(userId, cancellationToken).ConfigureAwait(false);
+                return userInfo;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving user information for UserId: {UserId}", userId);
+                throw new Exception("An error occurred while retrieving user information.");
+            }
+        }
+
+        [Authorize]
         [HttpGet("api/latest-application-states")]
         public async Task<List<IStateRepresentation>> GetLatestApplicationStates([FromHeader] List<Guid> applicationIds, CancellationToken cancellationToken)
         {

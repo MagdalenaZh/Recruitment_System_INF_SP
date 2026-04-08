@@ -82,5 +82,24 @@ namespace AppilicationProcesserAPI.Models
             EndTime = endTime;
         }
     }
+
+    public class UserDatabaseModel
+    {
+        public Guid UserId { get; }
+        public string FirstName { get; }
+        public string LastName { get; }
+        public string Email { get; }
+        public string AcademicYear { get; }
+        public string StudyMajor { get; }
+        public UserDatabaseModel(Guid userId, string firstName, string lastName, string email, string academicYear, string studyMajor)
+        {
+            UserId = userId;
+            FirstName = firstName;
+            LastName = lastName;
+            Email = email;
+            AcademicYear = academicYear;
+            StudyMajor = studyMajor;
+        }
+    }
 }
 

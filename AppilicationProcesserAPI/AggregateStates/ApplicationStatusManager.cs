@@ -53,8 +53,10 @@ namespace AppilicationProcesserAPI.AggregateStates
             {
                 case InitialRepresentation:
                     return new InProgressStatusRepresentation(representation.ApplicationId);
-                case HibernatedStateRepresentation:
+                case ApprovedStateRepresentation:
                     return new PendingInterviewStatusRepresentation(representation.ApplicationId);
+                case HibernatedStateRepresentation:
+                    return new InReviewStatusRepresentation(representation.ApplicationId);
                 case ConcludedStateRepresentation concludedStateRepresentation:
                     return new ConcludedStatusRepresentation(concludedStateRepresentation.ApplicationId, concludedStateRepresentation.ConclusionResult);
                 default: return null;

@@ -50,6 +50,8 @@
             """;
 
         internal const string GetDepartmentIdForApplication = "SELECT [DepartmentId], [UserId] FROM [Applications] WHERE [AggregateId] = @aggregateId";
+
+        internal const string GetUserInformation = "SELECT [UserId], [FirstName], [LastName], [Email], [AcademicYear], [StudyMajor] FROM [Users] WHERE [UserId] = @userId";
         #endregion
 
         #region INSERT QUERIES
