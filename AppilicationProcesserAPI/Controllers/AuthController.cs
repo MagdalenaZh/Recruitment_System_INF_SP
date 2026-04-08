@@ -209,7 +209,7 @@ namespace AppilicationProcesserAPI.Controllers
                     lastName,
                     role = roleName,
                     departmentId,
-                    clubId = (string?)null
+                    clubId
                 }
             });
         }

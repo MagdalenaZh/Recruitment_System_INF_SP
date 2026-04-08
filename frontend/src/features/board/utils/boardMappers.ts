@@ -12,16 +12,18 @@ import type {
 
 export function normalizeApplicationStatus(rawStatus: number): ApplicationStatus {
   switch (rawStatus) {
-    case 0:
-      return "Submitted";
     case 1:
-      return "Pending";
+      return "Submitted";
     case 2:
-      return "Approved";
+      return "Pending";
     case 3:
-      return "Rejected";
-    case 4:
       return "Interview";
+    case 4:
+      return "Rejected";
+    case 5:
+      return "Approved";
+    case 6:
+      return "FinalReview";
     default:
       return "Unknown";
   }
@@ -63,7 +65,9 @@ export function mapDepartmentDtoToBoardDepartment(
     return (
       status === "Pending" ||
       status === "Submitted" ||
+      status === "InterviewPending" ||
       status === "Interview" ||
+      status === "FinalReview" ||
       status === "Unknown"
     );
   }).length;

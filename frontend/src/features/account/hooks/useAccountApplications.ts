@@ -13,6 +13,8 @@ import type {
   LatestApplicationStateResponse,
 } from "../../../services/applications/applicationStateTypes";
 import {
+  isAfterInterviewReviewState,
+  isApprovedApplicationState,
   isConcludedApplicationState,
   isHibernatedApplicationState,
   isInitialApplicationState,
@@ -37,7 +39,9 @@ function mapApplicationStatusToStage(status: number): ApplicationStage {
     case 4:
       return "Rejected";
     case 5:
-      return "Accepted";
+          return "Accepted";
+    case 6:
+          return "Waitlisted";
     default:
       return "Submitted";
   }
@@ -52,6 +56,10 @@ function mapLatestStateToStage(
 
   if (isHibernatedApplicationState(state)) {
     return "Interview";
+  }
+
+    if (isAfterInterviewReviewState(state)) {
+        return "Waitlisted";
   }
 
   if (isProcessingApplicationState(state)) {

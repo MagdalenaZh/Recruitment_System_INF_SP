@@ -20,11 +20,20 @@ export type ProcessingApplicationStateRepresentation = {
 
 export type HibernatedApplicationStateRepresentation = {
   applicationId: string;
+  waitingFinalDecision: boolean;
+};
+
+export type AfterInterviewReviewStateRepresentation = {
+  applicationId: string;
+  requiredNumberOfApprovals: number;
+  currentNumberOfPostInterviewApprovals: number;
+  userDecisionsMap: Record<string, boolean>;
   scheduledTime: LatestInterviewSlot;
 };
 
 export type ApprovedApplicationStateRepresentation = {
   applicationId: string;
+  applicationApproved?: boolean;
 };
 
 export type ConcludedApplicationStateRepresentation = {
@@ -36,13 +45,18 @@ export type LatestApplicationStateResponse =
   | InitialApplicationStateRepresentation
   | ProcessingApplicationStateRepresentation
   | HibernatedApplicationStateRepresentation
+  | AfterInterviewReviewStateRepresentation
   | ApprovedApplicationStateRepresentation
   | ConcludedApplicationStateRepresentation;
 
 export function hasApplicationId(
   value: unknown,
 ): value is { applicationId: string } {
-  return !!value && typeof value === "object" && typeof (value as { applicationId?: unknown }).applicationId === "string";
+  return (
+    !!value &&
+    typeof value === "object" &&
+    typeof (value as { applicationId?: unknown }).applicationId === "string"
+  );
 }
 
 export function isInitialApplicationState(
@@ -55,16 +69,23 @@ export function isProcessingApplicationState(
   value: LatestApplicationStateResponse,
 ): value is ProcessingApplicationStateRepresentation {
   return (
-    "requiredNumberOfApprovals" in value ||
-    "currentNumberOfApprovals" in value ||
-    "userDecisionsMap" in value
+    "currentNumberOfApprovals" in value &&
+    "requiredNumberOfApprovals" in value &&
+    "userDecisionsMap" in value &&
+    !isAfterInterviewReviewState(value)
   );
+}
+
+export function isAfterInterviewReviewState(
+  value: LatestApplicationStateResponse,
+): value is AfterInterviewReviewStateRepresentation {
+  return "scheduledTime" in value && "currentNumberOfPostInterviewApprovals" in value;
 }
 
 export function isHibernatedApplicationState(
   value: LatestApplicationStateResponse,
 ): value is HibernatedApplicationStateRepresentation {
-  return "scheduledTime" in value;
+  return "waitingFinalDecision" in value;
 }
 
 export function isConcludedApplicationState(
@@ -80,6 +101,7 @@ export function isApprovedApplicationState(
     hasApplicationId(value) &&
     !isInitialApplicationState(value) &&
     !isProcessingApplicationState(value) &&
+    !isAfterInterviewReviewState(value) &&
     !isHibernatedApplicationState(value) &&
     !isConcludedApplicationState(value)
   );

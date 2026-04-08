@@ -15,27 +15,34 @@ function normalizeStatus(status: string | number | null | undefined): string {
 
   if (typeof status === "number") {
     switch (status) {
-      case 2:
-        return "approved";
       case 3:
+        return "interviewscheduled";
+      case 5:
+        return "accepted";
+      case 4:
         return "rejected";
+      case 2:
+        return "inprogress";
+      case 6:
+        return "inreview";
       case 1:
-        return "processing";
+        return "applicationsubmited";
       default:
         return String(status).toLowerCase();
     }
   }
 
-  return status.trim().toLowerCase();
+  return status.trim().toLowerCase().replace(/[\s_-]+/g, "");
 }
 
 function isApprovedApplication(app: UserApplication): boolean {
   const normalized = normalizeStatus(app.status);
 
   return (
-    normalized === "approved" ||
+    normalized === "interviewscheduled" ||
     normalized === "applicationapproved" ||
-    normalized === "approvedstate"
+    normalized === "approvedstate" ||
+    normalized === "approved"
   );
 }
 

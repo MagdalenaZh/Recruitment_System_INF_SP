@@ -82,9 +82,29 @@ export function BoardDepartmentApplicationsPage() {
                 onClick={() => setStatusFilter("All")}
               />
               <FilterButton
+                label="Submitted"
+                active={statusFilter === "Submitted"}
+                onClick={() => setStatusFilter("Submitted")}
+              />
+              <FilterButton
                 label="Pending"
                 active={statusFilter === "Pending"}
                 onClick={() => setStatusFilter("Pending")}
+              />
+              <FilterButton
+                label="InterviewPending"
+                active={statusFilter === "InterviewPending"}
+                onClick={() => setStatusFilter("InterviewPending")}
+              />
+              <FilterButton
+                label="Interview"
+                active={statusFilter === "Interview"}
+                onClick={() => setStatusFilter("Interview")}
+              />
+              <FilterButton
+                label="FinalReview"
+                active={statusFilter === "FinalReview"}
+                onClick={() => setStatusFilter("FinalReview")}
               />
               <FilterButton
                 label="Approved"
@@ -95,16 +115,6 @@ export function BoardDepartmentApplicationsPage() {
                 label="Rejected"
                 active={statusFilter === "Rejected"}
                 onClick={() => setStatusFilter("Rejected")}
-              />
-              <FilterButton
-                label="Submitted"
-                active={statusFilter === "Submitted"}
-                onClick={() => setStatusFilter("Submitted")}
-              />
-              <FilterButton
-                label="Interview"
-                active={statusFilter === "Interview"}
-                onClick={() => setStatusFilter("Interview")}
               />
             </div>
           </div>
@@ -138,6 +148,13 @@ function FilterButton({
   active: boolean;
   onClick: () => void;
 }) {
+  const text =
+    label === "InterviewPending"
+      ? "Awaiting Booking"
+      : label === "FinalReview"
+        ? "Final Review"
+        : label;
+
   return (
     <button
       onClick={onClick}
@@ -148,7 +165,7 @@ function FilterButton({
           : "border-white/10 bg-white/5 text-slate-200 hover:border-white/20 hover:bg-white/10",
       ].join(" ")}
     >
-      {label}
+      {text}
     </button>
   );
 }

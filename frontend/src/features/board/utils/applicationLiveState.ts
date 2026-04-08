@@ -2,6 +2,7 @@ import type {
   LatestApplicationStateResponse,
 } from "../../../services/applications/applicationStateTypes";
 import {
+  isAfterInterviewReviewState,
   isApprovedApplicationState,
   isConcludedApplicationState,
   isHibernatedApplicationState,
@@ -39,6 +40,8 @@ export function normalizeBaseStatus(applicationStatus: number): ApplicationStatu
       return "Rejected";
     case 5:
       return "Approved";
+    case 6:
+      return "FinalReview";
     default:
       return "Unknown";
   }
@@ -52,11 +55,15 @@ export function inferStatusFromUpdate(
   }
 
   if (isHibernatedApplicationState(payload)) {
+    return "FinalReview";
+  }
+
+  if (isAfterInterviewReviewState(payload)) {
     return "Interview";
   }
 
   if (isApprovedApplicationState(payload)) {
-    return "Approved";
+    return "InterviewPending";
   }
 
   if (isProcessingApplicationState(payload)) {
@@ -74,7 +81,10 @@ function extractMyVoteFromUserDecisionsMap(
   payload: ApplicationUpdatePayload,
   currentUserId: string | null,
 ): BoardVote | null {
-  if (!currentUserId || !isProcessingApplicationState(payload)) {
+  if (
+    !currentUserId ||
+    (!isProcessingApplicationState(payload) && !isAfterInterviewReviewState(payload))
+  ) {
     return null;
   }
 
@@ -97,14 +107,21 @@ function extractMyVoteFromUserDecisionsMap(
 function readApprovals(
   payload: ApplicationUpdatePayload,
 ): Pick<ApplicationListItem, "approvalsCount" | "requiredApprovals"> | null {
-  if (!isProcessingApplicationState(payload)) {
-    return null;
+  if (isProcessingApplicationState(payload)) {
+    return {
+      approvalsCount: payload.currentNumberOfApprovals,
+      requiredApprovals: payload.requiredNumberOfApprovals,
+    };
   }
 
-  return {
-    approvalsCount: payload.currentNumberOfApprovals,
-    requiredApprovals: payload.requiredNumberOfApprovals,
-  };
+  if (isAfterInterviewReviewState(payload)) {
+    return {
+      approvalsCount: payload.currentNumberOfPostInterviewApprovals,
+      requiredApprovals: payload.requiredNumberOfApprovals,
+    };
+  }
+
+  return null;
 }
 
 export function applyUpdateToApplicationListItem(

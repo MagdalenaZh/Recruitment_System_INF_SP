@@ -1,9 +1,11 @@
 export type ApplicationStatus =
   | "Submitted"
   | "Pending"
+  | "InterviewPending"
+  | "Interview"
+  | "FinalReview"
   | "Approved"
   | "Rejected"
-  | "Interview"
   | "Unknown";
 
 export type BoardVote = "Approve" | "Reject";
