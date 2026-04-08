@@ -56,6 +56,21 @@ namespace AppilicationProcesserAPI.Controllers
             }
         }
 
+        [HttpGet("api/booked-interview-slots/{clubId}")]
+        public async Task<List<BookedInterviewSlot>> GetBookedInterviewSlotsForClub([FromRoute] Guid clubId, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var slots = await _calendarProvider.GetBookedInterviewSlotsForClubAsync(clubId, cancellationToken).ConfigureAwait(false);
+                return slots;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving booked interview slots for ClubId: {ClubId}", clubId);
+                throw new Exception("An error occurred while retrieving booked interview slots for the club.");
+            }
+        }
+
 
         [HttpGet("api/applications-user/{userId}")]
         public async Task<List<ApplicationDatabaseModel>> GetAllApplicationsForUser([FromRoute] Guid userId, CancellationToken cancellationToken)
@@ -132,21 +147,6 @@ namespace AppilicationProcesserAPI.Controllers
             }
         }
 
-        [HttpGet("api/user-information/{userId}")]
-        public async Task GetUserInformation([FromRoute] Guid userId, CancellationToken cancellationToken)
-        {
-#warning Finish implementation
-            try
-            {
-                await _recruitmentDataProvider.GetUserInformation(userId, cancellationToken).ConfigureAwait(false);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error retrieving user information for UserId: {UserId}", userId);
-                throw new Exception("An error occurred while retrieving user information.");
-            }
-        }
-
         [HttpPost("api/create-club")]
         public async Task<IActionResult> CreateClub([FromBody] CreateClubRequest request, CancellationToken cancellationToken)
         {
@@ -154,9 +154,6 @@ namespace AppilicationProcesserAPI.Controllers
             {
                 await _systemManagementProvider.CreateClubAsync(
                     request.ClubName,
-                    request.AdmissionQuestions,
-                    request.RequiredNumberOfApprovals,
-                    request.Description,
                     request.Category,
                     cancellationToken
                 ).ConfigureAwait(false);
@@ -199,12 +196,13 @@ namespace AppilicationProcesserAPI.Controllers
             }
         }
 
-        [HttpPut("api/update-admission-questions/{clubId}")]
-        public async Task<IActionResult> UpdateAdmissionQuestions([FromRoute] Guid clubId, [FromBody] List<string> admissionQuestions, CancellationToken cancellationToken)
+        [HttpPut("api/update-club-information/{clubId}")]
+        public async Task<IActionResult> UpdateAdmissionQuestions([FromRoute] Guid clubId, [FromBody] UpdateClubRequest updateClubRequest, CancellationToken cancellationToken)
         {
             try
             {
-                await _systemManagementProvider.UpdateApplicationQuestions(clubId, admissionQuestions, cancellationToken).ConfigureAwait(false);
+                await _systemManagementProvider.UpdateClubInformationAsync(clubId, updateClubRequest.ClubName, updateClubRequest.ApplicationQuestions,
+                    updateClubRequest.RequiredApprovals, updateClubRequest.Description, updateClubRequest.Category, cancellationToken).ConfigureAwait(false);
                 return Ok(new { message = "Admission questions updated successfully." });
             }
             catch (Exception ex)
@@ -214,12 +212,13 @@ namespace AppilicationProcesserAPI.Controllers
             }
         }
 
-        [HttpPut("api/update-open-positions/{departmentId}")]
-        public async Task<IActionResult> UpdateOpenPositionsForDepartment([FromRoute] Guid departmentId, [FromBody] int numberOfOpenPositions, CancellationToken cancellationToken)
+        [HttpPut("api/update-department-information/{departmentId}")]
+        public async Task<IActionResult> UpdateOpenPositionsForDepartment([FromRoute] Guid departmentId, [FromBody] UpdateDepartmentRequest updateDepartmentRequest, CancellationToken cancellationToken)
         {
             try
             {
-                await _systemManagementProvider.UpdateOpenPositionsForDepartmentAsync(departmentId, numberOfOpenPositions, cancellationToken).ConfigureAwait(false);
+                await _systemManagementProvider.UpdateDepartmentInformationAsync(departmentId, updateDepartmentRequest.DepartmentName, updateDepartmentRequest.NumberOfOpenPositions,
+                    updateDepartmentRequest.Description, cancellationToken).ConfigureAwait(false);
                 return Ok(new { message = "Number of open positions updated successfully." });
             }
             catch (Exception ex)
@@ -248,7 +247,6 @@ namespace AppilicationProcesserAPI.Controllers
         [HttpPut("api/update-user-role/{userId}")]
         public async Task<IActionResult> UpdateUserRole([FromRoute] Guid userId, [FromBody] Guid roleId, CancellationToken cancellationToken)
         {
-#warning Fix roleId implementation
             try
             {
                 await _systemManagementProvider.UpdateUserRole(userId, roleId, cancellationToken).ConfigureAwait(false);
@@ -258,6 +256,21 @@ namespace AppilicationProcesserAPI.Controllers
             {
                 _logger.LogError(ex, "Error updating user role for UserId: {UserId} to RoleId: {RoleId}", userId, roleId);
                 return StatusCode(500, "An error occurred while updating the user role.");
+            }
+        }
+
+        [HttpPut("api/update-user-promote-club-admin/{userId}")]
+        public async Task<IActionResult> PromoteUserToClubAdmin([FromRoute] Guid userId, [FromBody] Guid clubId, CancellationToken cancellationToken)
+        {
+            try
+            {
+                await _systemManagementProvider.UpdateUserPromoteToClubAdminAsync(userId, clubId, cancellationToken).ConfigureAwait(false);
+                return Ok(new { message = "User promoted to club admin successfully." });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error promoting user with UserId: {UserId} to club admin for ClubId: {ClubId}", userId, clubId);
+                return StatusCode(500, "An error occurred while promoting the user to club admin.");
             }
         } 
     }

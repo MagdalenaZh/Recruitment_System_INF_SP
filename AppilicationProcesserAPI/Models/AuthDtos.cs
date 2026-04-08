@@ -4,5 +4,5 @@
     public record RegisterResponse(Guid UserId, string Email, string Role);
 
     public record LoginRequest(string Email, string Password);
-    public record LoginResponse(string Token, string Role);
+    public record LoginResponse(string Token);
 }

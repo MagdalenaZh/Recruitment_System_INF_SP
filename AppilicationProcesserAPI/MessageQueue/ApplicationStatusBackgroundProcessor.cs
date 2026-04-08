@@ -3,15 +3,15 @@ using AppilicationProcesserAPI.PersistanceServices;
 
 namespace AppilicationProcesserAPI.MessageQueue
 {
-    public class EmailManagerBackgroundProcessor : BackgroundService
+    public class ApplicationStatusBackgroundProcessor : BackgroundService
     {
-        private readonly ISystemManagementProvider _systemManagementProvider;
+        private readonly IApplicationFinalizer _applicationFinalizer;
         private readonly IApplicationStatusManager _applicationStatusManager;
-        private readonly ILogger<EmailManagerBackgroundProcessor> _logger;
+        private readonly ILogger<ApplicationStatusBackgroundProcessor> _logger;
 
-        public EmailManagerBackgroundProcessor(ISystemManagementProvider systemManagementProvider, IApplicationStatusManager applicationStatusManager, ILogger<EmailManagerBackgroundProcessor> logger)
+        public ApplicationStatusBackgroundProcessor(IApplicationFinalizer applicationFinalizer, IApplicationStatusManager applicationStatusManager, ILogger<ApplicationStatusBackgroundProcessor> logger)
         {
-            _systemManagementProvider = systemManagementProvider;
+            _applicationFinalizer = applicationFinalizer;
             _applicationStatusManager = applicationStatusManager;
             _logger = logger;
         }
@@ -25,7 +25,7 @@ namespace AppilicationProcesserAPI.MessageQueue
                     var message = await _applicationStatusManager.GetApplicationStatus(stoppingToken);
                     if (message != null)
                     {
-                        await _systemManagementProvider.UpdateApplicationStatusAsync(message, stoppingToken).ConfigureAwait(false);
+                        await _applicationFinalizer.UpdateApplicationStatusAsync(message, stoppingToken).ConfigureAwait(false);
                         _logger.LogInformation("Received application status update for ApplicationId: {ApplicationId}", message.MessageData.ApplicationId);
                     }
                 }

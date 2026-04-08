@@ -13,9 +13,10 @@ namespace AppilicationProcesserAPI.Configurations
             services.AddSingleton<IEventBroker, EventBroker>();
             services.AddSingleton<IRepresentationEmitter, RepresentationEmitter>();
             services.AddSingleton<IApplicationStatusManager, ApplicationStatusManager>();
+            services.AddSingleton<IApplicationFinalizer, ApplicationFinalizer>();
 
             services.AddHostedService<EventBackgroundProcessor>();
-            services.AddHostedService<EmailManagerBackgroundProcessor>();
+            services.AddHostedService<ApplicationStatusBackgroundProcessor>();
         }
 
         public static void ConfigureAggregateManagment(this IServiceCollection services)
@@ -27,13 +28,7 @@ namespace AppilicationProcesserAPI.Configurations
 
         public static void ConfigureCalendarProvider(this IServiceCollection services)
         {
-            services.AddSingleton<ICalendarProvider, CalendarProviderCacheDecorator>(sp =>
-            {
-                return new CalendarProviderCacheDecorator(
-                     new CalendarProvider(sp.GetRequiredService<ServiceConfiguration>(), sp.GetRequiredService<ILogger<CalendarProvider>>()),
-                     sp.GetRequiredService<IMemoryCache>()
-                     );
-            });
+            services.AddSingleton<ICalendarProvider, CalendarProvider>();
         }
 
         public static void ConfigurePersistance(this IServiceCollection services)

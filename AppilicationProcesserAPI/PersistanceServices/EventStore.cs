@@ -8,7 +8,7 @@ namespace AppilicationProcesserAPI.PersistanceServices
     public interface IEventStore
     {
         Task AppendEventAsync(IDomainEvent domainEvent, CancellationToken cancellationToken);
-        Task CreateApplication(Guid applicationId, ApplicationSubmissionData applicationData, CancellationToken cancellationToken);
+        Task CreateApplication(Guid userId, Guid applicationId, ApplicationSubmissionData applicationData, CancellationToken cancellationToken);
         Task<List<IDomainEvent>> GetEventsAsync(Guid aggregateId, CancellationToken cancellationToken);
     }
 
@@ -79,7 +79,7 @@ namespace AppilicationProcesserAPI.PersistanceServices
             return loadedEvents;
         }
 
-        public async Task CreateApplication(Guid applicationId, ApplicationSubmissionData applicationData, CancellationToken cancellationToken)
+        public async Task CreateApplication(Guid userId, Guid applicationId, ApplicationSubmissionData applicationData, CancellationToken cancellationToken)
         {
             var serializedQuestionaire = JsonSerializer.Serialize(applicationData.Questionnaire);
 
@@ -88,7 +88,7 @@ namespace AppilicationProcesserAPI.PersistanceServices
 
             using var command = new SqlCommand(DbQueries.InsertApplication, sqlConnection);
             command.Parameters.AddWithValue("@aggregateId", applicationId);
-            command.Parameters.AddWithValue("@userId", applicationData.UserId);
+            command.Parameters.AddWithValue("@userId", userId);
             command.Parameters.AddWithValue("@departmentId", applicationData.DepartmentId);
             command.Parameters.AddWithValue("@questionnaire", serializedQuestionaire);
             command.Parameters.AddWithValue("@status", ApplicationStatus.ApplicationSubmited);

@@ -138,6 +138,7 @@ namespace AppilicationProcesserAPI.Controllers
             u.LastName,
             u.DepartmentId,
             u.RoleId,
+            u.AdminClubId,
             r.Name AS RoleName,
             uc.Email,
             uc.Password,
@@ -166,6 +167,10 @@ namespace AppilicationProcesserAPI.Controllers
                 ? null
                 : reader.GetGuid(reader.GetOrdinal("DepartmentId"));
 
+            Guid? clubAdminId = reader.IsDBNull(reader.GetOrdinal("AdminClubId"))
+                ? null
+                : reader.GetGuid(reader.GetOrdinal("AdminClubId"));
+
             if (status != ActiveStatus)
                 return Unauthorized("Account is inactive.");
 
@@ -173,23 +178,9 @@ namespace AppilicationProcesserAPI.Controllers
             if (verifyResult == PasswordVerificationResult.Failed)
                 return Unauthorized("Invalid email or password.");
 
-            var token = CreateJwt(userId, dbEmail, roleName, firstName, lastName);
+            var token = CreateJwt(userId, dbEmail, roleName, firstName, lastName, departmentId, clubAdminId);
 
-            return Ok(new
-            {
-                token,
-                user = new
-                {
-
-                    userId,
-                    email = dbEmail,
-                    firstName,
-                    lastName,
-                    role = roleName,
-                    departmentId,
-                    clubId = (string?)null
-                }
-            });
+            return Ok(new LoginResponse(token));
         }
 
         [Authorize]
@@ -266,11 +257,14 @@ namespace AppilicationProcesserAPI.Controllers
             return NoContent();
         }
 
-        private string CreateJwt(Guid userId, string email, string role, string firstName, string lastName)
+        private string CreateJwt(Guid userId, string email, string role, string firstName, string lastName, Guid? departmentId, Guid? adminClubId)
         {
             var key = _config["Jwt:Key"] ?? throw new InvalidOperationException("Missing Jwt:Key");
             var issuer = _config["Jwt:Issuer"] ?? "AubgRecruitment";
             var audience = _config["Jwt:Audience"] ?? "AubgRecruitment";
+
+            var adminClubIdValue = adminClubId.HasValue ? adminClubId.Value.ToString() : string.Empty;
+            var departmentIdValue = departmentId.HasValue ? departmentId.Value.ToString() : string.Empty;
 
             var claims = new List<Claim>
             {
@@ -279,7 +273,9 @@ namespace AppilicationProcesserAPI.Controllers
                 new Claim(ClaimTypes.Role, role),
                 new Claim("firstName", firstName),
                 new Claim("lastName", lastName),
-                new Claim(ClaimTypes.NameIdentifier, userId.ToString())
+                new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
+                new Claim(CustomClaimNames.AdminClubId, adminClubIdValue),
+                new Claim(CustomClaimNames.DepartmentId, departmentIdValue)
             };
 
             var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key));
@@ -296,4 +292,10 @@ namespace AppilicationProcesserAPI.Controllers
             return new JwtSecurityTokenHandler().WriteToken(jwt);
         }
     }
+}
+
+public static class CustomClaimNames
+{
+        public const string AdminClubId = "adminClubId";
+        public const string DepartmentId = "departmentId";
 }

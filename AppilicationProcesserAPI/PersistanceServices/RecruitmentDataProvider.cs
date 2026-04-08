@@ -2,7 +2,6 @@
 using AppilicationProcesserAPI.Models;
 using Microsoft.Data.SqlClient;
 using System.Text.Json;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace AppilicationProcesserAPI.PersistanceServices
 {
@@ -15,8 +14,6 @@ namespace AppilicationProcesserAPI.PersistanceServices
         Task<List<ApplicationDatabaseModel>> GetAllApplicationsForClubAsync(Guid clubId, CancellationToken cancellationToken);
 
         Task<int> GetRequiredNumberOfApprovalsForDepartmentAsync(Guid departmentId, CancellationToken cancellationToken);
-
-        Task GetUserInformation(Guid userId, CancellationToken cancellationToken);
 
         Task<List<ClubDatabaseModel>> GetAllClubsInformationAsync(CancellationToken cancellationToken);
 
@@ -142,7 +139,7 @@ namespace AppilicationProcesserAPI.PersistanceServices
                 var clubmentName = reader.GetString(1);
                 var applicationQuestions = reader.GetString(2);
                 var description = reader.GetString(3);
-                var category = reader.IsDBNull(4) ? string.Empty : reader.GetString(4);
+                var category = (ClubCategories)reader.GetInt32(4);
 
                 var seriaizedQuestionaire = JsonSerializer.Deserialize<List<string>>(applicationQuestions, _serializerOptions);
 
@@ -195,12 +192,6 @@ namespace AppilicationProcesserAPI.PersistanceServices
             }
 
             throw new Exception($"Department with id {departmentId} not found");
-        }
-
-        public Task GetUserInformation(Guid userId, CancellationToken cancellationToken)
-        {
-#warning Implement later
-            throw new NotImplementedException();
         }
     }
 }

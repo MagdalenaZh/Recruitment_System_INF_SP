@@ -2,7 +2,9 @@
 using AppilicationProcesserAPI.MessageQueue;
 using AppilicationProcesserAPI.Models;
 using AppilicationProcesserAPI.PersistanceServices;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace AppilicationProcesserAPI.Controllers
 {
@@ -25,12 +27,19 @@ namespace AppilicationProcesserAPI.Controllers
             _logger = logger;
         }
 
+        [Authorize]
         [HttpPost("api/submit-application")]
         public async Task<IActionResult> SubmitApplication([FromBody] ApplicationSubmissionData applicationData, CancellationToken cancellationToken)
         {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (userIdClaim == null)
+                return Unauthorized();
+
+            var userId = Guid.Parse(userIdClaim.Value);
+
             var applicationId = Guid.NewGuid();
 
-            await _eventStore.CreateApplication(applicationId, applicationData, cancellationToken).ConfigureAwait(false);
+            await _eventStore.CreateApplication(userId, applicationId, applicationData, cancellationToken).ConfigureAwait(false);
 
             var requiredNumberOfApprovals = await _recruitmentDataProvider.GetRequiredNumberOfApprovalsForDepartmentAsync(applicationData.DepartmentId, cancellationToken).ConfigureAwait(false);
 
@@ -53,11 +62,17 @@ namespace AppilicationProcesserAPI.Controllers
             }
         }
 
+        [Authorize]
         [HttpPost("api/approve-application/{applicationId}")]
         public async Task<IActionResult> ApproveApplication([FromRoute] Guid applicationId, CancellationToken cancellationToken)
         {
-#warning In a real implementation, the UserId would come from the authenticated user context, not generated randomly.
-            var domainEvent = new ApplicationApprovedEvent(applicationId, Guid.NewGuid());
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (userIdClaim == null)
+                return Unauthorized();
+
+            var userId = Guid.Parse(userIdClaim.Value);
+
+            var domainEvent = new ApplicationApprovedEvent(applicationId, userId);
 
             await _eventStore.AppendEventAsync(domainEvent, cancellationToken).ConfigureAwait(false);
 
@@ -76,11 +91,16 @@ namespace AppilicationProcesserAPI.Controllers
             }
         }
 
+        [Authorize]
         [HttpPost("api/disapprove-application/{applicationId}")]
         public async Task<IActionResult> DisapproveApplication([FromRoute] Guid applicationId, CancellationToken cancellationToken)
         {
-#warning In a real implementation, the UserId would come from the authenticated user context, not generated randomly.
-            var domainEvent = new ApplicationDisapprovedEvent(applicationId, Guid.NewGuid());
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (userIdClaim == null)
+                return Unauthorized();
+
+            var userId = Guid.Parse(userIdClaim.Value);
+            var domainEvent = new ApplicationDisapprovedEvent(applicationId, userId);
 
             await _eventStore.AppendEventAsync(domainEvent, cancellationToken).ConfigureAwait(false);
 
@@ -99,6 +119,7 @@ namespace AppilicationProcesserAPI.Controllers
             }
         }
 
+        [Authorize]
         [HttpPost("api/reject-interview-proposal/{applicationId}")]
         public async Task<IActionResult> RejectInterviewProposal([FromRoute] Guid applicationId, CancellationToken cancellationToken)
         {

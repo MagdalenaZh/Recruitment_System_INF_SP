@@ -6,16 +6,16 @@ namespace AppilicationProcesserAPI.PersistanceServices
 {
     public interface ISystemManagementProvider
     {
-        Task CreateClubAsync(string clubName, List<string> applicationQuestions, int requiredApprovals, string description, string category, CancellationToken cancellationToken);
+        Task CreateClubAsync(string clubName, ClubCategories category, CancellationToken cancellationToken);
         Task CreateDepartmentAsync(Guid clubId, string departmentName, int numberOfOpenPositions, string description, CancellationToken cancellationToken);
         Task CreateInterviewSlot(Guid clubId, DateTimeOffset startTime, DateTimeOffset endTime, CancellationToken cancellationToken);
 
-        Task UpdateApplicationStatusAsync(StatusUpdateEnvelope statusUpdateEnvelope, CancellationToken cancellationToken);
-        Task UpdateApplicationQuestions(Guid clubId, List<string> applicationQuestions, CancellationToken cancellationToken);
-        Task UpdateOpenPositionsForDepartmentAsync(Guid departmentId, int numberOfOpenPositions, CancellationToken cancellationToken);
+        Task UpdateClubInformationAsync(Guid clubId, string clubName, List<string> applicationQuestions, int requiredApprovals, string description, ClubCategories category, CancellationToken cancellationToken);
+        Task UpdateDepartmentInformationAsync(Guid departmentId, string departmentName, int numberOfOpenPositions, string description, CancellationToken cancellationToken);
         Task UpdateInterviewSlotAsync(Guid slotId, DateTimeOffset newStartTime, DateTimeOffset newEndTime, CancellationToken cancellationToken);
 
         Task UpdateUserRole(Guid userId, Guid roleId, CancellationToken cancellationToken);
+        Task UpdateUserPromoteToClubAdminAsync(Guid userId, Guid clubId, CancellationToken cancellationToken);
     }
 
     public class SystemManagementProvider : ISystemManagementProvider
@@ -34,19 +34,14 @@ namespace AppilicationProcesserAPI.PersistanceServices
             _logger = logger;
         }
 
-        public async Task CreateClubAsync(string clubName, List<string> applicationQuestions, int requiredApprovals, string description, string category, CancellationToken cancellationToken)
+        public async Task CreateClubAsync(string clubName, ClubCategories category, CancellationToken cancellationToken)
         {
-            var serializedData = JsonSerializer.Serialize(applicationQuestions, _serializerOptions);
-
             using var sqlConnection = new SqlConnection(_connectionString);
             await sqlConnection.OpenAsync(cancellationToken).ConfigureAwait(false);
 
             using var command = new SqlCommand(DbQueries.InsertClub, sqlConnection);
             command.Parameters.AddWithValue("@clubId", Guid.NewGuid());
             command.Parameters.AddWithValue("@clubName", clubName);
-            command.Parameters.AddWithValue("@applicationQuestions", serializedData);
-            command.Parameters.AddWithValue("@requiredApprovals", requiredApprovals);
-            command.Parameters.AddWithValue("@description", description);
             command.Parameters.AddWithValue("@category", category);
 
             try
@@ -105,7 +100,7 @@ namespace AppilicationProcesserAPI.PersistanceServices
             }
         }
 
-        public async Task UpdateApplicationQuestions(Guid clubId, List<string> applicationQuestions, CancellationToken cancellationToken)
+        public async Task UpdateClubInformationAsync(Guid clubId, string clubName, List<string> applicationQuestions, int requiredApprovals, string description, ClubCategories category, CancellationToken cancellationToken)
         {
             var serializedData = JsonSerializer.Serialize(applicationQuestions, _serializerOptions);
 
@@ -114,7 +109,10 @@ namespace AppilicationProcesserAPI.PersistanceServices
 
             using var command = new SqlCommand(DbQueries.UpdateClubAdmissionQuestions, sqlConnection);
             command.Parameters.AddWithValue("@clubId", clubId);
+            command.Parameters.AddWithValue("@clubName", clubName);
             command.Parameters.AddWithValue("@applicationQuestions", serializedData);
+            command.Parameters.AddWithValue("@requiredApprovals", requiredApprovals);
+            command.Parameters.AddWithValue("@description", description);
 
             try
             {
@@ -127,30 +125,6 @@ namespace AppilicationProcesserAPI.PersistanceServices
             catch (SqlException ex)
             {
                 _logger.LogError(ex, "Failed Update in Clubs table");
-                throw new Exception("Event not registered");
-            }
-        }
-
-        public async Task UpdateApplicationStatusAsync(StatusUpdateEnvelope statusUpdateEnvelope, CancellationToken cancellationToken)
-        {
-            using var sqlConnection = new SqlConnection(_connectionString);
-            await sqlConnection.OpenAsync(cancellationToken).ConfigureAwait(false);
-
-            using var command = new SqlCommand(DbQueries.UpdateApplicationStatus, sqlConnection);
-            command.Parameters.AddWithValue("@status", statusUpdateEnvelope.MessageData.ApplicationStatus);
-            command.Parameters.AddWithValue("@aggregateId", statusUpdateEnvelope.MessageData.ApplicationId);
-
-            try
-            {
-                var rowsAffected = await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
-                if (rowsAffected == 0)
-                {
-                    throw new Exception("Update failed");
-                }
-            }
-            catch (SqlException ex)
-            {
-                _logger.LogError(ex, "Failed Update in InterviewSlots table");
                 throw new Exception("Event not registered");
             }
         }
@@ -180,14 +154,16 @@ namespace AppilicationProcesserAPI.PersistanceServices
             }
         }
 
-        public async Task UpdateOpenPositionsForDepartmentAsync(Guid departmentId, int numberOfOpenPositions, CancellationToken cancellationToken)
+        public async Task UpdateDepartmentInformationAsync(Guid departmentId, string departmentName, int numberOfOpenPositions, string description, CancellationToken cancellationToken)
         {
             using var sqlConnection = new SqlConnection(_connectionString);
             await sqlConnection.OpenAsync(cancellationToken).ConfigureAwait(false);
 
             using var command = new SqlCommand(DbQueries.UpdateDepartmentOpenPositions, sqlConnection);
             command.Parameters.AddWithValue("@departmentId", departmentId);
+            command.Parameters.AddWithValue("@departmentName", departmentName);
             command.Parameters.AddWithValue("@openPositions", numberOfOpenPositions);
+            command.Parameters.AddWithValue("@description", description);
 
             try
             {
@@ -212,6 +188,34 @@ namespace AppilicationProcesserAPI.PersistanceServices
             using var command = new SqlCommand(DbQueries.UpdateUserRole, sqlConnection);
             command.Parameters.AddWithValue("@userId", userId);
             command.Parameters.AddWithValue("@roleId", roleId);
+
+            try
+            {
+                var rowsAffected = await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+                if (rowsAffected == 0)
+                {
+                    throw new Exception("Update failed");
+                }
+            }
+            catch (SqlException ex)
+            {
+                _logger.LogError(ex, "Failed Update in Users table");
+                throw new Exception("Event not registered");
+            }
+        }
+
+        public async Task UpdateUserPromoteToClubAdminAsync(Guid userId, Guid clubId, CancellationToken cancellationToken)
+        {
+            using var sqlConnection = new SqlConnection(_connectionString);
+            await sqlConnection.OpenAsync(cancellationToken).ConfigureAwait(false);
+
+            using var demoteCommand = new SqlCommand(DbQueries.UpdateDemoteClubAdminToUser, sqlConnection);
+            demoteCommand.Parameters.AddWithValue("@clubId", clubId);
+            await demoteCommand.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+
+            using var command = new SqlCommand(DbQueries.UpdatePromoteUserToClubAdmin, sqlConnection);
+            command.Parameters.AddWithValue("@userId", userId);
+            command.Parameters.AddWithValue("@clubId", clubId);
 
             try
             {

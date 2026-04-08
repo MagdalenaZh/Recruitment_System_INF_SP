@@ -1,21 +1,33 @@
-﻿namespace AppilicationProcesserAPI.Models
+﻿using AppilicationProcesserAPI.PersistanceServices;
+
+namespace AppilicationProcesserAPI.Models
 {
     public class CreateClubRequest
     {
         public string ClubName { get; }
-        public List<string> AdmissionQuestions { get; }
 
-        public int RequiredNumberOfApprovals { get; }
+        public ClubCategories Category { get; }
 
-        public string Description { get; }
-
-        public string Category { get; set; } = string.Empty;
-
-        public CreateClubRequest(string clubName, List<string> admissionQuestions, int requiredNumberOfApprovals, string description, string category)
+        public CreateClubRequest(string clubName, ClubCategories category)
         {
             ClubName = clubName;
-            AdmissionQuestions = admissionQuestions;
-            RequiredNumberOfApprovals = requiredNumberOfApprovals;
+            Category = category;
+        }
+    }
+
+    public class UpdateClubRequest
+    {
+        public string ClubName { get; }
+        public List<string> ApplicationQuestions { get; }
+        public int RequiredApprovals { get; }
+        public string Description { get; }
+        public ClubCategories Category { get; }
+
+        public UpdateClubRequest(string clubName, List<string> applicationQuestions, int requiredApprovals, string description, ClubCategories category)
+        {
+            ClubName = clubName;
+            ApplicationQuestions = applicationQuestions;
+            RequiredApprovals = requiredApprovals;
             Description = description;
             Category = category;
         }
@@ -31,6 +43,19 @@
         public CreateDepartmentRequest(Guid clubId, string departmentName, int numberOfOpenPositions, string description)
         {
             ClubId = clubId;
+            DepartmentName = departmentName;
+            NumberOfOpenPositions = numberOfOpenPositions;
+            Description = description;
+        }
+    }
+
+    public class UpdateDepartmentRequest
+    {
+        public string DepartmentName { get; }
+        public int NumberOfOpenPositions { get; }
+        public string Description { get; }
+        public UpdateDepartmentRequest(string departmentName, int numberOfOpenPositions, string description)
+        {
             DepartmentName = departmentName;
             NumberOfOpenPositions = numberOfOpenPositions;
             Description = description;

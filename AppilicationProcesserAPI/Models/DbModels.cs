@@ -1,4 +1,5 @@
 ﻿using AppilicationProcesserAPI.DomainEvents;
+using AppilicationProcesserAPI.PersistanceServices;
 
 namespace AppilicationProcesserAPI.Models
 {
@@ -8,9 +9,9 @@ namespace AppilicationProcesserAPI.Models
         public string ClubName { get; }
         public List<string> AdmissionQuestions { get; }
         public string Description { get; }
-        public string Category { get; }
+        public ClubCategories Category { get; }
 
-        public ClubDatabaseModel(Guid clubId, string clubName, List<string> admissionQuestions, string description, string category)
+        public ClubDatabaseModel(Guid clubId, string clubName, List<string> admissionQuestions, string description, ClubCategories category)
         {
             ClubId = clubId;
             ClubName = clubName;
@@ -67,4 +68,19 @@ namespace AppilicationProcesserAPI.Models
             EndTime = endTime;
         }
     }
+
+    public class BookedInterviewSlot
+    {
+        public Guid ApplicationId { get; }
+        public DateTimeOffset StartTime { get; }
+        public DateTimeOffset EndTime { get; }
+
+        public BookedInterviewSlot(Guid applicationId, DateTimeOffset startTime, DateTimeOffset endTime)
+        {
+            ApplicationId = applicationId;
+            StartTime = startTime;
+            EndTime = endTime;
+        }
+    }
 }
+

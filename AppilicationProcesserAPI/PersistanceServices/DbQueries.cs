@@ -29,6 +29,14 @@
             ORDER BY s.StartTime
             """;
 
+        internal const string GetAllBookedInterviewSlotsForClub = """
+            SELECT b.[AggregateId], s.[StartTime], s.[EndTime] 
+            FROM [BookedSlots] AS b 
+            INNER JOIN [InterviewSlots] AS s ON b.SlotId = s.SlotId 
+            WHERE b.[ClubId] = @clubId
+            ORDER BY s.StartTime
+            """;
+
         internal const string GetAllClubsDetails = "SELECT [ClubId], [ClubName], [ApplicationQuestions], [Description], [Category] FROM [Clubs]";
 
         internal const string GetDepartmentsForClub = "SELECT [DepartmentId], [DepartmentName], [OpenPositions], [Description] FROM [Departments] WHERE [ClubId] = @clubId";
@@ -40,6 +48,8 @@
             ON deprt.[ClubId] = cb.[ClubId] 
             WHERE deprt.[DepartmentId] = @departmentId
             """;
+
+        internal const string GetDepartmentIdForApplication = "SELECT [DepartmentId], [UserId] FROM [Applications] WHERE [AggregateId] = @aggregateId";
         #endregion
 
         #region INSERT QUERIES
@@ -49,7 +59,7 @@
 
         internal const string InsertBookedInterviewSlot = "INSERT INTO [BookedSlots] ([SlotId], [AggregateId]) VALUES (@slotId, @aggregateId)";
 
-        internal const string InsertClub = "INSERT INTO [Clubs] ([ClubId], [ClubName], [ApplicationQuestions], [RequiredApprovals], [Description], [Category]) VALUES (@clubId, @clubName, @applicationQuestions, @requiredApprovals, @description, @category)";
+        internal const string InsertClub = "INSERT INTO [Clubs] ([ClubId], [ClubName], [Category]) VALUES (@clubId, @clubName, @category)";
 
         internal const string InsertDepartment = "INSERT INTO [Departments] ([DepartmentId], [ClubId], [DepartmentName], [OpenPositions], [Description]) VALUES (@departmentId, @clubId, @departmentName, @openPositions, @description)";
 
@@ -57,15 +67,21 @@
         #endregion
 
         #region UPDATE QUERIES
-        internal const string UpdateClubAdmissionQuestions = "UPDATE [Clubs] SET [ApplicationQuestions] = @applicationQuestions WHERE [ClubId] = @clubId";
+        internal const string UpdateClubAdmissionQuestions = "UPDATE [Clubs] SET [ClubName] = @clubName, [ApplicationQuestions] = @applicationQuestions, [RequiredApprovals] = @requiredApprovals, [Description] = @description, [Category] = @category WHERE [ClubId] = @clubId";
 
-        internal const string UpdateDepartmentOpenPositions = "UPDATE [Departments] SET [OpenPositions] = @openPositions WHERE [DepartmentId] = @departmentId";
+        internal const string UpdateDepartmentOpenPositions = "UPDATE [Departments] SET [DepartmentName] = @departmentId, [Description] = @description, [OpenPositions] = @openPositions WHERE [DepartmentId] = @departmentId";
 
         internal const string UpdateInterviewSlot = "UPDATE [InterviewSlots] SET [StartTime] = @startTime, [EndTime] = @endTime WHERE [SlotId] = @slotId";
 
         internal const string UpdateUserRole = "UPDATE [Users] SET [RoleId] = @roleId WHERE [UserId] = @userId";
 
+        internal const string UpdateDemoteClubAdminToUser = "UPDATE [Users] SET [AdminClubId] = NULL WHERE [AdminClubId] = @clubId";
+
+        internal const string UpdatePromoteUserToClubAdmin = "UPDATE [Users] SET [AdminClubId] = @clubId WHERE [UserId] = @userId";
+
         internal const string UpdateApplicationStatus = "UPDATE [Applications] SET [Status] = @status WHERE [AggregateId] = @aggregateId";
+
+        internal const string UpdateUserDepartment = "UPDATE [Users] SET [DepartmentId] = @departmentId WHERE [UserId] = @userId";
         #endregion
     }
 }
