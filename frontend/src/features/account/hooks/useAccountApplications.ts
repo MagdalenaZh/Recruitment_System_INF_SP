@@ -1,9 +1,30 @@
-import { useEffect, useState } from "react";
-import { getApplicationsForCurrentUser, getAllClubs, getDepartmentsForClub } from "../../../services/account/accountApplications.api";
-import type { DepartmentDto, ClubDto, AccountApplicationCard, UserApplicationDto } from "../../../types/account/accountApplications";
+import { useEffect, useMemo, useState } from "react";
+import {
+  getApplicationsForCurrentUser,
+  getAllClubs,
+  getDepartmentsForClub,
+} from "../../../services/account/accountApplications.api";
+import { getLatestApplicationStates } from "../../../services/applications/applicationStatusApi";
+import {
+  createRealtimeClientId,
+  subscribeToApplicationStates,
+} from "../../../services/applications/applicationStateStream";
+import type {
+  LatestApplicationStateResponse,
+} from "../../../services/applications/applicationStateTypes";
+import {
+  isConcludedApplicationState,
+  isHibernatedApplicationState,
+  isInitialApplicationState,
+  isProcessingApplicationState,
+} from "../../../services/applications/applicationStateTypes";
+import type {
+  AccountApplicationCard,
+  ClubDto,
+  DepartmentDto,
+  UserApplicationDto,
+} from "../../../types/account/accountApplications";
 import type { ApplicationStage } from "../../../types/account/applicationStage";
-
-
 
 function mapApplicationStatusToStage(status: number): ApplicationStage {
   switch (status) {
@@ -20,6 +41,28 @@ function mapApplicationStatusToStage(status: number): ApplicationStage {
     default:
       return "Submitted";
   }
+}
+
+function mapLatestStateToStage(
+  state: LatestApplicationStateResponse,
+): ApplicationStage | null {
+  if (isConcludedApplicationState(state)) {
+    return state.conclusionResult === 4 ? "Rejected" : "Accepted";
+  }
+
+  if (isHibernatedApplicationState(state)) {
+    return "Interview";
+  }
+
+  if (isProcessingApplicationState(state)) {
+    return "UnderReview";
+  }
+
+  if (isInitialApplicationState(state)) {
+    return "Submitted";
+  }
+
+  return "Interview";
 }
 
 function buildDepartmentMap(
@@ -42,10 +85,32 @@ function buildDepartmentMap(
   return result;
 }
 
+function applyLatestStateToCard(
+  card: AccountApplicationCard,
+  state: LatestApplicationStateResponse | undefined,
+): AccountApplicationCard {
+  if (!state) {
+    return card;
+  }
+
+  const nextStage = mapLatestStateToStage(state);
+
+  return {
+    ...card,
+    stage: nextStage ?? card.stage,
+    updatedAt: new Date().toISOString(),
+  };
+}
+
 export function useAccountApplications() {
   const [applications, setApplications] = useState<AccountApplicationCard[]>([]);
+  const [latestStates, setLatestStates] = useState<
+    Record<string, LatestApplicationStateResponse>
+  >({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const clientId = useMemo(() => createRealtimeClientId(), []);
 
   useEffect(() => {
     async function load() {
@@ -81,6 +146,18 @@ export function useAccountApplications() {
         );
 
         setApplications(mapped);
+
+        const stateSnapshots = await getLatestApplicationStates(
+          mapped.map((application) => application.id),
+        );
+
+        setLatestStates(() => {
+          const next: Record<string, LatestApplicationStateResponse> = {};
+          for (const state of stateSnapshots) {
+            next[state.applicationId] = state;
+          }
+          return next;
+        });
       } catch (err) {
         setError(
           err instanceof Error ? err.message : "Failed to load applications.",
@@ -90,11 +167,42 @@ export function useAccountApplications() {
       }
     }
 
-    load();
+    void load();
   }, []);
 
+  const applicationIds = useMemo(
+    () => applications.map((application) => application.id),
+    [applications],
+  );
+
+  useEffect(() => {
+    if (applicationIds.length === 0) {
+      return;
+    }
+
+    return subscribeToApplicationStates({
+      clientId,
+      applicationIds,
+      onMessage: (state) => {
+        setLatestStates((prev) => ({
+          ...prev,
+          [state.applicationId]: state,
+        }));
+      },
+      onError: (streamError) => {
+        console.error("[useAccountApplications] application stream error", streamError);
+      },
+    });
+  }, [applicationIds, clientId]);
+
+  const hydratedApplications = useMemo(() => {
+    return applications.map((application) =>
+      applyLatestStateToCard(application, latestStates[application.id]),
+    );
+  }, [applications, latestStates]);
+
   return {
-    applications,
+    applications: hydratedApplications,
     loading,
     error,
   };

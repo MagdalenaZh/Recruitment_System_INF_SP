@@ -2,19 +2,19 @@ import { useEffect, useMemo, useState } from "react";
 import type { ApplicationListItem, ApplicationStatus } from "../types/boardTypes";
 import {
   boardApi,
-  getApplicationUpdatesUrl,
   resolveCurrentBoardClubId,
   resolveCurrentUserId,
 } from "../../../services/board/boardApi";
-import type {
-  RecruitmentApplicationDto,
-  RecruitmentDepartmentDto,
-} from "../../../services/board/boardApi";
+import type { RecruitmentApplicationDto } from "../../../services/board/boardApi";
+import { getLatestApplicationStates } from "../../../services/applications/applicationStatusApi";
+import {
+  createRealtimeClientId,
+  subscribeToApplicationStates,
+} from "../../../services/applications/applicationStateStream";
+import type { LatestApplicationStateResponse } from "../../../services/applications/applicationStateTypes";
 import {
   applyUpdateToApplicationListItem,
   normalizeBaseStatus,
-  getApplicationIdFromUpdate,
-  type ApplicationUpdatePayload,
 } from "../utils/applicationLiveState";
 
 function buildApplicantName(userId: string): string {
@@ -24,16 +24,18 @@ function buildApplicantName(userId: string): string {
 export function useDepartmentApplications(departmentId?: string) {
   const [applications, setApplications] = useState<RecruitmentApplicationDto[]>([]);
   const [departmentName, setDepartmentName] = useState("Department");
-  const [liveUpdates, setLiveUpdates] = useState<Record<string, ApplicationUpdatePayload>>({});
+  const [liveUpdates, setLiveUpdates] = useState<Record<string, LatestApplicationStateResponse>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<ApplicationStatus | "All">("All");
+  const clientId = useMemo(() => createRealtimeClientId(), []);
 
   async function load() {
     if (!departmentId) {
       setApplications([]);
+      setLiveUpdates({});
       setLoading(false);
       return;
     }
@@ -47,15 +49,10 @@ export function useDepartmentApplications(departmentId?: string) {
         throw new Error("No clubId found in localStorage.");
       }
 
-      console.log("[useDepartmentApplications] loading", { departmentId, clubId });
-
       const [applicationsResponse, departmentsResponse] = await Promise.all([
         boardApi.getApplicationsByDepartment(departmentId),
         boardApi.getDepartmentsByClub(clubId),
       ]);
-
-      console.log("[useDepartmentApplications] raw applications:", applicationsResponse);
-      console.log("[useDepartmentApplications] raw departments:", departmentsResponse);
 
       setApplications(applicationsResponse);
 
@@ -64,52 +61,55 @@ export function useDepartmentApplications(departmentId?: string) {
       );
 
       setDepartmentName(matchedDepartment?.departmentName ?? "Department");
+
+      const stateSnapshots = await getLatestApplicationStates(
+        applicationsResponse.map((application) => application.applicationId),
+      );
+
+      setLiveUpdates(() => {
+        const next: Record<string, LatestApplicationStateResponse> = {};
+        for (const state of stateSnapshots) {
+          next[state.applicationId] = state;
+        }
+        return next;
+      });
     } catch (e) {
-      console.error("[useDepartmentApplications] load error:", e);
       setError(e instanceof Error ? e.message : "Unknown error");
       setApplications([]);
+      setLiveUpdates({});
     } finally {
       setLoading(false);
     }
   }
 
   useEffect(() => {
-    load();
+    void load();
   }, [departmentId]);
 
+  const applicationIds = useMemo(
+    () => applications.map((application) => application.applicationId),
+    [applications],
+  );
+
   useEffect(() => {
-    const url = getApplicationUpdatesUrl();
-    console.log("[useDepartmentApplications] opening SSE connection:", url);
+    if (applicationIds.length === 0) {
+      return;
+    }
 
-    const source = new EventSource(url);
-
-    source.onmessage = (event) => {
-      try {
-        const payload = JSON.parse(event.data) as ApplicationUpdatePayload;
-        const applicationId = getApplicationIdFromUpdate(payload);
-
-        if (!applicationId) return;
-
-        console.log("[useDepartmentApplications] SSE update received:", payload);
-
+    return subscribeToApplicationStates({
+      clientId,
+      applicationIds,
+      onMessage: (payload) => {
         setLiveUpdates((prev) => ({
           ...prev,
-          [applicationId]: payload,
+          [payload.applicationId]: payload,
         }));
-      } catch (e) {
-        console.error("[useDepartmentApplications] failed to parse SSE payload:", e);
-      }
-    };
-
-    source.onerror = (event) => {
-      console.error("[useDepartmentApplications] SSE error:", event);
-    };
-
-    return () => {
-      console.log("[useDepartmentApplications] closing SSE connection");
-      source.close();
-    };
-  }, []);
+      },
+      onError: (streamError) => {
+        console.error("[useDepartmentApplications] SSE stream error", streamError);
+      },
+    });
+  }, [applicationIds, clientId]);
 
   const currentUserId = resolveCurrentUserId();
 

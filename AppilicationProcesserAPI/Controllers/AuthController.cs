@@ -167,6 +167,23 @@ namespace AppilicationProcesserAPI.Controllers
                 ? null
                 : reader.GetGuid(reader.GetOrdinal("DepartmentId"));
 
+            Guid? clubId = null;
+            if (departmentId != null)
+            {
+                using var depconnection = new SqlConnection(_connectionString);
+                await depconnection.OpenAsync();
+                using var getClubForDepartment = new SqlCommand(@"
+                SELECT TOP 1 [ClubId] 
+                FROM [Departments] 
+                WHERE [DepartmentId] = @departmentId", depconnection);
+                getClubForDepartment.Parameters.AddWithValue("@departmentId", departmentId);
+                using var readerDep = await getClubForDepartment.ExecuteReaderAsync().ConfigureAwait(false);
+                if (readerDep.Read())
+                {
+                    clubId = readerDep.GetGuid(0);
+                }
+            }
+
             Guid? clubAdminId = reader.IsDBNull(reader.GetOrdinal("AdminClubId"))
                 ? null
                 : reader.GetGuid(reader.GetOrdinal("AdminClubId"));
@@ -178,7 +195,7 @@ namespace AppilicationProcesserAPI.Controllers
             if (verifyResult == PasswordVerificationResult.Failed)
                 return Unauthorized("Invalid email or password.");
 
-            var token = CreateJwt(userId, dbEmail, roleName, firstName, lastName, departmentId, clubAdminId);
+            var token = CreateJwt(userId, dbEmail, roleName, firstName, lastName, departmentId, clubId, clubAdminId);
 
             return Ok(new
             {
@@ -271,7 +288,7 @@ namespace AppilicationProcesserAPI.Controllers
             return NoContent();
         }
 
-        private string CreateJwt(Guid userId, string email, string role, string firstName, string lastName, Guid? departmentId, Guid? adminClubId)
+        private string CreateJwt(Guid userId, string email, string role, string firstName, string lastName, Guid? departmentId, Guid? clubId, Guid? adminClubId)
         {
             var key = _config["Jwt:Key"] ?? throw new InvalidOperationException("Missing Jwt:Key");
             var issuer = _config["Jwt:Issuer"] ?? "AubgRecruitment";
@@ -279,6 +296,7 @@ namespace AppilicationProcesserAPI.Controllers
 
             var adminClubIdValue = adminClubId.HasValue ? adminClubId.Value.ToString() : string.Empty;
             var departmentIdValue = departmentId.HasValue ? departmentId.Value.ToString() : string.Empty;
+            var clubIdValue = clubId.HasValue ? clubId.Value.ToString() : string.Empty;
 
             var claims = new List<Claim>
             {
@@ -289,7 +307,8 @@ namespace AppilicationProcesserAPI.Controllers
                 new Claim("lastName", lastName),
                 new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
                 new Claim(CustomClaimNames.AdminClubId, adminClubIdValue),
-                new Claim(CustomClaimNames.DepartmentId, departmentIdValue)
+                new Claim(CustomClaimNames.DepartmentId, departmentIdValue),
+                new Claim(CustomClaimNames.ClubId, clubIdValue)
             };
 
             var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key));
@@ -310,6 +329,7 @@ namespace AppilicationProcesserAPI.Controllers
 
 public static class CustomClaimNames
 {
-        public const string AdminClubId = "adminClubId";
-        public const string DepartmentId = "departmentId";
+    public const string ClubId = "clubId";
+    public const string AdminClubId = "adminClubId";
+    public const string DepartmentId = "departmentId";
 }

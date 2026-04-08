@@ -1,7 +1,9 @@
 ﻿using AppilicationProcesserAPI.MessageQueue;
 using AppilicationProcesserAPI.Representations;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace AppilicationProcesserAPI.Controllers
 {
@@ -18,12 +20,17 @@ namespace AppilicationProcesserAPI.Controllers
             _messageEmitter = messageEmitter;
         }
 
-        [HttpGet("aplicationUpdates/{clientId}")]
-        public ServerSentEventsResult<IStateRepresentation> GetAplicationUpdates([FromRoute] Guid clientId, [FromHeader(Name = "Last-Event-ID")] string? lastEventId, [FromHeader] HashSet<Guid> applicationIds, CancellationToken cancellationToken)
+        [Authorize]
+        [HttpGet("aplicationUpdates")]
+        public ServerSentEventsResult<IStateRepresentation> GetAplicationUpdates([FromHeader(Name = "Last-Event-ID")] string? lastEventId, [FromHeader] HashSet<Guid> applicationIds, CancellationToken cancellationToken)
         {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+
+            var userId = Guid.Parse(userIdClaim.Value);
+
             try
             {
-                return TypedResults.ServerSentEvents(_messageEmitter.ReadRepresentationsStates(clientId, applicationIds, lastEventId, cancellationToken), "applicationUpdates");
+                return TypedResults.ServerSentEvents(_messageEmitter.ReadRepresentationsStates(userId, applicationIds, lastEventId, cancellationToken), "applicationUpdates");
             }
             catch (Exception ex)
             {

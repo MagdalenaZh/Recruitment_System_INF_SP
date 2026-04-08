@@ -1,26 +1,21 @@
 import type {
+  LatestApplicationStateResponse,
+} from "../../../services/applications/applicationStateTypes";
+import {
+  isApprovedApplicationState,
+  isConcludedApplicationState,
+  isHibernatedApplicationState,
+  isInitialApplicationState,
+  isProcessingApplicationState,
+} from "../../../services/applications/applicationStateTypes";
+import type {
   ApplicationDetail,
   ApplicationListItem,
   ApplicationStatus,
   BoardVote,
 } from "../types/boardTypes";
 
-export type ApplicationUpdatePayload = Record<string, unknown>;
-
-function readString(obj: Record<string, unknown>, key: string): string | null {
-  const value = obj[key];
-  return typeof value === "string" ? value : null;
-}
-
-function readNumber(obj: Record<string, unknown>, key: string): number | null {
-  const value = obj[key];
-  return typeof value === "number" ? value : null;
-}
-
-function readBoolean(obj: Record<string, unknown>, key: string): boolean | null {
-  const value = obj[key];
-  return typeof value === "boolean" ? value : null;
-}
+export type ApplicationUpdatePayload = LatestApplicationStateResponse;
 
 function normalizeKey(value: string): string {
   return value.trim().toLowerCase();
@@ -29,21 +24,21 @@ function normalizeKey(value: string): string {
 export function getApplicationIdFromUpdate(
   payload: ApplicationUpdatePayload,
 ): string | null {
-  return readString(payload, "ApplicationId");
+  return payload.applicationId ?? null;
 }
 
 export function normalizeBaseStatus(applicationStatus: number): ApplicationStatus {
   switch (applicationStatus) {
-    case 0:
-      return "Submitted";
     case 1:
-      return "Pending";
+      return "Submitted";
     case 2:
-      return "Approved";
+      return "Pending";
     case 3:
-      return "Rejected";
-    case 4:
       return "Interview";
+    case 4:
+      return "Rejected";
+    case 5:
+      return "Approved";
     default:
       return "Unknown";
   }
@@ -52,28 +47,23 @@ export function normalizeBaseStatus(applicationStatus: number): ApplicationStatu
 export function inferStatusFromUpdate(
   payload: ApplicationUpdatePayload,
 ): ApplicationStatus | null {
-  if ("ConclusionResult" in payload) {
-    const result = readString(payload, "ConclusionResult") ?? "";
-    return result.toLowerCase().includes("reject") ? "Rejected" : "Approved";
+  if (isConcludedApplicationState(payload)) {
+    return payload.conclusionResult === 4 ? "Rejected" : "Approved";
   }
 
-  if ("InterviewTimesProposals" in payload) {
-    return "Approved";
-  }
-
-  if ("ScheduledTime" in payload) {
+  if (isHibernatedApplicationState(payload)) {
     return "Interview";
   }
 
-  if (
-    "CurrentNumberOfApprovals" in payload ||
-    "RequiredNumberOfApprovals" in payload ||
-    "UserDecisionsMap" in payload
-  ) {
+  if (isApprovedApplicationState(payload)) {
+    return "Approved";
+  }
+
+  if (isProcessingApplicationState(payload)) {
     return "Pending";
   }
 
-  if ("ApplicationProcessed" in payload) {
+  if (isInitialApplicationState(payload)) {
     return "Submitted";
   }
 
@@ -84,22 +74,37 @@ function extractMyVoteFromUserDecisionsMap(
   payload: ApplicationUpdatePayload,
   currentUserId: string | null,
 ): BoardVote | null {
-  if (!currentUserId) return null;
+  if (!currentUserId || !isProcessingApplicationState(payload)) {
+    return null;
+  }
 
-  const rawMap = payload["UserDecisionsMap"];
-  if (!rawMap || typeof rawMap !== "object") return null;
-
-  const decisions = rawMap as Record<string, unknown>;
+  const decisions = payload.userDecisionsMap;
   const targetKey = Object.keys(decisions).find(
     (key) => normalizeKey(key) === normalizeKey(currentUserId),
   );
 
-  if (!targetKey) return null;
+  if (!targetKey) {
+    return null;
+  }
 
-  const decision = readBoolean(decisions, targetKey);
+  const decision = decisions[targetKey];
+
   if (decision === true) return "Approve";
   if (decision === false) return "Reject";
   return null;
+}
+
+function readApprovals(
+  payload: ApplicationUpdatePayload,
+): Pick<ApplicationListItem, "approvalsCount" | "requiredApprovals"> | null {
+  if (!isProcessingApplicationState(payload)) {
+    return null;
+  }
+
+  return {
+    approvalsCount: payload.currentNumberOfApprovals,
+    requiredApprovals: payload.requiredNumberOfApprovals,
+  };
 }
 
 export function applyUpdateToApplicationListItem(
@@ -113,17 +118,14 @@ export function applyUpdateToApplicationListItem(
   }
 
   const inferredStatus = inferStatusFromUpdate(payload);
-  const currentApprovals = readNumber(payload, "CurrentNumberOfApprovals");
-  const requiredApprovals = readNumber(payload, "RequiredNumberOfApprovals");
+  const approvals = readApprovals(payload);
   const voteFromMap = extractMyVoteFromUserDecisionsMap(payload, currentUserId);
 
   return {
     ...item,
     status: inferredStatus ?? item.status,
-    approvalsCount:
-      currentApprovals !== null ? currentApprovals : item.approvalsCount,
-    requiredApprovals:
-      requiredApprovals !== null ? requiredApprovals : item.requiredApprovals,
+    approvalsCount: approvals?.approvalsCount ?? item.approvalsCount,
+    requiredApprovals: approvals?.requiredApprovals ?? item.requiredApprovals,
     myVote: voteFromMap ?? item.myVote,
   };
 }
@@ -139,19 +141,14 @@ export function applyUpdateToApplicationDetail(
   }
 
   const inferredStatus = inferStatusFromUpdate(payload);
-  const currentApprovals = readNumber(payload, "CurrentNumberOfApprovals");
-  const requiredApprovals = readNumber(payload, "RequiredNumberOfApprovals");
+  const approvals = readApprovals(payload);
   const voteFromMap = extractMyVoteFromUserDecisionsMap(payload, currentUserId);
 
   return {
     ...detail,
     status: inferredStatus ?? detail.status,
-    approvalsCount:
-      currentApprovals !== null ? currentApprovals : detail.approvalsCount,
-    requiredApprovals:
-      requiredApprovals !== null
-        ? requiredApprovals
-        : detail.requiredApprovals,
+    approvalsCount: approvals?.approvalsCount ?? detail.approvalsCount,
+    requiredApprovals: approvals?.requiredApprovals ?? detail.requiredApprovals,
     myVote: voteFromMap ?? detail.myVote,
   };
 }

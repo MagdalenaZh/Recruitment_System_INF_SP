@@ -1,27 +1,31 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   boardApi,
-  getApplicationUpdatesUrl,
   resolveCurrentBoardClubId,
 } from "../../../services/board/boardApi";
-import type { BoardDepartment } from "../types/boardTypes";
 import type {
   RecruitmentApplicationDto,
   RecruitmentDepartmentDto,
 } from "../../../services/board/boardApi";
+import { getLatestApplicationStates } from "../../../services/applications/applicationStatusApi";
 import {
-  getApplicationIdFromUpdate,
+  createRealtimeClientId,
+  subscribeToApplicationStates,
+} from "../../../services/applications/applicationStateStream";
+import type { LatestApplicationStateResponse } from "../../../services/applications/applicationStateTypes";
+import type { BoardDepartment } from "../types/boardTypes";
+import {
   inferStatusFromUpdate,
   normalizeBaseStatus,
-  type ApplicationUpdatePayload,
 } from "../utils/applicationLiveState";
 
 export function useBoardDepartments() {
   const [departments, setDepartments] = useState<RecruitmentDepartmentDto[]>([]);
   const [applications, setApplications] = useState<RecruitmentApplicationDto[]>([]);
-  const [liveUpdates, setLiveUpdates] = useState<Record<string, ApplicationUpdatePayload>>({});
+  const [liveUpdates, setLiveUpdates] = useState<Record<string, LatestApplicationStateResponse>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const clientId = useMemo(() => createRealtimeClientId(), []);
 
   async function load() {
     try {
@@ -34,68 +38,66 @@ export function useBoardDepartments() {
         throw new Error("No clubId found in localStorage.");
       }
 
-      console.log("[useBoardDepartments] loading departments and applications for clubId:", clubId);
-
       const [departmentsResponse, applicationsResponse] = await Promise.all([
         boardApi.getDepartmentsByClub(clubId),
         boardApi.getApplicationsByClub(clubId),
       ]);
 
-      console.log("[useBoardDepartments] raw departments:", departmentsResponse);
-      console.log("[useBoardDepartments] raw club applications:", applicationsResponse);
-
       setDepartments(departmentsResponse);
       setApplications(applicationsResponse);
+
+      const stateSnapshots = await getLatestApplicationStates(
+        applicationsResponse.map((application) => application.applicationId),
+      );
+
+      setLiveUpdates(() => {
+        const next: Record<string, LatestApplicationStateResponse> = {};
+        for (const state of stateSnapshots) {
+          next[state.applicationId] = state;
+        }
+        return next;
+      });
     } catch (e) {
-      console.error("[useBoardDepartments] load error:", e);
       setError(e instanceof Error ? e.message : "Unknown error");
       setDepartments([]);
       setApplications([]);
+      setLiveUpdates({});
     } finally {
       setLoading(false);
     }
   }
 
   useEffect(() => {
-    load();
+    void load();
   }, []);
+
+  const applicationIds = useMemo(
+    () => applications.map((application) => application.applicationId),
+    [applications],
+  );
 
   useEffect(() => {
-    const url = getApplicationUpdatesUrl();
-    console.log("[useBoardDepartments] opening SSE connection:", url);
+    if (applicationIds.length === 0) {
+      return;
+    }
 
-    const source = new EventSource(url);
-
-    source.onmessage = (event) => {
-      try {
-        const payload = JSON.parse(event.data) as ApplicationUpdatePayload;
-        const applicationId = getApplicationIdFromUpdate(payload);
-
-        if (!applicationId) return;
-
-        console.log("[useBoardDepartments] SSE update received:", payload);
-
+    return subscribeToApplicationStates({
+      clientId,
+      applicationIds,
+      onMessage: (payload) => {
         setLiveUpdates((prev) => ({
           ...prev,
-          [applicationId]: payload,
+          [payload.applicationId]: payload,
         }));
-      } catch (e) {
-        console.error("[useBoardDepartments] failed to parse SSE payload:", e);
-      }
-    };
-
-    source.onerror = (event) => {
-      console.error("[useBoardDepartments] SSE error:", event);
-    };
-
-    return () => {
-      console.log("[useBoardDepartments] closing SSE connection");
-      source.close();
-    };
-  }, []);
+      },
+      onError: (streamError) => {
+        console.error("[useBoardDepartments] SSE stream error", streamError);
+      },
+    });
+  }, [applicationIds, clientId]);
 
   const data = useMemo<BoardDepartment[]>(() => {
-    const mapped = departments.map((department) => {
+    return departments.map((department) => {
       const departmentApplications = applications.filter(
         (app) => app.departmentId === department.departmentId,
       );
@@ -127,9 +129,6 @@ export function useBoardDepartments() {
         pendingCount: counts.pendingCount,
       };
     });
-
-    console.log("[useBoardDepartments] mapped department cards:", mapped);
-    return mapped;
   }, [departments, applications, liveUpdates]);
 
   return { data, loading, error, refetch: load };

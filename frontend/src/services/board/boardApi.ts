@@ -100,10 +100,6 @@ export function resolveCurrentUserId(): string | null {
   return null;
 }
 
-export function getApplicationUpdatesUrl(): string {
-  return `${API_BASE}/AplicationUpdates`;
-}
-
 export type RecruitmentDepartmentDto = {
   clubId: string;
   departmentId: string;
