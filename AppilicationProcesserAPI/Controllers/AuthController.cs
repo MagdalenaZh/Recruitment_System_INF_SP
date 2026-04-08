@@ -180,7 +180,21 @@ namespace AppilicationProcesserAPI.Controllers
 
             var token = CreateJwt(userId, dbEmail, roleName, firstName, lastName, departmentId, clubAdminId);
 
-            return Ok(new LoginResponse(token));
+            return Ok(new
+            {
+                token,
+                user = new
+                {
+
+                    userId,
+                    email = dbEmail,
+                    firstName,
+                    lastName,
+                    role = roleName,
+                    departmentId,
+                    clubId = (string?)null
+                }
+            });
         }
 
         [Authorize]

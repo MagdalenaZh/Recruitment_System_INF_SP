@@ -27,7 +27,7 @@ namespace AppilicationProcesserAPI.Controllers
         }
 
         [HttpGet("api/latest-application-states")]
-        public async Task<List<IStateRepresentation>> GetLatestApplicationStates([FromBody] List<Guid> applicationIds, CancellationToken cancellationToken)
+        public async Task<List<IStateRepresentation>> GetLatestApplicationStates([FromHeader] List<Guid> applicationIds, CancellationToken cancellationToken)
         {
             try
             {

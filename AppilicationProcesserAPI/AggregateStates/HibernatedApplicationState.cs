@@ -34,7 +34,7 @@ public class HibernatedApplicationState : IApplicationState
                     applicationAggregate.TransitionToRejectedConcludedState(applicationRejectedEvent.AggregateId); 
                     break;
                 case ApplicationAcceptedEvent applicationAcceptedEvent:
-                    applicationAggregate.TransitionToRejectedConcludedState(applicationAcceptedEvent.AggregateId);
+                    applicationAggregate.TransitionToAcceptedConcludedState(applicationAcceptedEvent.AggregateId);
                     break;
             }
         }

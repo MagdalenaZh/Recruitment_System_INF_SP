@@ -113,6 +113,7 @@ namespace AppilicationProcesserAPI.PersistanceServices
             command.Parameters.AddWithValue("@applicationQuestions", serializedData);
             command.Parameters.AddWithValue("@requiredApprovals", requiredApprovals);
             command.Parameters.AddWithValue("@description", description);
+            command.Parameters.AddWithValue("@category", category);
 
             try
             {

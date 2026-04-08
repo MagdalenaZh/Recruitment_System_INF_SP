@@ -33,7 +33,7 @@
             SELECT b.[AggregateId], s.[StartTime], s.[EndTime] 
             FROM [BookedSlots] AS b 
             INNER JOIN [InterviewSlots] AS s ON b.SlotId = s.SlotId 
-            WHERE b.[ClubId] = @clubId
+            WHERE s.[ClubId] = @clubId
             ORDER BY s.StartTime
             """;
 
@@ -69,7 +69,7 @@
         #region UPDATE QUERIES
         internal const string UpdateClubAdmissionQuestions = "UPDATE [Clubs] SET [ClubName] = @clubName, [ApplicationQuestions] = @applicationQuestions, [RequiredApprovals] = @requiredApprovals, [Description] = @description, [Category] = @category WHERE [ClubId] = @clubId";
 
-        internal const string UpdateDepartmentOpenPositions = "UPDATE [Departments] SET [DepartmentName] = @departmentId, [Description] = @description, [OpenPositions] = @openPositions WHERE [DepartmentId] = @departmentId";
+        internal const string UpdateDepartmentOpenPositions = "UPDATE [Departments] SET [DepartmentName] = @departmentName, [Description] = @description, [OpenPositions] = @openPositions WHERE [DepartmentId] = @departmentId";
 
         internal const string UpdateInterviewSlot = "UPDATE [InterviewSlots] SET [StartTime] = @startTime, [EndTime] = @endTime WHERE [SlotId] = @slotId";
 
