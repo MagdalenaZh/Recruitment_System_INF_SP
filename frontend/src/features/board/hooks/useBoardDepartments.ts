@@ -84,20 +84,6 @@ export function useBoardDepartments() {
       },
       onError: (err) => {
         console.error("[useBoardDepartments] SSE error", err);
-        if (applicationIds.length === 0) return;
-        void getLatestApplicationStates(applicationIds)
-          .then((stateSnapshots) => {
-            setLiveUpdates((prev) => {
-              const next = { ...prev };
-              for (const state of stateSnapshots) {
-                next[state.applicationId] = state;
-              }
-              return next;
-            });
-          })
-          .catch((hydrateError) => {
-            console.error("[useBoardDepartments] failed to rehydrate states", hydrateError);
-          });
       },
     });
   }, [applicationIds, clientId]);

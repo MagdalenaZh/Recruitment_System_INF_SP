@@ -196,7 +196,8 @@ export function InterviewDetailsDrawer({
 
             <div className="mt-4 space-y-4">
               {slot.decisions.map((department) => {
-                const alreadyDecided = department.finalDecision !== null;
+                const alreadyDecided =
+                  department.finalDecision !== null || department.roundTwoDecision !== null;
 
                 return (
                   <div
@@ -211,6 +212,22 @@ export function InterviewDetailsDrawer({
                           <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 font-semibold text-slate-200">
                             Round 1: {department.roundOneStatus}
                           </span>
+                          {department.roundTwoDecision ? (
+                            <span
+                              className={[
+                                "rounded-full border px-3 py-1 font-semibold",
+                                department.roundTwoDecision === "Approved"
+                                  ? "border-sky-400/30 bg-sky-400/15 text-sky-100"
+                                  : "border-sky-400/30 bg-sky-400/15 text-sky-100",
+                              ].join(" ")}
+                            >
+                              Round 2: {department.roundTwoDecision}
+                            </span>
+                          ) : (
+                            <span className="rounded-full border border-sky-400/30 bg-sky-400/15 px-3 py-1 font-semibold text-sky-100">
+                              Round 2: pending
+                            </span>
+                          )}
 
                           {department.finalDecision ? (
                             <span
@@ -234,7 +251,7 @@ export function InterviewDetailsDrawer({
                           {!canVote && !alreadyDecided
                             ? getInterviewVotingHint(slot)
                             : alreadyDecided
-                              ? "A final decision has already been submitted for this department."
+                              ? "Your round two vote has been recorded. Final result stays pending until conclusion."
                               : "The interview slot has ended. You can submit your vote now."}
                         </p>
                       </div>

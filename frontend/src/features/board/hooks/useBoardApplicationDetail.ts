@@ -108,17 +108,6 @@ export function useBoardApplicationDetail(applicationId?: string) {
       },
       onError: (err) => {
         console.error("[useBoardApplicationDetail] SSE error", err);
-        void getLatestApplicationStates([applicationId])
-          .then((latestStates) => {
-            if (!latestStates[0]) return;
-            setData((prev) => {
-              if (!prev) return prev;
-              return applyUpdateToApplicationDetail(prev, latestStates[0], currentUserId);
-            });
-          })
-          .catch((hydrateError) => {
-            console.error("[useBoardApplicationDetail] failed to rehydrate state", hydrateError);
-          });
       },
     });
   }, [applicationId, clientId]);

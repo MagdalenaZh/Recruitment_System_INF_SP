@@ -114,6 +114,7 @@ export type BoardInterviewDepartmentDecision = {
   departmentId: string;
   departmentName: string;
   roundOneStatus: "Approved" | "Rejected";
+  roundTwoDecision: FinalInterviewDecision | null;
   finalDecision: FinalInterviewDecision | null;
   targetSpots: number;
 };

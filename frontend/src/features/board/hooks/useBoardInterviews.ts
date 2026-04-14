@@ -1,10 +1,18 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import { boardApi, resolveCurrentBoardClubId, resolveCurrentUserId } from "../../../services/board/boardApi";
 import { getAllClubs, getDepartmentsForClub, getLatestApplicationStates } from "../../../services/applications/applicationStatusApi";
+import {
+  createRealtimeClientId,
+  subscribeToApplicationStates,
+} from "../../../services/applications/applicationStateStream";
 import type { BookedInterviewSlotDto } from "../../../types/board/boardApiTypes";
 import type { UserApplicationDto } from "../../../types/account/accountApplications";
-import { isConcludedApplicationState } from "../../../services/applications/applicationStateTypes";
-import type { LatestApplicationStateResponse } from "../../../services/applications/applicationStateTypes";
+import {
+  isAfterInterviewReviewState,
+  isConcludedApplicationState,
+  isHibernatedApplicationState,
+  type LatestApplicationStateResponse,
+} from "../../../services/applications/applicationStateTypes";
 import type {
   BoardInterviewSlot,
   BoardInterviewNote,
@@ -40,6 +48,54 @@ export function useBoardInterviews() {
   const [clubName, setClubName] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const clientId = useMemo(() => createRealtimeClientId(), []);
+
+  const applyLiveStateToSlot = useCallback(
+    (
+      slot: BoardInterviewSlot,
+      state: LatestApplicationStateResponse,
+    ): BoardInterviewSlot => {
+      if (slot.applicationId !== state.applicationId) {
+        return slot;
+      }
+
+      const currentUserId = resolveCurrentUserId();
+
+      return {
+        ...slot,
+        decisions: slot.decisions.map((entry) => {
+          const finalDecision = deriveFinalDecision(slot.applicationId, {
+            [state.applicationId]: state,
+          });
+
+          let roundTwoDecision = entry.roundTwoDecision;
+
+          if (isAfterInterviewReviewState(state) && currentUserId) {
+            const userVote = Object.entries(state.userDecisionsMap).find(
+              ([userId]) => userId.toLowerCase() === currentUserId.toLowerCase(),
+            )?.[1];
+
+            if (userVote === true) roundTwoDecision = "Approved";
+            else if (userVote === false) roundTwoDecision = "Rejected";
+          }
+
+          // When the aggregate reaches hibernated state, round-two approvals
+          // threshold has already been met and the vote map is no longer present.
+          // Keep this as Approved across refreshes.
+          if (isHibernatedApplicationState(state)) {
+            roundTwoDecision = "Approved";
+          }
+
+          return {
+            ...entry,
+            roundTwoDecision,
+            finalDecision: finalDecision ?? entry.finalDecision,
+          };
+        }),
+      };
+    },
+    [],
+  );
 
   const load = useCallback(async () => {
     try {
@@ -129,6 +185,7 @@ export function useBoardInterviews() {
               departmentId: app.departmentId,
               departmentName: deptMap[app.departmentId] ?? "Unknown",
               roundOneStatus: "Approved",
+              roundTwoDecision: null,
               finalDecision: deriveFinalDecision(app.applicationId, stateMap),
               targetSpots: deptTargetMap[app.departmentId] ?? 0,
             },
@@ -136,7 +193,12 @@ export function useBoardInterviews() {
         };
       });
 
-      setSlots(builtSlots);
+      const hydratedSlots = builtSlots.map((slot) => {
+        const live = stateMap[slot.applicationId];
+        return live ? applyLiveStateToSlot(slot, live) : slot;
+      });
+
+      setSlots(hydratedSlots);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Unknown error");
       setSlots([]);
@@ -144,7 +206,7 @@ export function useBoardInterviews() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [applyLiveStateToSlot]);
 
   const addNote = useCallback((slotId: string, text: string) => {
     const trimmed = text.trim();
@@ -166,29 +228,22 @@ export function useBoardInterviews() {
   }, []);
 
   const submitDecision = useCallback(
-    async (slotId: string, departmentId: string, decision: FinalInterviewDecision) => {
+    async (applicationId: string, departmentId: string, decision: FinalInterviewDecision) => {
       if (decision === "Approved") {
-        await boardApi.afterInterviewApproveApplication(slotId);
+        await boardApi.afterInterviewApproveApplication(applicationId);
       } else {
-        await boardApi.afterInterviewDisapproveApplication(slotId);
+        await boardApi.afterInterviewDisapproveApplication(applicationId);
       }
-
-      // Post-interview approve/disapprove are board votes, not terminal decisions.
-      // Only concluded-state snapshots should mark finalDecision as Approved/Rejected.
-      const latestStates = await getLatestApplicationStates([slotId]);
-      const latestStateMap: Record<string, (typeof latestStates)[number]> = {};
-      for (const state of latestStates) latestStateMap[state.applicationId] = state;
-      const concludedDecision = deriveFinalDecision(slotId, latestStateMap);
 
       setSlots((prev) =>
         prev.map((slot) => {
-          if (slot.id !== slotId) return slot;
+          if (slot.applicationId !== applicationId) return slot;
 
           return {
             ...slot,
             decisions: slot.decisions.map((entry) =>
               entry.departmentId === departmentId
-                ? { ...entry, finalDecision: concludedDecision }
+                ? { ...entry, roundTwoDecision: decision }
                 : entry,
             ),
           };
@@ -197,6 +252,32 @@ export function useBoardInterviews() {
     },
     [],
   );
+
+  const applicationIdsKey = useMemo(() => {
+    return [...new Set(slots.map((slot) => slot.applicationId))]
+      .sort()
+      .join(",");
+  }, [slots]);
+
+  useEffect(() => {
+    const applicationIds = applicationIdsKey
+      .split(",")
+      .map((id) => id.trim())
+      .filter(Boolean);
+
+    if (applicationIds.length === 0) return;
+
+    return subscribeToApplicationStates({
+      clientId,
+      applicationIds,
+      onMessage: (payload) => {
+        setSlots((prev) => prev.map((slot) => applyLiveStateToSlot(slot, payload)));
+      },
+      onError: (streamError) => {
+        console.error("[useBoardInterviews] SSE error", streamError);
+      },
+    });
+  }, [applicationIdsKey, clientId, applyLiveStateToSlot]);
 
   return { slots, setSlots, clubName, loading, error, load, addNote, submitDecision };
 }

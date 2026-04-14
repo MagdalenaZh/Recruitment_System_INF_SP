@@ -103,20 +103,6 @@ export function useDepartmentApplications(departmentId?: string) {
       },
       onError: (err) => {
         console.error("[useDepartmentApplications] SSE error", err);
-        if (applicationIds.length === 0) return;
-        void getLatestApplicationStates(applicationIds)
-          .then((stateSnapshots) => {
-            setLiveUpdates((prev) => {
-              const next = { ...prev };
-              for (const state of stateSnapshots) {
-                next[state.applicationId] = state;
-              }
-              return next;
-            });
-          })
-          .catch((hydrateError) => {
-            console.error("[useDepartmentApplications] failed to rehydrate states", hydrateError);
-          });
       },
     });
   }, [applicationIds, clientId]);

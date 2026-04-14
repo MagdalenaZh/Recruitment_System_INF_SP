@@ -208,20 +208,6 @@ export function useAccountApplications() {
       },
       onError: (streamError) => {
         console.error("[useAccountApplications] application stream error", streamError);
-        if (applicationIds.length === 0) return;
-        void getLatestApplicationStates(applicationIds)
-          .then((stateSnapshots) => {
-            setLatestStates((prev) => {
-              const next = { ...prev };
-              for (const state of stateSnapshots) {
-                next[state.applicationId] = state;
-              }
-              return next;
-            });
-          })
-          .catch((hydrateError) => {
-            console.error("[useAccountApplications] failed to rehydrate states", hydrateError);
-          });
       },
     });
   }, [applicationIds, clientId]);

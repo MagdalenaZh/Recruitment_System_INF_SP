@@ -1,8 +1,6 @@
 import { useState } from "react";
 import type { ApplicationDetail, BoardVote, VoteResult } from "../types/boardTypes";
-import { boardApi, resolveCurrentUserId } from "../../../services/board/boardApi";
-import { getLatestApplicationStates } from "../../../services/applications/applicationStatusApi";
-import { applyUpdateToApplicationDetail } from "../utils/applicationLiveState";
+import { boardApi } from "../../../services/board/boardApi";
 
 export function useVoteOnApplication() {
   const [loading, setLoading] = useState(false);
@@ -41,25 +39,14 @@ export function useVoteOnApplication() {
 
       await submitVoteByStatus(applicationId, decision, current.status);
 
-      const optimistic: ApplicationDetail = {
-        ...current,
-        myVote: decision,
-      };
-
-      const snapshots = await getLatestApplicationStates([applicationId]);
-      const currentUserId = resolveCurrentUserId();
-      const hydrated = snapshots[0]
-        ? applyUpdateToApplicationDetail(optimistic, snapshots[0], currentUserId)
-        : optimistic;
-
       const result: VoteResult = {
-        approvalsCount: hydrated.approvalsCount,
-        requiredApprovals: hydrated.requiredApprovals,
-        totalVotes: hydrated.totalVotes,
-        approveVotes: hydrated.approveVotes,
-        rejectVotes: hydrated.rejectVotes,
-        status: hydrated.status,
-        myVote: hydrated.myVote,
+        approvalsCount: current.approvalsCount,
+        requiredApprovals: current.requiredApprovals,
+        totalVotes: current.totalVotes,
+        approveVotes: current.approveVotes,
+        rejectVotes: current.rejectVotes,
+        status: current.status,
+        myVote: decision,
       };
 
       return result;
