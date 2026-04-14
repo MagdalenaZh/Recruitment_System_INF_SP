@@ -13,6 +13,9 @@ export type BoardVote = "Approve" | "Reject";
 export type VoteResult = {
   approvalsCount: number;
   requiredApprovals: number;
+  totalVotes: number;
+  approveVotes: number;
+  rejectVotes: number;
   status: ApplicationStatus;
   myVote: BoardVote | null;
 };
@@ -49,6 +52,9 @@ export type ApplicationListItem = {
   submittedAt: string;
   approvalsCount: number;
   requiredApprovals: number;
+  totalVotes: number;
+  approveVotes: number;
+  rejectVotes: number;
   departmentId: string;
   departmentName: string;
   userId: string;
@@ -62,6 +68,9 @@ export type ApplicationDetail = {
   status: ApplicationStatus;
   approvalsCount: number;
   requiredApprovals: number;
+  totalVotes: number;
+  approveVotes: number;
+  rejectVotes: number;
   myVote: BoardVote | null;
   submittedAt: string;
   departmentId: string;

@@ -6,18 +6,25 @@ namespace AppilicationProcesserAPI.AggregateStates;
 public class ApplicationApprovedState : IApplicationState
 {
     private readonly Guid _aggregateId;
+    private readonly int _currentNumberOfApprovals;
     private readonly int _requiredNumberOfApprovals;
+    private readonly Dictionary<Guid, bool> _userDecisionsMap;
 
-    public ApplicationApprovedState(Guid aggregateId, int requiredNumberOfApprovals)
+    public ApplicationApprovedState(Guid aggregateId, int currentNumberOfApprovals, int requiredNumberOfApprovals, Dictionary<Guid, bool> userDecisionsMap)
     {
         _aggregateId = aggregateId;
+        _currentNumberOfApprovals = currentNumberOfApprovals;
         _requiredNumberOfApprovals = requiredNumberOfApprovals;
+        _userDecisionsMap = userDecisionsMap;
     }
 
     public void AcceptVisitor(IStateVisitor stateVisitor)
     {
         stateVisitor.PropertyBag.Set("ApplicationId", _aggregateId);
         stateVisitor.PropertyBag.Set("ApplicationApproved", true);
+        stateVisitor.PropertyBag.Set("CurrentNumberOfApprovals", _currentNumberOfApprovals);
+        stateVisitor.PropertyBag.Set("RequiredNumberOfApprovals", _requiredNumberOfApprovals);
+        stateVisitor.PropertyBag.Set("UserDecisionsMap", _userDecisionsMap);
         stateVisitor.Visit(this);
     }
 

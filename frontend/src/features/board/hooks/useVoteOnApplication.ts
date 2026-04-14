@@ -43,10 +43,6 @@ export function useVoteOnApplication() {
 
       const optimistic: ApplicationDetail = {
         ...current,
-        approvalsCount:
-          decision === "Approve"
-            ? current.approvalsCount + 1
-            : current.approvalsCount,
         myVote: decision,
       };
 
@@ -59,6 +55,9 @@ export function useVoteOnApplication() {
       const result: VoteResult = {
         approvalsCount: hydrated.approvalsCount,
         requiredApprovals: hydrated.requiredApprovals,
+        totalVotes: hydrated.totalVotes,
+        approveVotes: hydrated.approveVotes,
+        rejectVotes: hydrated.rejectVotes,
         status: hydrated.status,
         myVote: hydrated.myVote,
       };

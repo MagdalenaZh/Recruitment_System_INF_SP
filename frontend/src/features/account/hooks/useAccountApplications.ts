@@ -39,9 +39,9 @@ function mapApplicationStatusToStage(status: number): ApplicationStage {
     case 4:
       return "Rejected";
     case 5:
-          return "Accepted";
+      return "Accepted";
     case 6:
-          return "Waitlisted";
+      return "Waitlisted";
     default:
       return "Submitted";
   }
@@ -55,11 +55,15 @@ function mapLatestStateToStage(
   }
 
   if (isHibernatedApplicationState(state)) {
+    return "Waitlisted";
+  }
+
+  if (isAfterInterviewReviewState(state)) {
     return "Interview";
   }
 
-    if (isAfterInterviewReviewState(state)) {
-        return "Waitlisted";
+  if (isApprovedApplicationState(state)) {
+    return "Interview";
   }
 
   if (isProcessingApplicationState(state)) {
@@ -70,7 +74,7 @@ function mapLatestStateToStage(
     return "Submitted";
   }
 
-  return "Interview";
+  return "UnderReview";
 }
 
 function buildDepartmentMap(
@@ -199,6 +203,20 @@ export function useAccountApplications() {
       },
       onError: (streamError) => {
         console.error("[useAccountApplications] application stream error", streamError);
+        if (applicationIds.length === 0) return;
+        void getLatestApplicationStates(applicationIds)
+          .then((stateSnapshots) => {
+            setLatestStates((prev) => {
+              const next = { ...prev };
+              for (const state of stateSnapshots) {
+                next[state.applicationId] = state;
+              }
+              return next;
+            });
+          })
+          .catch((hydrateError) => {
+            console.error("[useAccountApplications] failed to rehydrate states", hydrateError);
+          });
       },
     });
   }, [applicationIds, clientId]);

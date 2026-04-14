@@ -13,10 +13,13 @@ export function ApplicationDecisionBar({
 }) {
   const btnBase =
     "rounded-xl px-4 py-2 text-sm font-semibold border transition disabled:opacity-60 disabled:cursor-not-allowed";
-  const canVote = app.status === "Pending" || app.status === "Submitted" || app.status === "Interview";
+  const canVote =
+    app.status === "Pending" || app.status === "Submitted" || app.status === "Interview";
 
   const approveActive = app.myVote === "Approve";
   const rejectActive = app.myVote === "Reject";
+  const myVoteLabel =
+    app.myVote === "Approve" ? "Approve" : app.myVote === "Reject" ? "Disapprove" : "-";
 
   return (
     <div className="mt-6">
@@ -28,8 +31,12 @@ export function ApplicationDecisionBar({
             </div>
             <div className="text-sm text-slate-600">
               Your vote:{" "}
+              <span className="font-medium text-slate-900">{myVoteLabel}</span>
+            </div>
+            <div className="text-sm text-slate-600">
+              Board votes:{" "}
               <span className="font-medium text-slate-900">
-                {app.myVote ?? "—"}
+                {app.totalVotes} ({app.approveVotes} approve / {app.rejectVotes} reject)
               </span>
             </div>
           </div>
@@ -56,24 +63,21 @@ export function ApplicationDecisionBar({
               onClick={() => onVote("Reject")}
               disabled={loading || !canVote}
             >
-              Reject
+              Disapprove
             </button>
           </div>
         </div>
 
         {!canVote ? (
           <div className="mt-3 text-sm text-slate-600">
-            Voting is available only while the application is in submitted/pending review stages.
+            Voting is available only while the application is in submitted, pending, or interview
+            review stages.
           </div>
         ) : null}
 
-        {error ? (
-          <div className="mt-3 text-sm text-rose-700">{error}</div>
-        ) : null}
+        {error ? <div className="mt-3 text-sm text-rose-700">{error}</div> : null}
 
-        {loading ? (
-          <div className="mt-3 text-sm text-slate-600">Submitting your vote...</div>
-        ) : null}
+        {loading ? <div className="mt-3 text-sm text-slate-600">Submitting your vote...</div> : null}
       </div>
     </div>
   );

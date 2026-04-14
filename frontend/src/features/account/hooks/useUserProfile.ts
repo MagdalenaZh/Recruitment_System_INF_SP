@@ -52,7 +52,7 @@ export function useUserProfile() {
   );
   
   const uploadCv = useCallback(
-    async (file: File) => {
+    async (_file: File) => {
       // Implementation for uploading CV
     },
     []

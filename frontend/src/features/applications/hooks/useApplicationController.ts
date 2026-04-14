@@ -19,6 +19,7 @@ import type { Step } from "./useApplicationState";
 
 export function useApplicationController(args: {
   clubId: string;
+  hasActiveClubApplication: boolean;
   questions: ApplicationQuestion[];
   step: Step;
   setStep: (s: Step) => void;
@@ -31,6 +32,7 @@ export function useApplicationController(args: {
 }) {
   const {
     questions,
+    hasActiveClubApplication,
     step,
     setStep,
     nextStep,
@@ -95,11 +97,18 @@ export function useApplicationController(args: {
   }
 
   const canSubmit = useMemo(
-    () => isFormValid(personal, questions, answers) && !!departmentId,
-    [personal, questions, answers, departmentId],
+    () =>
+      !hasActiveClubApplication &&
+      isFormValid(personal, questions, answers) &&
+      !!departmentId,
+    [hasActiveClubApplication, personal, questions, answers, departmentId],
   );
 
   async function submit() {
+    if (hasActiveClubApplication) {
+      return;
+    }
+
     const p = validatePersonal(personal);
     const a = validateAnswers(questions, answers);
     const dept = departmentId ? "" : "Please select a department.";

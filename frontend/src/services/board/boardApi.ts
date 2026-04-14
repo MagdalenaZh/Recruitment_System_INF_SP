@@ -21,11 +21,16 @@ export function resolveCurrentBoardClubId(): string | null {
   const token = localStorage.getItem("auth_token");
   const payload = parseJwtPayload(token);
 
+  if (payload && typeof payload.adminClubId === "string" && payload.adminClubId.length > 0) {
+    return payload.adminClubId;
+  }
+
   if (payload && typeof payload.clubId === "string" && payload.clubId.length > 0) {
     return payload.clubId;
   }
 
-  return getStoredUser()?.clubId ?? null;
+  const stored = getStoredUser();
+  return stored?.adminClubId ?? stored?.clubId ?? null;
 }
 
 export function resolveCurrentUserId(): string | null {

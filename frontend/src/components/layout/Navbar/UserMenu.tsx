@@ -22,11 +22,17 @@ function getMenuItems(
     ];
   }
 
-  if (role === "ClubAdmin" || role === "Admin") {
+  if (role === "Admin") {
+    return [
+      { label: "My Profile", to: "/account" },
+      { label: "System Admin", to: "/sys-admin" },
+    ];
+  }
+
+  if (role === "ClubAdmin") {
     return [
       { label: "My Profile", to: "/account" },
       { label: "Club Applications", to: "/board" },
-      { label: "Final Decisions", to: "/board/decisions" },
       { label: "Interview Stage", to: "/board/interviews" },
       { label: "Manage Club", to: "/club-admin" },
     ];

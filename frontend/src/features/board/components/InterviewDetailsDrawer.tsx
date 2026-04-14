@@ -192,7 +192,7 @@ export function InterviewDetailsDrawer({
           </section>
 
           <section className="rounded-2xl border border-white/10 bg-white/5 p-5">
-            <h3 className="text-lg font-semibold text-white">Round two decisions</h3>
+            <h3 className="text-lg font-semibold text-white">Round two voting</h3>
 
             <div className="mt-4 space-y-4">
               {slot.decisions.map((department) => {
@@ -235,7 +235,7 @@ export function InterviewDetailsDrawer({
                             ? getInterviewVotingHint(slot)
                             : alreadyDecided
                               ? "A final decision has already been submitted for this department."
-                              : "The interview slot has ended. You can vote now."}
+                              : "The interview slot has ended. You can submit your vote now."}
                         </p>
                       </div>
 

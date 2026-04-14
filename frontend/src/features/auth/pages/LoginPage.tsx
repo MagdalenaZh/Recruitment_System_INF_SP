@@ -18,6 +18,10 @@ function isClubAdmin(role: string | null | undefined): boolean {
   return role === "ClubAdmin";
 }
 
+function isSystemAdmin(role: string | null | undefined): boolean {
+  return role === "Admin";
+}
+
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -54,6 +58,8 @@ export default function LoginPage() {
         nav("/board", { replace: true });
       } else if (isClubAdmin(res.user.role)) {
         nav("/club-admin", { replace: true });
+      } else if (isSystemAdmin(res.user.role)) {
+        nav("/sys-admin", { replace: true });
       } else {
         nav("/home", { replace: true });
       }

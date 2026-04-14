@@ -26,18 +26,28 @@ namespace AppilicationProcesserAPI.AggregateStates
             var reconstructionTasks = aggregateIds.Select(async aggregateId =>
             {
                 var events = await _eventStore.GetEventsAsync(aggregateId, cancellationToken);
-                return await PopulateAggregate(events);
+                return await PopulateAggregate(aggregateId, events);
             });
 
             var representations = await Task.WhenAll(reconstructionTasks).ConfigureAwait(false);
             return [.. representations];
         }
 
-        private Task<IStateRepresentation> PopulateAggregate(IEnumerable<IDomainEvent> events)
+        private Task<IStateRepresentation> PopulateAggregate(Guid aggregateId, IEnumerable<IDomainEvent> events)
         {
+            var domainEvents = events.ToList();
+            if (domainEvents.Count == 0)
+            {
+                return Task.FromResult<IStateRepresentation>(new InitialRepresentation
+                {
+                    ApplicationId = aggregateId,
+                    ApplicationProcessed = false
+                });
+            }
+
             var aggregate = new ApplicationAggregate();
 
-            foreach (var domainEvent in events)
+            foreach (var domainEvent in domainEvents)
             {
                 aggregate.ApplyEvent(domainEvent);
             }

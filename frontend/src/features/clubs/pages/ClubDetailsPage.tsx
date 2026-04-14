@@ -107,6 +107,7 @@ export default function ClubDetailsPage() {
                 description: club.description,
                 admissionQuestions: club.admissionQuestions,
                 departments,
+                category: club.category,
               }}
             />
             <AboutSection about={club.description} />

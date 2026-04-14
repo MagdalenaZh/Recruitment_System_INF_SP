@@ -17,12 +17,8 @@ export function HeaderSection({ club }: { club: ClubDetails }) {
           <div className="lg:col-span-5">
             <div className="rounded-2xl bg-white/5 p-6 ring-1 ring-white/10">
               <div>
-                <h1 className="text-3xl font-bold tracking-tight">
-                  {club.clubName}
-                </h1>
-                <p className="mt-2 text-white/70">
-                  {club.description || "No description yet."}
-                </p>
+                <h1 className="text-3xl font-bold tracking-tight">{club.clubName}</h1>
+                <p className="mt-2 text-white/70">{club.description || "No description yet."}</p>
               </div>
             </div>
           </div>

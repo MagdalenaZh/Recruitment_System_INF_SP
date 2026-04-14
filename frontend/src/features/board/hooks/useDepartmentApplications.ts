@@ -63,7 +63,10 @@ export function useDepartmentApplications(departmentId?: string) {
 
       const stateSnapshots = await getLatestApplicationStates(
         applicationsResponse.map((a) => a.applicationId),
-      );
+      ).catch((hydrateError) => {
+        console.error("[useDepartmentApplications] latest-state hydration failed", hydrateError);
+        return [] as LatestApplicationStateResponse[];
+      });
 
       setLiveUpdates(() => {
         const next: Record<string, LatestApplicationStateResponse> = {};
@@ -100,6 +103,20 @@ export function useDepartmentApplications(departmentId?: string) {
       },
       onError: (err) => {
         console.error("[useDepartmentApplications] SSE error", err);
+        if (applicationIds.length === 0) return;
+        void getLatestApplicationStates(applicationIds)
+          .then((stateSnapshots) => {
+            setLiveUpdates((prev) => {
+              const next = { ...prev };
+              for (const state of stateSnapshots) {
+                next[state.applicationId] = state;
+              }
+              return next;
+            });
+          })
+          .catch((hydrateError) => {
+            console.error("[useDepartmentApplications] failed to rehydrate states", hydrateError);
+          });
       },
     });
   }, [applicationIds, clientId]);
@@ -121,6 +138,9 @@ export function useDepartmentApplications(departmentId?: string) {
         submittedAt: "",
         approvalsCount: 0,
         requiredApprovals: 0,
+        totalVotes: 0,
+        approveVotes: 0,
+        rejectVotes: 0,
         departmentId: app.departmentId,
         departmentName,
         userId: app.userId,

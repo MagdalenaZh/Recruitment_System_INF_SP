@@ -89,9 +89,9 @@ public class ApplicationDisapprovedEvent : DomainEvent
 public class BookInterviewSlotEvent : DomainEvent
 {
     public InterviewSlot BookedSlot { get; }
-    public BookInterviewSlotEvent(Guid aggregateId, InterviewSlot interviewSlot) : base(aggregateId)
+    public BookInterviewSlotEvent(Guid aggregateId, InterviewSlot bookedSlot) : base(aggregateId)
     {
-        BookedSlot = interviewSlot;
+        BookedSlot = bookedSlot;
     }
     public override DomainEventEnum EventType => DomainEventEnum.BookInterviewSlot;
 }

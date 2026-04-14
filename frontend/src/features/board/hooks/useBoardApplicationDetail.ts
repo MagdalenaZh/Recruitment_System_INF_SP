@@ -5,6 +5,7 @@ import {
   createRealtimeClientId,
   subscribeToApplicationStates,
 } from "../../../services/applications/applicationStateStream";
+import type { LatestApplicationStateResponse } from "../../../services/applications/applicationStateTypes";
 import type { ApplicationDetail } from "../types/boardTypes";
 import { applyUpdateToApplicationDetail, normalizeBaseStatus } from "../utils/applicationLiveState";
 
@@ -31,7 +32,10 @@ export function useBoardApplicationDetail(applicationId?: string) {
       const [applications, departments, latestStates] = await Promise.all([
         boardApi.getApplicationsByClub(clubId),
         getDepartmentsForClub(clubId),
-        getLatestApplicationStates([applicationId]),
+        getLatestApplicationStates([applicationId]).catch((hydrateError) => {
+          console.error("[useBoardApplicationDetail] latest-state hydration failed", hydrateError);
+          return [] as LatestApplicationStateResponse[];
+        }),
       ]);
 
       const application = applications.find((a) => a.applicationId === applicationId);
@@ -53,6 +57,9 @@ export function useBoardApplicationDetail(applicationId?: string) {
         status: normalizeBaseStatus(application.applicationStatus),
         approvalsCount: 0,
         requiredApprovals: 0,
+        totalVotes: 0,
+        approveVotes: 0,
+        rejectVotes: 0,
         myVote: null,
         submittedAt: "",
         departmentId: application.departmentId,
@@ -101,6 +108,17 @@ export function useBoardApplicationDetail(applicationId?: string) {
       },
       onError: (err) => {
         console.error("[useBoardApplicationDetail] SSE error", err);
+        void getLatestApplicationStates([applicationId])
+          .then((latestStates) => {
+            if (!latestStates[0]) return;
+            setData((prev) => {
+              if (!prev) return prev;
+              return applyUpdateToApplicationDetail(prev, latestStates[0], currentUserId);
+            });
+          })
+          .catch((hydrateError) => {
+            console.error("[useBoardApplicationDetail] failed to rehydrate state", hydrateError);
+          });
       },
     });
   }, [applicationId, clientId]);

@@ -29,16 +29,17 @@ export function InterviewDecisionConfirmModal({
         <div className="flex items-start justify-between gap-4">
           <div>
             <h2 className="text-xl font-semibold text-white">
-              {isApprove ? "Approve applicant?" : "Reject applicant?"}
+              {isApprove ? "Submit approval vote?" : "Submit disapproval vote?"}
             </h2>
             <p className="mt-2 text-sm text-slate-300">
-              You are about to{" "}
-              <span className="font-semibold text-white">{isApprove ? "approve" : "reject"}</span>{" "}
+              You are about to submit a{" "}
+              <span className="font-semibold text-white">{isApprove ? "positive" : "negative"}</span>{" "}
+              post-interview vote for{" "}
               <span className="font-semibold text-white">{candidateName}</span> for{" "}
               <span className="font-semibold text-white">{departmentName}</span>.
             </p>
             <p className="mt-2 text-sm text-slate-400">
-              Please make sure this is the correct final choice before submitting.
+              This vote contributes to the post-interview review state.
             </p>
           </div>
 
@@ -71,7 +72,7 @@ export function InterviewDecisionConfirmModal({
                 : "bg-rose-600 hover:bg-rose-500",
             ].join(" ")}
           >
-            {loading ? "Submitting..." : `Confirm ${isApprove ? "approval" : "rejection"}`}
+            {loading ? "Submitting..." : `Confirm ${isApprove ? "approval vote" : "disapproval vote"}`}
           </button>
         </div>
       </div>

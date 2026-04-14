@@ -85,11 +85,11 @@ export async function bookInterviewSlot(
   payload: BookInterviewSlotRequest
 ): Promise<{ message: string }> {
   const res = await fetch(
-    `${API_URL}/api/recruitmentInfo/api/book-interview-slot`,
+    `${API_URL}/api/book-interview-slot/${payload.applicationId}`,
     {
-      method: "POST",
+      method: "PUT",
       headers: buildHeaders(true),
-      body: JSON.stringify(payload),
+      body: JSON.stringify(payload.slot),
     }
   );
 

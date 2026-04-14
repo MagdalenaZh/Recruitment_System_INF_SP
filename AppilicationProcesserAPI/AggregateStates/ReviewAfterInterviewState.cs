@@ -54,6 +54,7 @@ namespace AppilicationProcesserAPI.AggregateStates
                     case AfterInterviewDisapprovedEvent applicationDisapprovedEvent:
                         {
                             _userDecisionsMap[applicationDisapprovedEvent.UserId] = false;
+                            applicationAggregate.TransitionToRejectedConcludedState(_aggregateId);
                         }
                         break;
                     case ApplicationRejectedEvent applicationRejectedEvent:

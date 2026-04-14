@@ -41,13 +41,14 @@ public class ProcessingApplicationState : IApplicationState
                     _userDecisionsMap[applicationApprovedEvent.UserId] = true;
                     if (_numberOfApprovals >= _requiredNumberOfApprovals)
                     {
-                        applicationAggregate.TransitionToApprovedState(_aggregateId, _requiredNumberOfApprovals);
+                        applicationAggregate.TransitionToApprovedState(_aggregateId, _numberOfApprovals, _requiredNumberOfApprovals, new Dictionary<Guid, bool>(_userDecisionsMap));
                     }
                 }
                 break;
             case ApplicationDisapprovedEvent applicationRejectedEvent:
                 {
                     _userDecisionsMap[applicationRejectedEvent.UserId] = false;
+                    applicationAggregate.TransitionToRejectedConcludedState(_aggregateId);
                 }
                 break;
             case ApplicationRejectedEvent applicationRejectedEvent:

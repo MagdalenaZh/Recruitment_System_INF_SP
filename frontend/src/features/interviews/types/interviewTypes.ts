@@ -9,6 +9,7 @@ export interface UserApplication {
   clubId?: string;
   clubName?: string;
   status?: ApplicationStatusLike;
+  applicationStatus?: ApplicationStatusLike;
 }
 
 export interface InterviewSlot {
@@ -18,8 +19,8 @@ export interface InterviewSlot {
 }
 
 export interface BookInterviewSlotRequest {
-  slotId: string;
   applicationId: string;
+  slot: InterviewSlot;
 }
 
 export interface ApprovedInterviewApplication {

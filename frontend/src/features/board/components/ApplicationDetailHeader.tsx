@@ -9,6 +9,12 @@ export function ApplicationDetailHeader({ app }: { app: ApplicationDetail }) {
           <h1 className="text-xl font-bold text-slate-900">{app.applicantName}</h1>
           <div className="mt-1 text-sm text-slate-600">Email: {app.applicantEmail}</div>
           <div className="mt-1 text-sm text-slate-600">Department: {app.departmentName}</div>
+          <div className="mt-1 text-sm text-slate-600">
+            Approvals:{" "}
+            <span className="font-semibold text-slate-900">
+              {app.approvalsCount}/{app.requiredApprovals}
+            </span>
+          </div>
         </div>
 
         <div className="flex items-center gap-2">

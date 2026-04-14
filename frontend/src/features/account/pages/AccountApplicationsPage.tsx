@@ -1,8 +1,17 @@
+import { useLocation } from "react-router-dom";
 import { StatusChip } from "../components/StatusChip";
 import { StageStepper } from "../components/StageStepper";
 import { useAccountApplications } from "../hooks/useAccountApplications";
 
 export function AccountApplicationsPage() {
+  const location = useLocation();
+  const notice =
+    location.state &&
+    typeof location.state === "object" &&
+    "notice" in location.state &&
+    typeof (location.state as { notice?: unknown }).notice === "string"
+      ? (location.state as { notice: string }).notice
+      : null;
   const { applications, loading, error } = useAccountApplications();
 
   if (loading) {
@@ -31,6 +40,12 @@ export function AccountApplicationsPage() {
 
   return (
     <div>
+      {notice ? (
+        <div className="mt-6 rounded-2xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-900 ring-1 ring-amber-100">
+          {notice}
+        </div>
+      ) : null}
+
       <div className="mt-6 space-y-4">
         {applications.map((a) => (
           <div

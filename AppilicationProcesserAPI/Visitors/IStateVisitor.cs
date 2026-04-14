@@ -92,7 +92,10 @@ namespace AppilicationProcesserAPI.Visitors
             _stateRepresentation = new ApprovedStateRepresentation
             {
                 ApplicationId = PropertyBag.Get<Guid>("ApplicationId"),
-                ApplicationApproved = PropertyBag.Get<bool>("ApplicationApproved")
+                ApplicationApproved = PropertyBag.Get<bool>("ApplicationApproved"),
+                CurrentNumberOfApprovals = PropertyBag.Get<int>("CurrentNumberOfApprovals"),
+                RequiredNumberOfApprovals = PropertyBag.Get<int>("RequiredNumberOfApprovals"),
+                UserDecisionsMap = PropertyBag.Get<Dictionary<Guid, bool>>("UserDecisionsMap")
             };
         }
 

@@ -19,78 +19,13 @@ export function AccountInterviewBookingPage() {
     successMessage,
     submitBooking,
   } = useInterviewBooking(user?.userId);
-
-  const previewMode = true;
-
-  const previewApplications = [
-    {
-      applicationId: "preview-1",
-      clubId: "club-1",
-      clubName: "The Hub",
-      departmentName: "Development",
-    },
-    {
-      applicationId: "preview-2",
-      clubId: "club-2",
-      clubName: "AUBG Lion's Club",
-      departmentName: "Events",
-    },
-  ];
-
-  const previewSlots = [
-    {
-      slotId: "slot-1",
-      startTime: "2026-04-15T10:00:00",
-      endTime: "2026-04-15T10:20:00",
-    },
-    {
-      slotId: "slot-2",
-      startTime: "2026-04-15T11:00:00",
-      endTime: "2026-04-15T11:20:00",
-    },
-    {
-      slotId: "slot-3",
-      startTime: "2026-04-15T13:30:00",
-      endTime: "2026-04-15T13:50:00",
-    },
-    {
-      slotId: "slot-4",
-      startTime: "2026-04-16T10:30:00",
-      endTime: "2026-04-16T10:50:00",
-    },
-    {
-      slotId: "slot-5",
-      startTime: "2026-04-16T12:00:00",
-      endTime: "2026-04-16T12:20:00",
-    },
-    {
-      slotId: "slot-6",
-      startTime: "2026-04-17T15:00:00",
-      endTime: "2026-04-17T15:20:00",
-    },
-  ];
-
-  const shownApplications = previewMode
-    ? previewApplications
-    : approvedApplications;
-  const shownSelectedApplication = previewMode
-    ? previewApplications.find(
-        (app) =>
-          app.applicationId === selectedApplicationId || !selectedApplicationId,
-      ) || previewApplications[0]
-    : selectedApplication;
-
-  const shownSlots = previewMode ? previewSlots : slots;
-  const shownLoadingApplications = previewMode ? false : loadingApplications;
-  const shownLoadingSlots = previewMode ? false : loadingSlots;
-  const shownError = previewMode ? "" : error;
-  const shownSuccessMessage = previewMode
-    ? "Preview mode is on. These are example interview slots."
-    : successMessage;
-
-  function handlePreviewBooking(slotId: string) {
-    console.log("Preview booking clicked:", slotId);
-  }
+  const shownApplications = approvedApplications;
+  const shownSelectedApplication = selectedApplication;
+  const shownSlots = slots;
+  const shownLoadingApplications = loadingApplications;
+  const shownLoadingSlots = loadingSlots;
+  const shownError = error;
+  const shownSuccessMessage = successMessage;
 
   return (
     <div className="space-y-6">
@@ -157,19 +92,8 @@ export function AccountInterviewBookingPage() {
                 </p>
 
                 <select
-                  value={
-                    previewMode
-                      ? shownSelectedApplication?.applicationId || ""
-                      : selectedApplicationId ||
-                        selectedApplication?.applicationId ||
-                        ""
-                  }
-                  onChange={(e) => {
-                    if (!previewMode) {
-                      setSelectedApplicationId(e.target.value);
-                    }
-                  }}
-                  disabled={previewMode}
+                  value={selectedApplicationId || selectedApplication?.applicationId || ""}
+                  onChange={(e) => setSelectedApplicationId(e.target.value)}
                   className="mt-4 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-500"
                 >
                   {shownApplications.map((app) => (
@@ -179,13 +103,6 @@ export function AccountInterviewBookingPage() {
                     </option>
                   ))}
                 </select>
-
-                {previewMode && (
-                  <p className="mt-2 text-xs text-slate-500">
-                    Preview mode is enabled, so the dropdown is fixed to example
-                    data.
-                  </p>
-                )}
               </div>
 
               <div className="rounded-3xl border border-blue-100 bg-blue-50/60 p-5 sm:p-6">
@@ -218,8 +135,8 @@ export function AccountInterviewBookingPage() {
             ) : (
               <InterviewSlotsCalendar
                 slots={shownSlots}
-                onBook={previewMode ? handlePreviewBooking : submitBooking}
-                booking={previewMode ? false : booking}
+                onBook={submitBooking}
+                booking={booking}
               />
             )}
           </section>

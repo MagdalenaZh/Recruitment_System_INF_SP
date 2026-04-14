@@ -4,6 +4,7 @@ import { getAllClubs, getDepartmentsForClub, getLatestApplicationStates } from "
 import type { BookedInterviewSlotDto } from "../../../types/board/boardApiTypes";
 import type { UserApplicationDto } from "../../../types/account/accountApplications";
 import { isConcludedApplicationState } from "../../../services/applications/applicationStateTypes";
+import type { LatestApplicationStateResponse } from "../../../services/applications/applicationStateTypes";
 import type {
   BoardInterviewSlot,
   BoardInterviewNote,
@@ -80,7 +81,10 @@ export function useBoardInterviews() {
 
       const bookedAppIds = matchedSlots.map(({ app }) => app.applicationId);
       const latestStates = bookedAppIds.length > 0
-        ? await getLatestApplicationStates(bookedAppIds)
+        ? await getLatestApplicationStates(bookedAppIds).catch((hydrateError) => {
+            console.error("[useBoardInterviews] latest-state hydration failed", hydrateError);
+            return [] as LatestApplicationStateResponse[];
+          })
         : [];
 
       const stateMap: Record<string, (typeof latestStates)[number]> = {};
@@ -169,19 +173,26 @@ export function useBoardInterviews() {
         await boardApi.afterInterviewDisapproveApplication(slotId);
       }
 
+      // Post-interview approve/disapprove are board votes, not terminal decisions.
+      // Only concluded-state snapshots should mark finalDecision as Approved/Rejected.
+      const latestStates = await getLatestApplicationStates([slotId]);
+      const latestStateMap: Record<string, (typeof latestStates)[number]> = {};
+      for (const state of latestStates) latestStateMap[state.applicationId] = state;
+      const concludedDecision = deriveFinalDecision(slotId, latestStateMap);
+
       setSlots((prev) =>
-        prev.map((slot) =>
-          slot.id === slotId
-            ? {
-                ...slot,
-                decisions: slot.decisions.map((entry) =>
-                  entry.departmentId === departmentId
-                    ? { ...entry, finalDecision: decision }
-                    : entry,
-                ),
-              }
-            : slot,
-        ),
+        prev.map((slot) => {
+          if (slot.id !== slotId) return slot;
+
+          return {
+            ...slot,
+            decisions: slot.decisions.map((entry) =>
+              entry.departmentId === departmentId
+                ? { ...entry, finalDecision: concludedDecision }
+                : entry,
+            ),
+          };
+        }),
       );
     },
     [],

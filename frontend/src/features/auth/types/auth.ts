@@ -6,6 +6,7 @@ export interface AuthUser {
   role: string;
   departmentId: string | null;
   clubId: string | null;
+  adminClubId?: string | null;
 }
 
 export interface LoginRequest {

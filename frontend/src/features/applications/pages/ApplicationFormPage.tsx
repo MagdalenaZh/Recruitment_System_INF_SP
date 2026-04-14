@@ -12,6 +12,10 @@ import type { ApplicationQuestion } from "../../../types/application/application
 import type { ClubListItem } from "../../../types/clubs/club";
 
 import { getClubById } from "../../../services/clubs/clubs.api";
+import {
+  getApplicationsForCurrentUser,
+  getDepartmentsForClub,
+} from "../../../services/applications/applicationStatusApi";
 import { useApplicationState } from "../hooks/useApplicationState";
 import { useApplicationController } from "../hooks/useApplicationController";
 
@@ -40,6 +44,8 @@ export default function ApplicationFormPage() {
   const [club, setClub] = useState<ClubListItem | null>(
     stateFromLocation?.club ?? null,
   );
+  const [hasActiveClubApplication, setHasActiveClubApplication] = useState(false);
+  const [duplicateCheckLoading, setDuplicateCheckLoading] = useState(true);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -75,6 +81,55 @@ export default function ApplicationFormPage() {
     };
   }, [clubId, stateFromLocation?.club]);
 
+  useEffect(() => {
+    let cancelled = false;
+
+    async function checkDuplicateActiveApplication() {
+      if (!clubId) {
+        if (!cancelled) {
+          setHasActiveClubApplication(false);
+          setDuplicateCheckLoading(false);
+        }
+        return;
+      }
+
+      try {
+        setDuplicateCheckLoading(true);
+
+        const [userApplications, departments] = await Promise.all([
+          getApplicationsForCurrentUser(),
+          getDepartmentsForClub(clubId),
+        ]);
+
+        const departmentIds = new Set(departments.map((department) => department.departmentId));
+        const hasDuplicate = userApplications.some((application) => {
+          if (!departmentIds.has(application.departmentId)) return false;
+
+          const status = application.applicationStatus;
+          return status === 1 || status === 2 || status === 3 || status === 6;
+        });
+
+        if (!cancelled) {
+          setHasActiveClubApplication(hasDuplicate);
+        }
+      } catch {
+        if (!cancelled) {
+          setHasActiveClubApplication(false);
+        }
+      } finally {
+        if (!cancelled) {
+          setDuplicateCheckLoading(false);
+        }
+      }
+    }
+
+    void checkDuplicateActiveApplication();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [clubId]);
+
   const questions: ApplicationQuestion[] = useMemo(() => {
     if (!club) return [];
     return mapAdmissionQuestionsToFormQuestions(club.admissionQuestions);
@@ -84,6 +139,7 @@ export default function ApplicationFormPage() {
 
   const controller = useApplicationController({
     clubId: clubId ?? "",
+    hasActiveClubApplication,
     questions,
     step: state.step,
     setStep: state.setStep,
@@ -137,6 +193,12 @@ export default function ApplicationFormPage() {
           steps={["Personal info", "Questions", "Review"]}
           current={state.step}
         />
+
+        {!duplicateCheckLoading && hasActiveClubApplication ? (
+          <div className="mt-6 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 ring-1 ring-amber-100">
+            You have already applied to this club and your application is still under review.
+          </div>
+        ) : null}
 
         {controller.isSubmitted ? (
           <div className="mt-8 rounded-xl bg-blue-50 p-5 text-sm text-blue-900 ring-1 ring-blue-100">

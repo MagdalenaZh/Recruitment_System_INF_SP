@@ -1,4 +1,9 @@
-import { Link } from "react-router-dom";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  getApplicationsForCurrentUser,
+  getDepartmentsForClub,
+} from "../../../../services/applications/applicationStatusApi";
 
 type Props = {
   clubId: string;
@@ -13,6 +18,64 @@ export function ApplySection({
   clubDescription,
   admissionQuestions,
 }: Props) {
+  const navigate = useNavigate();
+  const [checking, setChecking] = useState(false);
+
+  async function onApplyClick() {
+    try {
+      setChecking(true);
+
+      const [userApplications, departments] = await Promise.all([
+        getApplicationsForCurrentUser(),
+        getDepartmentsForClub(clubId),
+      ]);
+
+      const departmentIds = new Set(
+        departments.map((department) => department.departmentId),
+      );
+
+      const hasActiveClubApplication = userApplications.some((application) => {
+        if (!departmentIds.has(application.departmentId)) return false;
+        const status = application.applicationStatus;
+        return status === 1 || status === 2 || status === 3 || status === 6;
+      });
+
+      if (hasActiveClubApplication) {
+        navigate("/account/applications", {
+          state: {
+            notice:
+              "You have already applied to this club and your application is still under review.",
+          },
+        });
+        return;
+      }
+
+      navigate(`/clubs/${clubId}/apply`, {
+        state: {
+          club: {
+            clubId,
+            clubName,
+            description: clubDescription,
+            admissionQuestions,
+          },
+        },
+      });
+    } catch {
+      navigate(`/clubs/${clubId}/apply`, {
+        state: {
+          club: {
+            clubId,
+            clubName,
+            description: clubDescription,
+            admissionQuestions,
+          },
+        },
+      });
+    } finally {
+      setChecking(false);
+    }
+  }
+
   return (
     <section className="bg-slate-50 pb-14 text-slate-900">
       <div className="mx-auto max-w-6xl px-4">
@@ -24,20 +87,14 @@ export function ApplySection({
             </p>
           </div>
 
-          <Link
-            to={`/clubs/${clubId}/apply`}
-            state={{
-              club: {
-                clubId,
-                clubName,
-                description: clubDescription,
-                admissionQuestions,
-              },
-            }}
+          <button
+            type="button"
+            onClick={() => void onApplyClick()}
+            disabled={checking}
             className="shrink-0 rounded-full bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-700"
           >
-            Apply now
-          </Link>
+            {checking ? "Checking..." : "Apply now"}
+          </button>
         </div>
       </div>
     </section>

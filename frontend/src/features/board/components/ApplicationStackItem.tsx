@@ -3,6 +3,9 @@ import { StatusPill } from "./StatusPill";
 import type { ApplicationListItem } from "../types/boardTypes";
 
 export function ApplicationStackItem({ item }: { item: ApplicationListItem }) {
+  const myVoteLabel =
+    item.myVote === "Approve" ? "Approve" : item.myVote === "Reject" ? "Disapprove" : "-";
+
   return (
     <Link
       to={`/board/applications/${item.id}`}
@@ -24,9 +27,7 @@ export function ApplicationStackItem({ item }: { item: ApplicationListItem }) {
       <div className="relative flex items-start justify-between gap-3">
         <div>
           <div className="text-base font-semibold text-white/90">{item.applicantName}</div>
-          <div className="mt-1 text-sm text-slate-300">
-            {item.applicantEmail || "No email provided"}
-          </div>
+          <div className="mt-1 text-sm text-slate-300">{item.applicantEmail || "No email provided"}</div>
         </div>
 
         <div className="flex items-center gap-2">
@@ -34,14 +35,21 @@ export function ApplicationStackItem({ item }: { item: ApplicationListItem }) {
         </div>
       </div>
 
-      <div className="relative mt-3 flex items-center justify-between gap-3 text-sm text-slate-300">
+      <div className="relative mt-3 flex flex-wrap items-center justify-between gap-3 text-sm text-slate-300">
         <div>
-          Your vote: <span className="font-semibold text-white/90">{item.myVote ?? "-"}</span>
+          Your vote: <span className="font-semibold text-white/90">{myVoteLabel}</span>
+        </div>
+
+        <div className="text-xs text-slate-300">
+          Board votes:{" "}
+          <span className="font-semibold text-white/90">
+            {item.totalVotes} ({item.approveVotes} approve / {item.rejectVotes} reject)
+          </span>
         </div>
 
         <div className="flex items-center gap-2 text-slate-300">
           <span className="text-xs">Open</span>
-          <span className="transition-transform duration-300 group-hover:translate-x-1">→</span>
+          <span className="transition-transform duration-300 group-hover:translate-x-1">-&gt;</span>
         </div>
       </div>
     </Link>

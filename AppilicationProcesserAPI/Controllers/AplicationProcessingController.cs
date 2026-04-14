@@ -2,6 +2,8 @@
 using AppilicationProcesserAPI.MessageQueue;
 using AppilicationProcesserAPI.Models;
 using AppilicationProcesserAPI.PersistanceServices;
+using AppilicationProcesserAPI.AggregateStates;
+using AppilicationProcesserAPI.Representations;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -15,15 +17,17 @@ namespace AppilicationProcesserAPI.Controllers
         private readonly ICalendarProvider _calendarProvider;
         private readonly IEventBroker _messageBroker;
         private readonly IRecruitmentDataProvider _recruitmentDataProvider;
+        private readonly IAggregateReconstructor _aggregateReconstructor;
         private readonly ILogger<AplicationProcessingController> _logger;
 
         public AplicationProcessingController(IEventStore eventStore, ICalendarProvider calendarProvider,
-            IEventBroker messageBroker, IRecruitmentDataProvider recruitmentDataProvider, ILogger<AplicationProcessingController> logger)
+            IEventBroker messageBroker, IRecruitmentDataProvider recruitmentDataProvider, IAggregateReconstructor aggregateReconstructor, ILogger<AplicationProcessingController> logger)
         {
             _eventStore = eventStore;
             _calendarProvider = calendarProvider;
             _messageBroker = messageBroker;
             _recruitmentDataProvider = recruitmentDataProvider;
+            _aggregateReconstructor = aggregateReconstructor;
             _logger = logger;
         }
 
@@ -227,6 +231,17 @@ namespace AppilicationProcesserAPI.Controllers
             if (userIdClaim == null)
                 return Unauthorized();
             var userId = Guid.Parse(userIdClaim.Value);
+            var userApplications = await _recruitmentDataProvider.GetAllApplicationsForUserAsync(userId, cancellationToken).ConfigureAwait(false);
+            if (!userApplications.Any(application => application.ApplicationId == applicationId))
+            {
+                return Forbid();
+            }
+
+            var latestState = (await _aggregateReconstructor.GetLatestAggregateStates([applicationId], cancellationToken).ConfigureAwait(false)).FirstOrDefault();
+            if (latestState is not ApprovedStateRepresentation)
+            {
+                return BadRequest("Application is not eligible for interview booking.");
+            }
 
             await _calendarProvider.BookInterviewSlotAsync(interviewSlot.SlotId, applicationId, cancellationToken).ConfigureAwait(false);
 

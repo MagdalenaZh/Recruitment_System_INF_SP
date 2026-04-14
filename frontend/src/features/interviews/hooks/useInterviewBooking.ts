@@ -4,11 +4,16 @@ import {
   getApplicationsForUser,
   getAvailableInterviewSlotsForClub,
 } from "../api/interviewApi";
+import {
+  getAllClubs,
+  getDepartmentsForClub,
+} from "../../../services/applications/applicationStatusApi";
 import type {
   ApprovedInterviewApplication,
   InterviewSlot,
   UserApplication,
 } from "../types/interviewTypes";
+import type { ClubDto, DepartmentDto } from "../../../types/account/accountApplications";
 
 function normalizeStatus(status: string | number | null | undefined): string {
   if (status === null || status === undefined) return "";
@@ -36,7 +41,7 @@ function normalizeStatus(status: string | number | null | undefined): string {
 }
 
 function isApprovedApplication(app: UserApplication): boolean {
-  const normalized = normalizeStatus(app.status);
+  const normalized = normalizeStatus(app.status ?? app.applicationStatus);
 
   return (
     normalized === "interviewscheduled" ||
@@ -90,10 +95,39 @@ export function useInterviewBooking(userId?: string) {
     setError("");
 
     try {
-      const data = await getApplicationsForUser(userId);
-      setApplications(data);
+      const [data, clubs] = await Promise.all([
+        getApplicationsForUser(userId),
+        getAllClubs(),
+      ]);
 
-      const approved = toApprovedInterviewApplications(data);
+      const departmentLists = await Promise.all(
+        clubs.map((club: ClubDto) => getDepartmentsForClub(club.clubId)),
+      );
+      const departments = departmentLists.flat();
+      const departmentMap = new Map<string, DepartmentDto>(
+        departments.map((department) => [department.departmentId, department]),
+      );
+      const clubNameMap = new Map<string, string>(
+        clubs.map((club: ClubDto) => [club.clubId, club.clubName]),
+      );
+
+      const enrichedData: UserApplication[] = data.map((application) => {
+        const department = application.departmentId
+          ? departmentMap.get(application.departmentId)
+          : undefined;
+        const clubId = application.clubId ?? department?.clubId;
+
+        return {
+          ...application,
+          clubId,
+          clubName: application.clubName ?? (clubId ? clubNameMap.get(clubId) : undefined),
+          departmentName: application.departmentName ?? department?.departmentName,
+        };
+      });
+
+      setApplications(enrichedData);
+
+      const approved = toApprovedInterviewApplications(enrichedData);
       if (approved.length > 0) {
         setSelectedApplicationId((current) =>
           current || approved[0].applicationId
@@ -132,6 +166,10 @@ export function useInterviewBooking(userId?: string) {
       if (!selectedApplication) {
         throw new Error("No approved application selected.");
       }
+      const selectedSlot = slots.find((slot) => slot.slotId === slotId);
+      if (!selectedSlot) {
+        throw new Error("Selected interview slot was not found.");
+      }
 
       setBooking(true);
       setError("");
@@ -139,8 +177,8 @@ export function useInterviewBooking(userId?: string) {
 
       try {
         const result = await bookInterviewSlot({
-          slotId,
           applicationId: selectedApplication.applicationId,
+          slot: selectedSlot,
         });
 
         setSuccessMessage(result.message || "Interview slot booked successfully.");
@@ -152,7 +190,7 @@ export function useInterviewBooking(userId?: string) {
         setBooking(false);
       }
     },
-    [selectedApplication, loadSlots]
+    [selectedApplication, slots, loadSlots]
   );
 
   useEffect(() => {

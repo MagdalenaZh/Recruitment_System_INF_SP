@@ -28,6 +28,9 @@ export function BoardApplicationDetailPage() {
       ...data,
       approvalsCount: result.approvalsCount,
       requiredApprovals: result.requiredApprovals,
+      totalVotes: result.totalVotes,
+      approveVotes: result.approveVotes,
+      rejectVotes: result.rejectVotes,
       status: result.status,
       myVote: result.myVote,
     });

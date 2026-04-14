@@ -31,7 +31,7 @@ export function getApplicationIdFromUpdate(
 export function normalizeBaseStatus(applicationStatus: number): ApplicationStatus {
   switch (applicationStatus) {
     case 1:
-      return "Pending";
+      return "Submitted";
     case 2:
       return "Pending";
     case 3:
@@ -122,7 +122,37 @@ function readApprovals(
     };
   }
 
+  if (isApprovedApplicationState(payload)) {
+    return {
+      approvalsCount: payload.currentNumberOfApprovals ?? 0,
+      requiredApprovals: payload.requiredNumberOfApprovals ?? 0,
+    };
+  }
+
   return null;
+}
+
+function readVoteActivity(
+  payload: ApplicationUpdatePayload,
+): Pick<ApplicationListItem, "totalVotes" | "approveVotes" | "rejectVotes"> | null {
+  if (!("userDecisionsMap" in payload) || !payload.userDecisionsMap) {
+    return null;
+  }
+
+  const decisions = payload.userDecisionsMap as Record<string, boolean>;
+  let approveVotes = 0;
+  let rejectVotes = 0;
+
+  for (const vote of Object.values(decisions)) {
+    if (vote === true) approveVotes += 1;
+    else if (vote === false) rejectVotes += 1;
+  }
+
+  return {
+    totalVotes: approveVotes + rejectVotes,
+    approveVotes,
+    rejectVotes,
+  };
 }
 
 export function applyUpdateToApplicationListItem(
@@ -138,12 +168,16 @@ export function applyUpdateToApplicationListItem(
   const inferredStatus = inferStatusFromUpdate(payload);
   const approvals = readApprovals(payload);
   const voteFromMap = extractMyVoteFromUserDecisionsMap(payload, currentUserId);
+  const voteActivity = readVoteActivity(payload);
 
   return {
     ...item,
     status: inferredStatus ?? item.status,
     approvalsCount: approvals?.approvalsCount ?? item.approvalsCount,
     requiredApprovals: approvals?.requiredApprovals ?? item.requiredApprovals,
+    totalVotes: voteActivity?.totalVotes ?? item.totalVotes,
+    approveVotes: voteActivity?.approveVotes ?? item.approveVotes,
+    rejectVotes: voteActivity?.rejectVotes ?? item.rejectVotes,
     myVote: voteFromMap ?? item.myVote,
   };
 }
@@ -161,12 +195,16 @@ export function applyUpdateToApplicationDetail(
   const inferredStatus = inferStatusFromUpdate(payload);
   const approvals = readApprovals(payload);
   const voteFromMap = extractMyVoteFromUserDecisionsMap(payload, currentUserId);
+  const voteActivity = readVoteActivity(payload);
 
   return {
     ...detail,
     status: inferredStatus ?? detail.status,
     approvalsCount: approvals?.approvalsCount ?? detail.approvalsCount,
     requiredApprovals: approvals?.requiredApprovals ?? detail.requiredApprovals,
+    totalVotes: voteActivity?.totalVotes ?? detail.totalVotes,
+    approveVotes: voteActivity?.approveVotes ?? detail.approveVotes,
+    rejectVotes: voteActivity?.rejectVotes ?? detail.rejectVotes,
     myVote: voteFromMap ?? detail.myVote,
   };
 }

@@ -28,7 +28,7 @@ namespace AppilicationProcesserAPI.PersistanceServices
             if(statusUpdateEnvelope.MessageData.ApplicationStatus == ApplicationStatus.Accepted)
             {
                 using var departmentFromApplicationCommand = new SqlCommand(DbQueries.GetDepartmentIdForApplication, sqlConnection);
-                departmentFromApplicationCommand.Parameters.AddWithValue("@applicationId", statusUpdateEnvelope.MessageData.ApplicationId);
+                departmentFromApplicationCommand.Parameters.AddWithValue("@aggregateId", statusUpdateEnvelope.MessageData.ApplicationId);
 
                 using var reader = await departmentFromApplicationCommand.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
 

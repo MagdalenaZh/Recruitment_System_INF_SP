@@ -34,6 +34,8 @@ export type AfterInterviewReviewStateRepresentation = {
 export type ApprovedApplicationStateRepresentation = {
   applicationId: string;
   applicationApproved?: boolean;
+  currentNumberOfApprovals?: number;
+  requiredNumberOfApprovals?: number;
   userDecisionsMap?: Record<string, boolean>;
 };
 

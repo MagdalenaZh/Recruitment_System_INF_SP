@@ -51,18 +51,48 @@ namespace AppilicationProcesserAPI.Controllers
 
         [Authorize]
         [HttpGet("api/latest-application-states")]
-        public async Task<List<IStateRepresentation>> GetLatestApplicationStates([FromHeader] List<Guid> applicationIds, CancellationToken cancellationToken)
+        public async Task<List<IStateRepresentation>> GetLatestApplicationStates(CancellationToken cancellationToken)
         {
             try
             {
+                var applicationIds = ParseApplicationIdsFromHeaders();
+                if (applicationIds.Count == 0)
+                {
+                    return [];
+                }
+
                 var representations = await _aggregateReconstructor.GetLatestAggregateStates(applicationIds, cancellationToken).ConfigureAwait(false);
                 return representations;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error retrieving latest application states for ApplicationIds: {ApplicationIds}", string.Join(", ", applicationIds));
-                throw new Exception("An error occurred while retrieving the latest application states.");
+                _logger.LogError(ex, "Error retrieving latest application states");
+                return [];
             }
+        }
+
+        private List<Guid> ParseApplicationIdsFromHeaders()
+        {
+            if (!Request.Headers.TryGetValue("applicationIds", out var headerValues))
+            {
+                return [];
+            }
+
+            var parsed = new List<Guid>();
+
+            foreach (var headerValue in headerValues)
+            {
+                var parts = headerValue.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                foreach (var part in parts)
+                {
+                    if (Guid.TryParse(part, out var guidValue))
+                    {
+                        parsed.Add(guidValue);
+                    }
+                }
+            }
+
+            return [.. parsed.Distinct()];
         }
 
         [HttpGet("api/available-interview-slots/{clubId}")]

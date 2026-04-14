@@ -43,7 +43,10 @@ export function useBoardDepartments() {
 
       const stateSnapshots = await getLatestApplicationStates(
         applicationsResponse.map((a) => a.applicationId),
-      );
+      ).catch((hydrateError) => {
+        console.error("[useBoardDepartments] latest-state hydration failed", hydrateError);
+        return [] as LatestApplicationStateResponse[];
+      });
 
       setLiveUpdates(() => {
         const next: Record<string, LatestApplicationStateResponse> = {};
@@ -81,6 +84,20 @@ export function useBoardDepartments() {
       },
       onError: (err) => {
         console.error("[useBoardDepartments] SSE error", err);
+        if (applicationIds.length === 0) return;
+        void getLatestApplicationStates(applicationIds)
+          .then((stateSnapshots) => {
+            setLiveUpdates((prev) => {
+              const next = { ...prev };
+              for (const state of stateSnapshots) {
+                next[state.applicationId] = state;
+              }
+              return next;
+            });
+          })
+          .catch((hydrateError) => {
+            console.error("[useBoardDepartments] failed to rehydrate states", hydrateError);
+          });
       },
     });
   }, [applicationIds, clientId]);
@@ -96,7 +113,7 @@ export function useBoardDepartments() {
             ? (inferStatusFromUpdate(live) ?? normalizeBaseStatus(app.applicationStatus))
             : normalizeBaseStatus(app.applicationStatus);
 
-          if (status === "Approved") acc.approvedCount += 1;
+          if (status === "Approved" || status === "InterviewPending") acc.approvedCount += 1;
           else if (status === "Rejected") acc.rejectedCount += 1;
           else acc.pendingCount += 1;
 
