@@ -57,6 +57,13 @@
             INNER JOIN [UserCredentials] AS uc ON uc.[UserId] = u.[UserId]
             WHERE u.[UserId] = @userId
             """;
+
+        internal const string GetUserRights = """
+            SELECT r.[Name], u.[AdminClubId], u.[DepartmentId] 
+            FROM [Users] AS u 
+            INNER JOIN [Roles] AS r ON u.[RoleId] = r.[RoleId] 
+            WHERE u.[UserId] = @userId
+            """;
         #endregion
 
         #region INSERT QUERIES

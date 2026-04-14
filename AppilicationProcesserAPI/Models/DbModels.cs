@@ -101,5 +101,22 @@ namespace AppilicationProcesserAPI.Models
             StudyMajor = studyMajor;
         }
     }
+
+    public class UserRightsDatabaseModel
+    {
+        public Guid UserId { get; }
+        public Guid? DepartmentId { get; }
+        public string Role { get; }
+
+        public Guid? ClubAdminId { get; }
+
+        public UserRightsDatabaseModel(Guid userId, Guid? departmentId, string role, Guid? clubAdminId)
+        {
+            UserId = userId;
+            DepartmentId = departmentId;
+            Role = role;
+            ClubAdminId = clubAdminId;
+        }
+    }
 }
 

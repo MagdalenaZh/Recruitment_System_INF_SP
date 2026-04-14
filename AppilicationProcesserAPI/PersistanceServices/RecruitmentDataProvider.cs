@@ -20,6 +20,8 @@ namespace AppilicationProcesserAPI.PersistanceServices
         Task<List<DepartmentDatabaseModel>> GetDepartmentsForClubAsync(Guid clubId, CancellationToken cancellationToken);
 
         Task<UserDatabaseModel?> GetApplicantUserInformationAsync(Guid userId, CancellationToken cancellationToken);
+
+        Task<UserRightsDatabaseModel> GetUserRightsAsync(Guid userId, CancellationToken cancellationToken);
     }
 
     public class RecruitmentDataProvider : IRecruitmentDataProvider
@@ -216,6 +218,26 @@ namespace AppilicationProcesserAPI.PersistanceServices
             }
 
             throw new Exception($"Department with id {departmentId} not found");
+        }
+
+        public async Task<UserRightsDatabaseModel> GetUserRightsAsync(Guid userId, CancellationToken cancellationToken)
+        {
+            using var sqlConnection = new SqlConnection(_connectionString);
+            await sqlConnection.OpenAsync(cancellationToken).ConfigureAwait(false);
+
+            using var command = new SqlCommand(DbQueries.GetUserRights, sqlConnection);
+            command.Parameters.AddWithValue("@userId", userId);
+            using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+
+            if (reader.Read())
+            {
+                var roleName = reader.GetString(0);
+                var adminClubId = reader.IsDBNull(1) ? (Guid?)null : reader.GetGuid(1);
+                var departmentId = reader.IsDBNull(2) ? (Guid?)null : reader.GetGuid(2);
+                return new UserRightsDatabaseModel(userId, departmentId, roleName, adminClubId);
+            }
+
+            throw new Exception($"User with id {userId} not found");
         }
     }
 }

@@ -111,6 +111,21 @@ namespace AppilicationProcesserAPI.Controllers
             }
         }
 
+        [HttpGet("api/user-rights/{userId}")]
+        public async Task<UserRightsDatabaseModel> GetUserRights([FromRoute] Guid userId, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var userRights = await _recruitmentDataProvider.GetUserRightsAsync(userId, cancellationToken).ConfigureAwait(false);
+                return userRights;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving user rights for UserId: {UserId}", userId);
+                throw new Exception("An error occurred while retrieving user rights.");
+            }
+        }
+
         [HttpGet("api/applications-department/{departmentId}")]
         public async Task<List<ApplicationDatabaseModel>> GetAllApplicationsForDepartment([FromRoute] Guid departmentId, CancellationToken cancellationToken)
         {
