@@ -68,6 +68,22 @@ export function AccountApplicationsPage() {
               <StatusChip stage={a.stage} />
             </div>
 
+            {a.interviewSlot ? (
+              <div className="mt-3 flex items-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+                <span className="font-semibold">Interview:</span>
+                <span>
+                  {new Date(a.interviewSlot.startTime).toLocaleString(undefined, {
+                    dateStyle: "medium",
+                    timeStyle: "short",
+                  })}{" "}
+                  &ndash;{" "}
+                  {new Date(a.interviewSlot.endTime).toLocaleTimeString(undefined, {
+                    timeStyle: "short",
+                  })}
+                </span>
+              </div>
+            ) : null}
+
             <StageStepper stage={a.stage} />
           </div>
         ))}

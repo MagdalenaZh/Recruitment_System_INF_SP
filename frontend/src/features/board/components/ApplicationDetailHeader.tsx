@@ -21,6 +21,24 @@ export function ApplicationDetailHeader({ app }: { app: ApplicationDetail }) {
           <StatusPill status={app.status} />
         </div>
       </div>
+
+      {app.interviewSlot ? (
+        <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
+          <div className="text-xs font-semibold uppercase tracking-wide text-amber-700">
+            Interview scheduled
+          </div>
+          <div className="mt-1 text-sm text-amber-900">
+            {new Date(app.interviewSlot.startTime).toLocaleString(undefined, {
+              dateStyle: "medium",
+              timeStyle: "short",
+            })}{" "}
+            &ndash;{" "}
+            {new Date(app.interviewSlot.endTime).toLocaleTimeString(undefined, {
+              timeStyle: "short",
+            })}
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

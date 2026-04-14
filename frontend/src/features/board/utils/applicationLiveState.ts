@@ -197,6 +197,18 @@ export function applyUpdateToApplicationDetail(
   const voteFromMap = extractMyVoteFromUserDecisionsMap(payload, currentUserId);
   const voteActivity = readVoteActivity(payload);
 
+  let interviewSlot: ApplicationDetail["interviewSlot"] = detail.interviewSlot;
+  let voterDecisions: ApplicationDetail["voterDecisions"] = detail.voterDecisions;
+
+  if (isAfterInterviewReviewState(payload)) {
+    interviewSlot = payload.scheduledTime;
+    voterDecisions = payload.userDecisionsMap as Record<string, boolean>;
+  } else if (isProcessingApplicationState(payload)) {
+    voterDecisions = payload.userDecisionsMap as Record<string, boolean>;
+  } else if (isApprovedApplicationState(payload) && payload.userDecisionsMap) {
+    voterDecisions = payload.userDecisionsMap as Record<string, boolean>;
+  }
+
   return {
     ...detail,
     status: inferredStatus ?? detail.status,
@@ -206,5 +218,7 @@ export function applyUpdateToApplicationDetail(
     approveVotes: voteActivity?.approveVotes ?? detail.approveVotes,
     rejectVotes: voteActivity?.rejectVotes ?? detail.rejectVotes,
     myVote: voteFromMap ?? detail.myVote,
+    interviewSlot,
+    voterDecisions,
   };
 }

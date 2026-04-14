@@ -1,3 +1,4 @@
+import { resolveCurrentUserId } from "../../../services/board/boardApi";
 import type { ApplicationDetail, BoardVote } from "../types/boardTypes";
 
 export function ApplicationDecisionBar({
@@ -21,11 +22,14 @@ export function ApplicationDecisionBar({
   const myVoteLabel =
     app.myVote === "Approve" ? "Approve" : app.myVote === "Reject" ? "Disapprove" : "-";
 
+  const currentUserId = resolveCurrentUserId();
+  const voterEntries = app.voterDecisions ? Object.entries(app.voterDecisions) : [];
+
   return (
     <div className="mt-6">
       <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-lg">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <div className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-sm font-semibold text-slate-800">
               Status: {app.status}
             </div>
@@ -67,6 +71,41 @@ export function ApplicationDecisionBar({
             </button>
           </div>
         </div>
+
+        {voterEntries.length > 0 ? (
+          <div className="mt-3 border-t border-slate-100 pt-3">
+            <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+              Board member votes
+            </div>
+            <div className="flex flex-col gap-1">
+              {voterEntries.map(([userId, approved]) => {
+                const isMe =
+                  currentUserId !== null &&
+                  userId.toLowerCase() === currentUserId.toLowerCase();
+                return (
+                  <div key={userId} className="flex items-center gap-2 text-sm">
+                    <span
+                      className={
+                        isMe ? "font-semibold text-blue-700" : "text-slate-600"
+                      }
+                    >
+                      {isMe ? "You" : `${userId.slice(0, 8)}\u2026`}
+                    </span>
+                    <span
+                      className={
+                        approved
+                          ? "font-medium text-emerald-600"
+                          : "font-medium text-rose-600"
+                      }
+                    >
+                      {approved ? "Approved" : "Rejected"}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ) : null}
 
         {!canVote ? (
           <div className="mt-3 text-sm text-slate-600">

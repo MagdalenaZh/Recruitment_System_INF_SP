@@ -29,4 +29,5 @@ export type AccountApplicationCard = {
   departmentName: string;
   stage: ApplicationStage;
   updatedAt: string;
+  interviewSlot?: { startTime: string; endTime: string };
 };

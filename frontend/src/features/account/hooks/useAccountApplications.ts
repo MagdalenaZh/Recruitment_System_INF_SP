@@ -107,10 +107,15 @@ function applyLatestStateToCard(
 
   const nextStage = mapLatestStateToStage(state);
 
+  const interviewSlot = isAfterInterviewReviewState(state)
+    ? { startTime: state.scheduledTime.startTime, endTime: state.scheduledTime.endTime }
+    : undefined;
+
   return {
     ...card,
     stage: nextStage ?? card.stage,
     updatedAt: new Date().toISOString(),
+    interviewSlot,
   };
 }
 

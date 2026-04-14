@@ -80,6 +80,8 @@ export type ApplicationDetail = {
   answers: ApplicationAnswer[];
   attachments: ApplicationAttachment[];
   rawApplication?: unknown;
+  interviewSlot?: { slotId: string; startTime: string; endTime: string };
+  voterDecisions?: Record<string, boolean>;
 };
 
 export type FinalInterviewDecision = "Approved" | "Rejected";
