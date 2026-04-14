@@ -46,10 +46,14 @@ async function handleResponse<T>(res: Response): Promise<T> {
   return (await res.text()) as unknown as T;
 }
 
-export async function apiGet<TRes>(path: string, includeAuth = true): Promise<TRes> {
+export async function apiGet<TRes>(
+  path: string,
+  includeAuth = true,
+  additionalHeaders?: HeadersInit,
+): Promise<TRes> {
   const res = await fetch(`${API_URL}${path}`, {
     method: "GET",
-    headers: buildHeaders(includeAuth),
+    headers: { ...buildHeaders(includeAuth), ...(additionalHeaders ?? {}) },
   });
 
   return handleResponse<TRes>(res);

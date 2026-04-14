@@ -6,7 +6,7 @@ const API_BASE =
 const TOKEN_KEY = "auth_token";
 const USER_KEY = "auth_user";
 
-function getStoredUser(): AuthUser | null {
+export function getStoredUser(): AuthUser | null {
   const raw = localStorage.getItem(USER_KEY);
   if (!raw) return null;
   try {

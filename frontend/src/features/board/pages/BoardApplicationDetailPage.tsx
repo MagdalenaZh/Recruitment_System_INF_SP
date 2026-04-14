@@ -21,8 +21,6 @@ export function BoardApplicationDetailPage() {
   async function onVote(decision: BoardVote) {
     if (!data) return;
 
-    console.log("[BoardApplicationDetailPage] before vote data:", data);
-
     const result = await vote(data.id, decision, data);
     if (!result) return;
 
@@ -33,8 +31,6 @@ export function BoardApplicationDetailPage() {
       status: result.status,
       myVote: result.myVote,
     });
-
-    console.log("[BoardApplicationDetailPage] optimistic UI updated:", result);
   }
 
   return (

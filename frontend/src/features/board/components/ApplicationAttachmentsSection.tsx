@@ -11,7 +11,7 @@ export function ApplicationAttachmentsSection({
 
       {attachments.length === 0 ? (
         <div className="mt-3 text-sm text-slate-600">
-          No attachments available from this API.
+          No attachments provided.
         </div>
       ) : (
         <div className="mt-4 flex flex-col gap-2">

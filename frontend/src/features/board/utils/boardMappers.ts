@@ -6,9 +6,9 @@ import type {
   BoardDepartment,
 } from "../types/boardTypes";
 import type {
-  RecruitmentApplicationDto,
-  RecruitmentDepartmentDto,
-} from "../../../services/board/boardApi";
+  UserApplicationDto as RecruitmentApplicationDto,
+  DepartmentDto as RecruitmentDepartmentDto,
+} from "../../../types/account/accountApplications";
 
 export function normalizeApplicationStatus(rawStatus: number): ApplicationStatus {
   switch (rawStatus) {
@@ -94,7 +94,7 @@ export function mapApplicationDtoToListItem(
     applicantName: buildApplicantDisplayName(application.userId),
     applicantEmail: "",
     status: normalizeApplicationStatus(application.applicationStatus),
-    submittedAt: new Date().toISOString(),
+    submittedAt: "",
     approvalsCount: 0,
     requiredApprovals: 0,
     departmentId: application.departmentId,
@@ -117,7 +117,7 @@ export function mapApplicationDtoToDetail(
     approvalsCount: 0,
     requiredApprovals: 0,
     myVote: null,
-    submittedAt: new Date().toISOString(),
+    submittedAt: "",
     departmentId: application.departmentId,
     departmentName,
     clubId,

@@ -29,17 +29,23 @@ namespace AppilicationProcesserAPI.Controllers
 
         [Authorize]
         [HttpGet("api/user-information/{userId}")]
-        public async Task<UserDatabaseModel> GetUserInformation([FromRoute] Guid userId, CancellationToken cancellationToken)
+        public async Task<ActionResult<UserDatabaseModel>> GetUserInformation([FromRoute] Guid userId, CancellationToken cancellationToken)
         {
             try
             {
                 var userInfo = await _recruitmentDataProvider.GetApplicantUserInformationAsync(userId, cancellationToken).ConfigureAwait(false);
-                return userInfo;
+                if (userInfo is null)
+                {
+                    _logger.LogWarning("User not found for UserId: {UserId}", userId);
+                    return NotFound(new { message = $"User with id {userId} not found" });
+                }
+
+                return Ok(userInfo);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error retrieving user information for UserId: {UserId}", userId);
-                throw new Exception("An error occurred while retrieving user information.");
+                return StatusCode(500, new { message = "An error occurred while retrieving user information." });
             }
         }
 

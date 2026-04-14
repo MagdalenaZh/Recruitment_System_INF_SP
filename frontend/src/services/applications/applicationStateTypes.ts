@@ -34,6 +34,7 @@ export type AfterInterviewReviewStateRepresentation = {
 export type ApprovedApplicationStateRepresentation = {
   applicationId: string;
   applicationApproved?: boolean;
+  userDecisionsMap?: Record<string, boolean>;
 };
 
 export type ConcludedApplicationStateRepresentation = {
@@ -99,6 +100,8 @@ export function isApprovedApplicationState(
 ): value is ApprovedApplicationStateRepresentation {
   return (
     hasApplicationId(value) &&
+    "applicationApproved" in value &&
+    typeof value.applicationApproved === "boolean" &&
     !isInitialApplicationState(value) &&
     !isProcessingApplicationState(value) &&
     !isAfterInterviewReviewState(value) &&

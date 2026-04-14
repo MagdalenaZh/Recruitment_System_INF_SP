@@ -1,10 +1,34 @@
 import { useState } from "react";
 import type { ApplicationDetail, BoardVote, VoteResult } from "../types/boardTypes";
-import { boardApi } from "../../../services/board/boardApi";
+import { boardApi, resolveCurrentUserId } from "../../../services/board/boardApi";
+import { getLatestApplicationStates } from "../../../services/applications/applicationStatusApi";
+import { applyUpdateToApplicationDetail } from "../utils/applicationLiveState";
 
 export function useVoteOnApplication() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  async function submitVoteByStatus(
+    applicationId: string,
+    decision: BoardVote,
+    status: ApplicationDetail["status"],
+  ): Promise<void> {
+    if (status === "Pending" || status === "Submitted") {
+      await boardApi.voteOnApplication(applicationId, decision);
+      return;
+    }
+
+    if (status === "Interview") {
+      if (decision === "Approve") {
+        await boardApi.afterInterviewApproveApplication(applicationId);
+      } else {
+        await boardApi.afterInterviewDisapproveApplication(applicationId);
+      }
+      return;
+    }
+
+    throw new Error("This application cannot be voted in its current state.");
+  }
 
   async function vote(
     applicationId: string,
@@ -15,29 +39,32 @@ export function useVoteOnApplication() {
       setLoading(true);
       setError(null);
 
-      console.log("[useVoteOnApplication] voting", {
-        applicationId,
-        decision,
-        current,
-      });
+      await submitVoteByStatus(applicationId, decision, current.status);
 
-      await boardApi.voteOnApplication(applicationId, decision);
-
-      const result: VoteResult = {
+      const optimistic: ApplicationDetail = {
+        ...current,
         approvalsCount:
           decision === "Approve"
             ? current.approvalsCount + 1
             : current.approvalsCount,
-        requiredApprovals: current.requiredApprovals,
-        status: current.status,
         myVote: decision,
       };
 
-      console.log("[useVoteOnApplication] optimistic result:", result);
+      const snapshots = await getLatestApplicationStates([applicationId]);
+      const currentUserId = resolveCurrentUserId();
+      const hydrated = snapshots[0]
+        ? applyUpdateToApplicationDetail(optimistic, snapshots[0], currentUserId)
+        : optimistic;
+
+      const result: VoteResult = {
+        approvalsCount: hydrated.approvalsCount,
+        requiredApprovals: hydrated.requiredApprovals,
+        status: hydrated.status,
+        myVote: hydrated.myVote,
+      };
 
       return result;
     } catch (e) {
-      console.error("[useVoteOnApplication] vote error:", e);
       setError(e instanceof Error ? e.message : "Unknown error");
       return null;
     } finally {

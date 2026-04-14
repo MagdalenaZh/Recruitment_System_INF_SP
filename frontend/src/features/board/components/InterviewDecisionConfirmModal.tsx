@@ -1,4 +1,4 @@
-import type { FinalInterviewDecision } from "../../../mocks/boardInterviewMock";
+import type { FinalInterviewDecision } from "../types/boardTypes";
 
 type Props = {
   open: boolean;
@@ -7,6 +7,7 @@ type Props = {
   decision: FinalInterviewDecision;
   onClose: () => void;
   onConfirm: () => void;
+  loading?: boolean;
 };
 
 export function InterviewDecisionConfirmModal({
@@ -16,6 +17,7 @@ export function InterviewDecisionConfirmModal({
   decision,
   onClose,
   onConfirm,
+  loading = false,
 }: Props) {
   if (!open) return null;
 
@@ -31,17 +33,12 @@ export function InterviewDecisionConfirmModal({
             </h2>
             <p className="mt-2 text-sm text-slate-300">
               You are about to{" "}
-              <span className="font-semibold text-white">
-                {isApprove ? "approve" : "reject"}
-              </span>{" "}
-              <span className="font-semibold text-white">{candidateName}</span>{" "}
-              for{" "}
-              <span className="font-semibold text-white">{departmentName}</span>
-              .
+              <span className="font-semibold text-white">{isApprove ? "approve" : "reject"}</span>{" "}
+              <span className="font-semibold text-white">{candidateName}</span> for{" "}
+              <span className="font-semibold text-white">{departmentName}</span>.
             </p>
             <p className="mt-2 text-sm text-slate-400">
-              Please make sure this is the correct final choice before
-              submitting.
+              Please make sure this is the correct final choice before submitting.
             </p>
           </div>
 
@@ -50,7 +47,7 @@ export function InterviewDecisionConfirmModal({
             onClick={onClose}
             className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm font-semibold text-slate-200 hover:bg-white/10"
           >
-            ✕
+            ×
           </button>
         </div>
 
@@ -66,14 +63,15 @@ export function InterviewDecisionConfirmModal({
           <button
             type="button"
             onClick={onConfirm}
+            disabled={loading}
             className={[
-              "rounded-xl px-4 py-2 text-sm font-semibold text-white transition",
+              "rounded-xl px-4 py-2 text-sm font-semibold text-white transition disabled:opacity-50",
               isApprove
                 ? "bg-emerald-600 hover:bg-emerald-500"
                 : "bg-rose-600 hover:bg-rose-500",
             ].join(" ")}
           >
-            Confirm {isApprove ? "approval" : "rejection"}
+            {loading ? "Submitting..." : `Confirm ${isApprove ? "approval" : "rejection"}`}
           </button>
         </div>
       </div>

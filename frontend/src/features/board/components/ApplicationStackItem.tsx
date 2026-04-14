@@ -2,20 +2,6 @@ import { Link } from "react-router-dom";
 import { StatusPill } from "./StatusPill";
 import type { ApplicationListItem } from "../types/boardTypes";
 
-function formatDate(iso: string) {
-  const d = new Date(iso);
-
-  if (Number.isNaN(d.getTime())) {
-    return "Unknown date";
-  }
-
-  return d.toLocaleDateString(undefined, {
-    year: "numeric",
-    month: "short",
-    day: "2-digit",
-  });
-}
-
 export function ApplicationStackItem({ item }: { item: ApplicationListItem }) {
   return (
     <Link
@@ -37,14 +23,9 @@ export function ApplicationStackItem({ item }: { item: ApplicationListItem }) {
 
       <div className="relative flex items-start justify-between gap-3">
         <div>
-          <div className="text-base font-semibold text-white/90">
-            {item.applicantName}
-          </div>
+          <div className="text-base font-semibold text-white/90">{item.applicantName}</div>
           <div className="mt-1 text-sm text-slate-300">
-            User ID: {item.userId.slice(0, 8)}
-          </div>
-          <div className="mt-1 text-sm text-slate-300">
-            Submitted: {formatDate(item.submittedAt)}
+            {item.applicantEmail || "No email provided"}
           </div>
         </div>
 
@@ -55,17 +36,12 @@ export function ApplicationStackItem({ item }: { item: ApplicationListItem }) {
 
       <div className="relative mt-3 flex items-center justify-between gap-3 text-sm text-slate-300">
         <div>
-          Your vote:{" "}
-          <span className="font-semibold text-white/90">
-            {item.myVote ? item.myVote : "—"}
-          </span>
+          Your vote: <span className="font-semibold text-white/90">{item.myVote ?? "-"}</span>
         </div>
 
         <div className="flex items-center gap-2 text-slate-300">
           <span className="text-xs">Open</span>
-          <span className="transition-transform duration-300 group-hover:translate-x-1">
-            →
-          </span>
+          <span className="transition-transform duration-300 group-hover:translate-x-1">→</span>
         </div>
       </div>
     </Link>

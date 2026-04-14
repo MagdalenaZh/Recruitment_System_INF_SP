@@ -1,23 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
-import type { ApplicationDetail } from "../types/boardTypes";
-import {
-  boardApi,
-  resolveCurrentBoardClubId,
-  resolveCurrentUserId,
-} from "../../../services/board/boardApi";
-import { getLatestApplicationStates } from "../../../services/applications/applicationStatusApi";
+import { boardApi, resolveCurrentBoardClubId, resolveCurrentUserId } from "../../../services/board/boardApi";
+import { getDepartmentsForClub, getLatestApplicationStates } from "../../../services/applications/applicationStatusApi";
 import {
   createRealtimeClientId,
   subscribeToApplicationStates,
 } from "../../../services/applications/applicationStateStream";
-import {
-  applyUpdateToApplicationDetail,
-  normalizeBaseStatus,
-} from "../utils/applicationLiveState";
-
-function buildApplicantName(userId: string): string {
-  return `Applicant ${userId.slice(0, 8)}`;
-}
+import type { ApplicationDetail } from "../types/boardTypes";
+import { applyUpdateToApplicationDetail, normalizeBaseStatus } from "../utils/applicationLiveState";
 
 export function useBoardApplicationDetail(applicationId?: string) {
   const [data, setData] = useState<ApplicationDetail | null>(null);
@@ -37,48 +26,43 @@ export function useBoardApplicationDetail(applicationId?: string) {
       setError(null);
 
       const clubId = resolveCurrentBoardClubId();
-
-      if (!clubId) {
-        throw new Error("No clubId found in localStorage.");
-      }
+      if (!clubId) throw new Error("No club assigned to this board member.");
 
       const [applications, departments, latestStates] = await Promise.all([
         boardApi.getApplicationsByClub(clubId),
-        boardApi.getDepartmentsByClub(clubId),
+        getDepartmentsForClub(clubId),
         getLatestApplicationStates([applicationId]),
       ]);
 
-      const application = applications.find(
-        (item) => item.applicationId === applicationId,
-      );
+      const application = applications.find((a) => a.applicationId === applicationId);
+      if (!application) throw new Error("Application not found.");
 
-      if (!application) {
-        throw new Error("Application not found.");
-      }
+      // Fetch real name and email for the applicant. If lookup fails, keep page usable.
+      const userInfo = await boardApi
+        .getUserInformation(application.userId)
+        .catch(() => null);
 
-      const department = departments.find(
-        (item) => item.departmentId === application.departmentId,
-      );
+      const department = departments.find((d) => d.departmentId === application.departmentId);
 
       const mapped: ApplicationDetail = {
         id: application.applicationId,
-        applicantName: buildApplicantName(application.userId),
-        applicantEmail: "",
+        applicantName: userInfo
+          ? `${userInfo.firstName} ${userInfo.lastName}`.trim()
+          : application.userId,
+        applicantEmail: userInfo?.email ?? "",
         status: normalizeBaseStatus(application.applicationStatus),
         approvalsCount: 0,
         requiredApprovals: 0,
         myVote: null,
-        submittedAt: new Date().toISOString(),
+        submittedAt: "",
         departmentId: application.departmentId,
         departmentName: department?.departmentName ?? "Department",
         clubId,
         userId: application.userId,
-        answers: Object.entries(application.questionnaire ?? {}).map(
-          ([question, answer]) => ({
-            question,
-            answer: String(answer ?? ""),
-          }),
-        ),
+        answers: Object.entries(application.questionnaire ?? {}).map(([question, answer]) => ({
+          question,
+          answer: String(answer ?? ""),
+        })),
         attachments: [],
         rawApplication: application,
       };
@@ -115,8 +99,8 @@ export function useBoardApplicationDetail(applicationId?: string) {
           return applyUpdateToApplicationDetail(prev, payload, currentUserId);
         });
       },
-      onError: (streamError) => {
-        console.error("[useBoardApplicationDetail] SSE stream error", streamError);
+      onError: (err) => {
+        console.error("[useBoardApplicationDetail] SSE error", err);
       },
     });
   }, [applicationId, clientId]);

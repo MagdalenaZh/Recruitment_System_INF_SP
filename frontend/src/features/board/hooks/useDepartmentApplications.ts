@@ -1,28 +1,19 @@
 import { useEffect, useMemo, useState } from "react";
-import type { ApplicationListItem, ApplicationStatus } from "../types/boardTypes";
-import {
-  boardApi,
-  resolveCurrentBoardClubId,
-  resolveCurrentUserId,
-} from "../../../services/board/boardApi";
-import type { RecruitmentApplicationDto } from "../../../services/board/boardApi";
-import { getLatestApplicationStates } from "../../../services/applications/applicationStatusApi";
+import { boardApi, resolveCurrentBoardClubId, resolveCurrentUserId } from "../../../services/board/boardApi";
+import { getDepartmentsForClub, getLatestApplicationStates } from "../../../services/applications/applicationStatusApi";
 import {
   createRealtimeClientId,
   subscribeToApplicationStates,
 } from "../../../services/applications/applicationStateStream";
+import type { UserApplicationDto } from "../../../types/account/accountApplications";
+import type { UserInfoDto } from "../../../types/board/boardApiTypes";
 import type { LatestApplicationStateResponse } from "../../../services/applications/applicationStateTypes";
-import {
-  applyUpdateToApplicationListItem,
-  normalizeBaseStatus,
-} from "../utils/applicationLiveState";
-
-function buildApplicantName(userId: string): string {
-  return `Applicant ${userId.slice(0, 8)}`;
-}
+import type { ApplicationListItem, ApplicationStatus } from "../types/boardTypes";
+import { applyUpdateToApplicationListItem, normalizeBaseStatus } from "../utils/applicationLiveState";
 
 export function useDepartmentApplications(departmentId?: string) {
-  const [applications, setApplications] = useState<RecruitmentApplicationDto[]>([]);
+  const [applications, setApplications] = useState<UserApplicationDto[]>([]);
+  const [userInfoMap, setUserInfoMap] = useState<Record<string, UserInfoDto>>({});
   const [departmentName, setDepartmentName] = useState("Department");
   const [liveUpdates, setLiveUpdates] = useState<Record<string, LatestApplicationStateResponse>>({});
   const [loading, setLoading] = useState(true);
@@ -45,37 +36,44 @@ export function useDepartmentApplications(departmentId?: string) {
       setError(null);
 
       const clubId = resolveCurrentBoardClubId();
-      if (!clubId) {
-        throw new Error("No clubId found in localStorage.");
-      }
+      if (!clubId) throw new Error("No club assigned to this board member.");
 
       const [applicationsResponse, departmentsResponse] = await Promise.all([
         boardApi.getApplicationsByDepartment(departmentId),
-        boardApi.getDepartmentsByClub(clubId),
+        getDepartmentsForClub(clubId),
       ]);
 
       setApplications(applicationsResponse);
-
-      const matchedDepartment = departmentsResponse.find(
-        (department) => department.departmentId === departmentId,
+      setDepartmentName(
+        departmentsResponse.find((d) => d.departmentId === departmentId)?.departmentName ?? "Department",
       );
 
-      setDepartmentName(matchedDepartment?.departmentName ?? "Department");
+      // Fetch real name + email for every unique applicant in parallel
+      const uniqueUserIds = [...new Set(applicationsResponse.map((a) => a.userId))];
+      const userInfoResults = await Promise.allSettled(
+        uniqueUserIds.map((id) => boardApi.getUserInformation(id)),
+      );
+      const infoMap: Record<string, UserInfoDto> = {};
+      for (const result of userInfoResults) {
+        if (result.status === "fulfilled") {
+          infoMap[result.value.userId] = result.value;
+        }
+      }
+      setUserInfoMap(infoMap);
 
       const stateSnapshots = await getLatestApplicationStates(
-        applicationsResponse.map((application) => application.applicationId),
+        applicationsResponse.map((a) => a.applicationId),
       );
 
       setLiveUpdates(() => {
         const next: Record<string, LatestApplicationStateResponse> = {};
-        for (const state of stateSnapshots) {
-          next[state.applicationId] = state;
-        }
+        for (const state of stateSnapshots) next[state.applicationId] = state;
         return next;
       });
     } catch (e) {
       setError(e instanceof Error ? e.message : "Unknown error");
       setApplications([]);
+      setUserInfoMap({});
       setLiveUpdates({});
     } finally {
       setLoading(false);
@@ -87,26 +85,21 @@ export function useDepartmentApplications(departmentId?: string) {
   }, [departmentId]);
 
   const applicationIds = useMemo(
-    () => applications.map((application) => application.applicationId),
+    () => applications.map((a) => a.applicationId),
     [applications],
   );
 
   useEffect(() => {
-    if (applicationIds.length === 0) {
-      return;
-    }
+    if (applicationIds.length === 0) return;
 
     return subscribeToApplicationStates({
       clientId,
       applicationIds,
       onMessage: (payload) => {
-        setLiveUpdates((prev) => ({
-          ...prev,
-          [payload.applicationId]: payload,
-        }));
+        setLiveUpdates((prev) => ({ ...prev, [payload.applicationId]: payload }));
       },
-      onError: (streamError) => {
-        console.error("[useDepartmentApplications] SSE stream error", streamError);
+      onError: (err) => {
+        console.error("[useDepartmentApplications] SSE error", err);
       },
     });
   }, [applicationIds, clientId]);
@@ -114,44 +107,39 @@ export function useDepartmentApplications(departmentId?: string) {
   const currentUserId = resolveCurrentUserId();
 
   const data = useMemo<ApplicationListItem[]>(() => {
-    return applications.map((application) => {
+    return applications.map((app) => {
+      const info = userInfoMap[app.userId];
+      const applicantName = info
+        ? `${info.firstName} ${info.lastName}`.trim()
+        : app.userId;
+
       const baseItem: ApplicationListItem = {
-        id: application.applicationId,
-        applicantName: buildApplicantName(application.userId),
-        applicantEmail: "",
-        status: normalizeBaseStatus(application.applicationStatus),
-        submittedAt: new Date().toISOString(),
+        id: app.applicationId,
+        applicantName,
+        applicantEmail: info?.email ?? "",
+        status: normalizeBaseStatus(app.applicationStatus),
+        submittedAt: "",
         approvalsCount: 0,
         requiredApprovals: 0,
-        departmentId: application.departmentId,
+        departmentId: app.departmentId,
         departmentName,
-        userId: application.userId,
+        userId: app.userId,
         myVote: null,
       };
 
-      const liveUpdate = liveUpdates[application.applicationId];
-
-      if (!liveUpdate) {
-        return baseItem;
-      }
-
-      return applyUpdateToApplicationListItem(baseItem, liveUpdate, currentUserId);
+      const live = liveUpdates[app.applicationId];
+      return live ? applyUpdateToApplicationListItem(baseItem, live, currentUserId) : baseItem;
     });
-  }, [applications, departmentName, liveUpdates, currentUserId]);
+  }, [applications, userInfoMap, departmentName, liveUpdates, currentUserId]);
 
   const filtered = useMemo(() => {
     return data.filter((item) => {
-      const normalizedQuery = query.toLowerCase().trim();
-
+      const q = query.toLowerCase().trim();
       const matchesQuery =
-        normalizedQuery.length === 0
-          ? true
-          : item.applicantName.toLowerCase().includes(normalizedQuery) ||
-            item.userId.toLowerCase().includes(normalizedQuery);
-
-      const matchesStatus =
-        statusFilter === "All" ? true : item.status === statusFilter;
-
+        q.length === 0 ||
+        item.applicantName.toLowerCase().includes(q) ||
+        item.applicantEmail.toLowerCase().includes(q);
+      const matchesStatus = statusFilter === "All" || item.status === statusFilter;
       return matchesQuery && matchesStatus;
     });
   }, [data, query, statusFilter]);
@@ -159,6 +147,7 @@ export function useDepartmentApplications(departmentId?: string) {
   return {
     data,
     filtered,
+    departmentName,
     loading,
     error,
     query,

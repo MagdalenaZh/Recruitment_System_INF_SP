@@ -72,3 +72,67 @@ export type ApplicationDetail = {
   attachments: ApplicationAttachment[];
   rawApplication?: unknown;
 };
+
+export type FinalInterviewDecision = "Approved" | "Rejected";
+
+export type InterviewSlotPhase =
+  | "Scheduled"
+  | "Live now"
+  | "Ready for decision"
+  | "Decision submitted";
+
+export type BoardInterviewAnswer = {
+  id: string;
+  question: string;
+  answer: string;
+};
+
+export type BoardInterviewAttachment = {
+  id: string;
+  name: string;
+};
+
+export type BoardInterviewNote = {
+  id: string;
+  author: string;
+  createdAt: string;
+  text: string;
+};
+
+export type BoardInterviewDepartmentDecision = {
+  departmentId: string;
+  departmentName: string;
+  roundOneStatus: "Approved" | "Rejected";
+  finalDecision: FinalInterviewDecision | null;
+  targetSpots: number;
+};
+
+export type BoardInterviewSlot = {
+  id: string;
+  applicationId: string;
+  clubId: string;
+  clubName: string;
+  departmentId: string;
+  departmentName: string;
+  date: string;
+  startTime: string;
+  endTime: string;
+  startAt: string;
+  endAt: string;
+  candidateName: string;
+  candidateEmail: string;
+  answers: BoardInterviewAnswer[];
+  attachments: BoardInterviewAttachment[];
+  notes: BoardInterviewNote[];
+  decisions: BoardInterviewDepartmentDecision[];
+};
+
+export type BoardInterviewDepartmentStats = {
+  departmentId: string;
+  departmentName: string;
+  totalApplicants: number;
+  approvedCount: number;
+  rejectedCount: number;
+  pendingCount: number;
+  targetSpots: number;
+};

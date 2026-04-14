@@ -1,13 +1,11 @@
 import { useEffect, useState } from "react";
-import type {
-  BoardInterviewSlot,
-  FinalInterviewDecision,
-} from "../../../mocks/boardInterviewMock";
+import { Link } from "react-router-dom";
+import type { BoardInterviewSlot, FinalInterviewDecision } from "../types/boardTypes";
 import {
   getDecisionProgressLabel,
   getInterviewVotingHint,
   getSlotPhase,
-} from "../../../mocks/boardInterviewMock";
+} from "../utils/interviewSchedule";
 import { InterviewPhaseBadge } from "./InterviewPhaseBadge";
 
 type DecisionRequest = {
@@ -46,10 +44,7 @@ export function InterviewDetailsDrawer({
 
   return (
     <div className="fixed inset-0 z-[80]">
-      <div
-        className="absolute inset-0 bg-slate-950/70 backdrop-blur-sm"
-        onClick={onClose}
-      />
+      <div className="absolute inset-0 bg-slate-950/70 backdrop-blur-sm" onClick={onClose} />
 
       <aside className="absolute right-0 top-0 h-full w-full max-w-2xl overflow-y-auto border-l border-white/10 bg-slate-950/95 shadow-2xl">
         <div className="sticky top-0 z-10 border-b border-white/10 bg-slate-950/95 px-4 py-4 backdrop-blur sm:px-6">
@@ -58,17 +53,16 @@ export function InterviewDetailsDrawer({
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-300">
                 Interview details
               </p>
-              <h2 className="mt-2 text-2xl font-semibold text-white">
-                {slot.candidateName}
-              </h2>
+              <h2 className="mt-2 text-2xl font-semibold text-white">{slot.candidateName}</h2>
               <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-slate-300">
                 <span>
-                  {slot.date} • {slot.startTime}–{slot.endTime}
+                  {slot.date} • {slot.startTime}-{slot.endTime}
                 </span>
                 <InterviewPhaseBadge phase={phase} />
               </div>
+              <p className="mt-2 text-sm text-slate-400">{slot.candidateEmail}</p>
               <p className="mt-2 text-sm text-slate-400">
-                {slot.candidateEmail}
+                {slot.clubName} • {slot.departmentName}
               </p>
             </div>
 
@@ -84,9 +78,7 @@ export function InterviewDetailsDrawer({
 
         <div className="space-y-6 px-4 py-6 sm:px-6">
           <section className="rounded-2xl border border-white/10 bg-white/5 p-5">
-            <h3 className="text-lg font-semibold text-white">
-              Applied departments
-            </h3>
+            <h3 className="text-lg font-semibold text-white">Applied departments</h3>
 
             <div className="mt-3 flex flex-wrap gap-2">
               {slot.decisions.map((department) => (
@@ -99,18 +91,18 @@ export function InterviewDetailsDrawer({
               ))}
             </div>
 
-            <p className="mt-4 text-sm text-slate-300">
-              {getDecisionProgressLabel(slot)}
-            </p>
-            <p className="mt-2 text-sm text-slate-400">
-              {getInterviewVotingHint(slot)}
-            </p>
+            <p className="mt-4 text-sm text-slate-300">{getDecisionProgressLabel(slot)}</p>
+            <p className="mt-2 text-sm text-slate-400">{getInterviewVotingHint(slot)}</p>
+            <Link
+              to={`/board/applications/${slot.applicationId}`}
+              className="mt-4 inline-flex rounded-xl border border-white/10 bg-white/10 px-4 py-2 text-sm font-semibold text-white hover:bg-white/15"
+            >
+              Open application details
+            </Link>
           </section>
 
           <section className="rounded-2xl border border-white/10 bg-white/5 p-5">
-            <h3 className="text-lg font-semibold text-white">
-              Application answers
-            </h3>
+            <h3 className="text-lg font-semibold text-white">Application answers</h3>
 
             <div className="mt-4 space-y-4">
               {slot.answers.map((answer) => (
@@ -118,12 +110,8 @@ export function InterviewDetailsDrawer({
                   key={answer.id}
                   className="rounded-2xl border border-white/10 bg-slate-950/40 p-4"
                 >
-                  <div className="text-sm font-semibold text-slate-200">
-                    {answer.question}
-                  </div>
-                  <div className="mt-2 text-sm leading-6 text-slate-300">
-                    {answer.answer}
-                  </div>
+                  <div className="text-sm font-semibold text-slate-200">{answer.question}</div>
+                  <div className="mt-2 text-sm leading-6 text-slate-300">{answer.answer}</div>
                 </div>
               ))}
             </div>
@@ -133,28 +121,27 @@ export function InterviewDetailsDrawer({
             <h3 className="text-lg font-semibold text-white">Attachments</h3>
 
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
-              {slot.attachments.map((attachment) => (
-                <div
-                  key={attachment.id}
-                  className="rounded-2xl border border-white/10 bg-slate-950/40 p-4"
-                >
-                  <div className="text-sm font-semibold text-slate-200">
-                    {attachment.name}
-                  </div>
-                  <div className="mt-2 text-xs text-slate-400">
-                    Mock attachment
-                  </div>
+              {slot.attachments.length === 0 ? (
+                <div className="rounded-2xl border border-dashed border-white/10 bg-slate-950/30 p-4 text-sm text-slate-400">
+                  No attachments provided.
                 </div>
-              ))}
+              ) : (
+                slot.attachments.map((attachment) => (
+                  <div
+                    key={attachment.id}
+                    className="rounded-2xl border border-white/10 bg-slate-950/40 p-4"
+                  >
+                    <div className="text-sm font-semibold text-slate-200">{attachment.name}</div>
+                  </div>
+                ))
+              )}
             </div>
           </section>
 
           <section className="rounded-2xl border border-white/10 bg-white/5 p-5">
             <div className="flex items-center justify-between gap-4">
               <h3 className="text-lg font-semibold text-white">Board notes</h3>
-              <span className="text-xs text-slate-400">
-                Use this during or after the interview
-              </span>
+              <span className="text-xs text-slate-400">Use this during or after the interview</span>
             </div>
 
             <div className="mt-4 space-y-3">
@@ -169,16 +156,10 @@ export function InterviewDetailsDrawer({
                     className="rounded-2xl border border-white/10 bg-slate-950/40 p-4"
                   >
                     <div className="flex items-center justify-between gap-4">
-                      <div className="text-sm font-semibold text-slate-200">
-                        {note.author}
-                      </div>
-                      <div className="text-xs text-slate-400">
-                        {note.createdAt}
-                      </div>
+                      <div className="text-sm font-semibold text-slate-200">{note.author}</div>
+                      <div className="text-xs text-slate-400">{note.createdAt}</div>
                     </div>
-                    <div className="mt-2 text-sm leading-6 text-slate-300">
-                      {note.text}
-                    </div>
+                    <div className="mt-2 text-sm leading-6 text-slate-300">{note.text}</div>
                   </div>
                 ))
               )}
@@ -211,9 +192,7 @@ export function InterviewDetailsDrawer({
           </section>
 
           <section className="rounded-2xl border border-white/10 bg-white/5 p-5">
-            <h3 className="text-lg font-semibold text-white">
-              Round two decisions
-            </h3>
+            <h3 className="text-lg font-semibold text-white">Round two decisions</h3>
 
             <div className="mt-4 space-y-4">
               {slot.decisions.map((department) => {
@@ -226,9 +205,7 @@ export function InterviewDetailsDrawer({
                   >
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                       <div>
-                        <h4 className="text-base font-semibold text-white">
-                          {department.departmentName}
-                        </h4>
+                        <h4 className="text-base font-semibold text-white">{department.departmentName}</h4>
 
                         <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
                           <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 font-semibold text-slate-200">

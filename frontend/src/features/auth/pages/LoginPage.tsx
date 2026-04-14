@@ -48,8 +48,6 @@ export default function LoginPage() {
         false,
       );
 
-      console.log("LOGIN RESPONSE:", res);
-
       login(res);
 
       if (isBoardMember(res.user.role)) {

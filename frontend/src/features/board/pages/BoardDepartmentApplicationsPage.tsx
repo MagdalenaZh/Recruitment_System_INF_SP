@@ -9,13 +9,13 @@ export function BoardDepartmentApplicationsPage() {
   const { departmentId } = useParams<{ departmentId: string }>();
   const {
     filtered,
+    departmentName,
     loading,
     error,
     query,
     setQuery,
     statusFilter,
     setStatusFilter,
-    refetch,
   } = useDepartmentApplications(departmentId);
 
   return (
@@ -40,23 +40,8 @@ export function BoardDepartmentApplicationsPage() {
               Back to departments
             </Link>
 
-            <h1 className="mt-6 text-3xl font-semibold text-white/95">
-              Applications
-            </h1>
-            <p className="mt-1 text-sm text-slate-300">
-              Department ID:{" "}
-              <span className="font-semibold text-white/90">
-                {departmentId}
-              </span>
-            </p>
+            <h1 className="mt-6 text-3xl font-semibold text-white/95">{departmentName}</h1>
           </div>
-
-          <button
-            onClick={refetch}
-            className="w-fit rounded-xl border border-white/15 bg-white/10 px-4 py-2 text-sm font-semibold text-white transition hover:border-white/25 hover:bg-white/15"
-          >
-            Refresh
-          </button>
         </div>
 
         <BoardSectionNav />
@@ -67,12 +52,9 @@ export function BoardDepartmentApplicationsPage() {
               <input
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search by applicant name or email…"
+                placeholder="Search by applicant name or email..."
                 className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white/90 outline-none transition placeholder:text-slate-400 focus:border-sky-400/40 focus:ring-2 focus:ring-sky-400/20"
               />
-              <div className="mt-1 text-xs text-slate-400">
-                Debug logs are available in the console if something looks off.
-              </div>
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
@@ -123,7 +105,7 @@ export function BoardDepartmentApplicationsPage() {
         <div className="mt-6">
           {loading ? (
             <div className="rounded-2xl border border-white/10 bg-white/5 p-6 text-slate-200 shadow-[0_10px_30px_-12px_rgba(0,0,0,0.65)] backdrop-blur-md">
-              Loading applications…
+              Loading applications...
             </div>
           ) : error ? (
             <div className="rounded-2xl border border-rose-400/30 bg-rose-500/10 p-6 text-rose-200">

@@ -31,7 +31,7 @@ export function getApplicationIdFromUpdate(
 export function normalizeBaseStatus(applicationStatus: number): ApplicationStatus {
   switch (applicationStatus) {
     case 1:
-      return "Submitted";
+      return "Pending";
     case 2:
       return "Pending";
     case 3:
@@ -81,14 +81,15 @@ function extractMyVoteFromUserDecisionsMap(
   payload: ApplicationUpdatePayload,
   currentUserId: string | null,
 ): BoardVote | null {
-  if (
-    !currentUserId ||
-    (!isProcessingApplicationState(payload) && !isAfterInterviewReviewState(payload))
-  ) {
+  if (!currentUserId) {
     return null;
   }
 
-  const decisions = payload.userDecisionsMap;
+  if (!("userDecisionsMap" in payload) || !payload.userDecisionsMap) {
+    return null;
+  }
+
+  const decisions = payload.userDecisionsMap as Record<string, boolean>;
   const targetKey = Object.keys(decisions).find(
     (key) => normalizeKey(key) === normalizeKey(currentUserId),
   );

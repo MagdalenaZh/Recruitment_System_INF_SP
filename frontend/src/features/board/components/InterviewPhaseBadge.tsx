@@ -1,4 +1,4 @@
-import type { InterviewSlotPhase } from "../../../mocks/boardInterviewMock";
+import type { InterviewSlotPhase } from "../types/boardTypes";
 
 type Props = {
   phase: InterviewSlotPhase;

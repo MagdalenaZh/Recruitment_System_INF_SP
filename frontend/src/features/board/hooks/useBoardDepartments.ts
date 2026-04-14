@@ -1,27 +1,23 @@
 import { useEffect, useMemo, useState } from "react";
+import { boardApi, resolveCurrentBoardClubId } from "../../../services/board/boardApi";
 import {
-  boardApi,
-  resolveCurrentBoardClubId,
-} from "../../../services/board/boardApi";
-import type {
-  RecruitmentApplicationDto,
-  RecruitmentDepartmentDto,
-} from "../../../services/board/boardApi";
-import { getLatestApplicationStates } from "../../../services/applications/applicationStatusApi";
+  getAllClubs,
+  getDepartmentsForClub,
+  getLatestApplicationStates,
+} from "../../../services/applications/applicationStatusApi";
 import {
   createRealtimeClientId,
   subscribeToApplicationStates,
 } from "../../../services/applications/applicationStateStream";
+import type { UserApplicationDto, DepartmentDto } from "../../../types/account/accountApplications";
 import type { LatestApplicationStateResponse } from "../../../services/applications/applicationStateTypes";
 import type { BoardDepartment } from "../types/boardTypes";
-import {
-  inferStatusFromUpdate,
-  normalizeBaseStatus,
-} from "../utils/applicationLiveState";
+import { inferStatusFromUpdate, normalizeBaseStatus } from "../utils/applicationLiveState";
 
 export function useBoardDepartments() {
-  const [departments, setDepartments] = useState<RecruitmentDepartmentDto[]>([]);
-  const [applications, setApplications] = useState<RecruitmentApplicationDto[]>([]);
+  const [departments, setDepartments] = useState<DepartmentDto[]>([]);
+  const [applications, setApplications] = useState<UserApplicationDto[]>([]);
+  const [clubName, setClubName] = useState("");
   const [liveUpdates, setLiveUpdates] = useState<Record<string, LatestApplicationStateResponse>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -33,34 +29,32 @@ export function useBoardDepartments() {
       setError(null);
 
       const clubId = resolveCurrentBoardClubId();
+      if (!clubId) throw new Error("No club assigned to this board member.");
 
-      if (!clubId) {
-        throw new Error("No clubId found in localStorage.");
-      }
-
-      const [departmentsResponse, applicationsResponse] = await Promise.all([
-        boardApi.getDepartmentsByClub(clubId),
+      const [departmentsResponse, applicationsResponse, allClubs] = await Promise.all([
+        getDepartmentsForClub(clubId),
         boardApi.getApplicationsByClub(clubId),
+        getAllClubs(),
       ]);
 
       setDepartments(departmentsResponse);
       setApplications(applicationsResponse);
+      setClubName(allClubs.find((c) => c.clubId === clubId)?.clubName ?? "");
 
       const stateSnapshots = await getLatestApplicationStates(
-        applicationsResponse.map((application) => application.applicationId),
+        applicationsResponse.map((a) => a.applicationId),
       );
 
       setLiveUpdates(() => {
         const next: Record<string, LatestApplicationStateResponse> = {};
-        for (const state of stateSnapshots) {
-          next[state.applicationId] = state;
-        }
+        for (const state of stateSnapshots) next[state.applicationId] = state;
         return next;
       });
     } catch (e) {
       setError(e instanceof Error ? e.message : "Unknown error");
       setDepartments([]);
       setApplications([]);
+      setClubName("");
       setLiveUpdates({});
     } finally {
       setLoading(false);
@@ -72,41 +66,35 @@ export function useBoardDepartments() {
   }, []);
 
   const applicationIds = useMemo(
-    () => applications.map((application) => application.applicationId),
+    () => applications.map((a) => a.applicationId),
     [applications],
   );
 
   useEffect(() => {
-    if (applicationIds.length === 0) {
-      return;
-    }
+    if (applicationIds.length === 0) return;
 
     return subscribeToApplicationStates({
       clientId,
       applicationIds,
       onMessage: (payload) => {
-        setLiveUpdates((prev) => ({
-          ...prev,
-          [payload.applicationId]: payload,
-        }));
+        setLiveUpdates((prev) => ({ ...prev, [payload.applicationId]: payload }));
       },
-      onError: (streamError) => {
-        console.error("[useBoardDepartments] SSE stream error", streamError);
+      onError: (err) => {
+        console.error("[useBoardDepartments] SSE error", err);
       },
     });
   }, [applicationIds, clientId]);
 
   const data = useMemo<BoardDepartment[]>(() => {
-    return departments.map((department) => {
-      const departmentApplications = applications.filter(
-        (app) => app.departmentId === department.departmentId,
-      );
+    return departments.map((dept) => {
+      const deptApps = applications.filter((app) => app.departmentId === dept.departmentId);
 
-      const counts = departmentApplications.reduce(
-        (acc, application) => {
-          const liveUpdate = liveUpdates[application.applicationId];
-          const liveStatus = liveUpdate ? inferStatusFromUpdate(liveUpdate) : null;
-          const status = liveStatus ?? normalizeBaseStatus(application.applicationStatus);
+      const counts = deptApps.reduce(
+        (acc, app) => {
+          const live = liveUpdates[app.applicationId];
+          const status = live
+            ? (inferStatusFromUpdate(live) ?? normalizeBaseStatus(app.applicationStatus))
+            : normalizeBaseStatus(app.applicationStatus);
 
           if (status === "Approved") acc.approvedCount += 1;
           else if (status === "Rejected") acc.rejectedCount += 1;
@@ -118,12 +106,12 @@ export function useBoardDepartments() {
       );
 
       return {
-        clubId: department.clubId,
-        departmentId: department.departmentId,
-        departmentName: department.departmentName,
-        description: department.description,
-        targetSpots: department.numberOfOpenPositions,
-        totalApplicants: departmentApplications.length,
+        clubId: dept.clubId,
+        departmentId: dept.departmentId,
+        departmentName: dept.departmentName,
+        description: dept.description,
+        targetSpots: dept.numberOfOpenPositions,
+        totalApplicants: deptApps.length,
         approvedCount: counts.approvedCount,
         rejectedCount: counts.rejectedCount,
         pendingCount: counts.pendingCount,
@@ -131,5 +119,5 @@ export function useBoardDepartments() {
     });
   }, [departments, applications, liveUpdates]);
 
-  return { data, loading, error, refetch: load };
+  return { data, clubName, loading, error, refetch: load };
 }

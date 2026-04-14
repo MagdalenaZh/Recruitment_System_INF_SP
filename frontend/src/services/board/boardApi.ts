@@ -1,198 +1,102 @@
+import { apiGet, API_URL } from "../api";
+import { getStoredUser } from "../auth/auth.api";
+import type { UserApplicationDto } from "../../types/account/accountApplications";
+import type { UserInfoDto, BookedInterviewSlotDto } from "../../types/board/boardApiTypes";
 import type { BoardVote } from "../../features/board/types/boardTypes";
 
-const API_BASE =
-  import.meta.env.VITE_API_URL?.replace(/\/$/, "") ?? "https://localhost:7113";
-
-const RECRUITMENT_INFO_BASE = `${API_BASE}/api/recruitmentInfo/api`;
-
-function buildHeaders(): HeadersInit {
-  const token = localStorage.getItem("auth_token");
-
-  return {
-    "Content-Type": "application/json",
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-  };
-}
-
-async function handleResponse<T>(response: Response): Promise<T> {
-  if (!response.ok) {
-    const text = await response.text();
-    console.error("[boardApi] request failed:", text);
-    throw new Error(text || `Request failed with status ${response.status}`);
-  }
-
-  if (response.status === 204) {
-    return undefined as T;
-  }
-
-  const text = await response.text();
-
-  if (!text) {
-    return undefined as T;
-  }
-
-  try {
-    return JSON.parse(text) as T;
-  } catch {
-    return text as T;
-  }
-}
-
-function decodeJwtPayload(token: string): Record<string, unknown> | null {
+function parseJwtPayload(token: string | null): Record<string, unknown> | null {
+  if (!token) return null;
   try {
     const parts = token.split(".");
     if (parts.length < 2) return null;
-
     const base64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
     const padded = base64.padEnd(Math.ceil(base64.length / 4) * 4, "=");
-    const decoded = atob(padded);
-
-    return JSON.parse(decoded) as Record<string, unknown>;
+    return JSON.parse(atob(padded)) as Record<string, unknown>;
   } catch {
     return null;
   }
 }
 
 export function resolveCurrentBoardClubId(): string | null {
-  const clubId = localStorage.getItem("clubId");
+  const token = localStorage.getItem("auth_token");
+  const payload = parseJwtPayload(token);
 
-  if (clubId) {
-    console.log(
-      '[boardApi] resolved clubId from localStorage key "clubId":',
-      clubId,
-    );
-    return clubId;
+  if (payload && typeof payload.clubId === "string" && payload.clubId.length > 0) {
+    return payload.clubId;
   }
 
-  console.warn("[boardApi] no clubId found in localStorage");
-  return null;
+  return getStoredUser()?.clubId ?? null;
 }
 
 export function resolveCurrentUserId(): string | null {
-  const directUserId = localStorage.getItem("userId");
-  if (directUserId) {
-    console.log('[boardApi] resolved userId from localStorage key "userId":', directUserId);
-    return directUserId;
-  }
+  const userId = getStoredUser()?.userId;
+  if (userId) return userId;
 
   const token = localStorage.getItem("auth_token");
-  if (!token) {
-    console.warn("[boardApi] no auth_token found while resolving userId");
-    return null;
-  }
+  const payload = parseJwtPayload(token);
+  if (!payload) return null;
 
-  const payload = decodeJwtPayload(token);
-  const userId =
-    typeof payload?.sub === "string"
-      ? payload.sub
-      : typeof payload?.nameid === "string"
-        ? payload.nameid
-        : typeof payload?.userId === "string"
-          ? payload.userId
-          : null;
-
-  if (userId) {
-    console.log("[boardApi] resolved userId from auth token:", userId);
-    return userId;
-  }
-
-  console.warn("[boardApi] could not resolve userId from auth token");
-  return null;
+  return (
+    (typeof payload.sub === "string" ? payload.sub : null) ??
+    (typeof payload.nameid === "string" ? payload.nameid : null)
+  );
 }
 
-export type RecruitmentDepartmentDto = {
-  clubId: string;
-  departmentId: string;
-  departmentName: string;
-  description: string;
-  numberOfOpenPositions: number;
-};
+export function resolveCurrentBoardDepartmentId(): string | null {
+  return getStoredUser()?.departmentId ?? null;
+}
 
-export type RecruitmentApplicationDto = {
-  applicationId: string;
-  applicationStatus: number;
-  departmentId: string;
-  questionnaire: Record<string, string>;
-  userId: string;
-};
+async function postNoBody(path: string): Promise<void> {
+  const token = localStorage.getItem("auth_token");
+  const res = await fetch(`${API_URL}${path}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(text || `Request failed with status ${res.status}`);
+  }
+}
 
 export const boardApi = {
-  async getDepartmentsByClub(
-    clubId: string,
-  ): Promise<RecruitmentDepartmentDto[]> {
-    const url = `${RECRUITMENT_INFO_BASE}/departments-club/${clubId}`;
-    console.log("[boardApi] GET", url);
-
-    const response = await fetch(url, {
-      method: "GET",
-      headers: buildHeaders(),
-    });
-
-    return handleResponse<RecruitmentDepartmentDto[]>(response);
+  getApplicationsByClub(clubId: string): Promise<UserApplicationDto[]> {
+    return apiGet(`/api/recruitmentInfo/api/applications-club/${clubId}`);
   },
 
-  async getApplicationsByClub(
-    clubId: string,
-  ): Promise<RecruitmentApplicationDto[]> {
-    const url = `${RECRUITMENT_INFO_BASE}/applications-club/${clubId}`;
-    console.log("[boardApi] GET", url);
-
-    const response = await fetch(url, {
-      method: "GET",
-      headers: buildHeaders(),
-    });
-
-    return handleResponse<RecruitmentApplicationDto[]>(response);
+  getApplicationsByDepartment(departmentId: string): Promise<UserApplicationDto[]> {
+    return apiGet(`/api/recruitmentInfo/api/applications-department/${departmentId}`);
   },
 
-  async getApplicationsByDepartment(
-    departmentId: string,
-  ): Promise<RecruitmentApplicationDto[]> {
-    const url = `${RECRUITMENT_INFO_BASE}/applications-department/${departmentId}`;
-    console.log("[boardApi] GET", url);
-
-    const response = await fetch(url, {
-      method: "GET",
-      headers: buildHeaders(),
-    });
-
-    return handleResponse<RecruitmentApplicationDto[]>(response);
+  getUserInformation(userId: string): Promise<UserInfoDto> {
+    return apiGet(`/api/recruitmentInfo/api/user-information/${userId}`);
   },
 
-  async approveApplication(applicationId: string): Promise<unknown> {
-    const url = `${API_BASE}/api/approve-application/${applicationId}`;
-    console.log("[boardApi] POST", url);
-
-    const response = await fetch(url, {
-      method: "POST",
-      headers: buildHeaders(),
-    });
-
-    return handleResponse<unknown>(response);
+  getBookedInterviewSlots(clubId: string): Promise<BookedInterviewSlotDto[]> {
+    return apiGet(`/api/recruitmentInfo/api/booked-interview-slots/${clubId}`);
   },
 
-  async disapproveApplication(applicationId: string): Promise<unknown> {
-    const url = `${API_BASE}/api/disapprove-application/${applicationId}`;
-    console.log("[boardApi] POST", url);
-
-    const response = await fetch(url, {
-      method: "POST",
-      headers: buildHeaders(),
-    });
-
-    return handleResponse<unknown>(response);
+  approveApplication(applicationId: string): Promise<void> {
+    return postNoBody(`/api/approve-application/${applicationId}`);
   },
 
-  async voteOnApplication(
-    applicationId: string,
-    decision: BoardVote,
-  ): Promise<unknown> {
-    console.log("[boardApi] voteOnApplication", { applicationId, decision });
+  disapproveApplication(applicationId: string): Promise<void> {
+    return postNoBody(`/api/disapprove-application/${applicationId}`);
+  },
 
-    if (decision === "Approve") {
-      return this.approveApplication(applicationId);
-    }
+  afterInterviewApproveApplication(applicationId: string): Promise<void> {
+    return postNoBody(`/api/after-interview-approve-application/${applicationId}`);
+  },
 
-    return this.disapproveApplication(applicationId);
+  afterInterviewDisapproveApplication(applicationId: string): Promise<void> {
+    return postNoBody(`/api/after-interview-disapprove-application/${applicationId}`);
+  },
+
+  voteOnApplication(applicationId: string, decision: BoardVote): Promise<void> {
+    return decision === "Approve"
+      ? this.approveApplication(applicationId)
+      : this.disapproveApplication(applicationId);
   },
 };
