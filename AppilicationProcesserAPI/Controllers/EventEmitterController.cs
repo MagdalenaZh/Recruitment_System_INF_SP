@@ -21,13 +21,12 @@ namespace AppilicationProcesserAPI.Controllers
         }
 
         [Authorize]
-        [HttpGet("aplicationUpdates")]
-        public ServerSentEventsResult<IStateRepresentation> GetAplicationUpdates([FromHeader(Name = "Last-Event-ID")] string? lastEventId, CancellationToken cancellationToken)
+        [HttpPost("aplicationUpdates")]
+        public ServerSentEventsResult<IStateRepresentation> GetAplicationUpdates([FromBody] HashSet<Guid> applicationIds, [FromHeader(Name = "Last-Event-ID")] string? lastEventId, CancellationToken cancellationToken)
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
 
             var userId = Guid.Parse(userIdClaim.Value);
-            var applicationIds = ParseApplicationIdsFromHeaders();
 
             try
             {
@@ -38,30 +37,6 @@ namespace AppilicationProcesserAPI.Controllers
                 _logger.LogError(ex, "Error while getting application updates");
                 throw;
             }
-        }
-
-        private HashSet<Guid> ParseApplicationIdsFromHeaders()
-        {
-            if (!Request.Headers.TryGetValue("applicationIds", out var headerValues))
-            {
-                return [];
-            }
-
-            var parsed = new HashSet<Guid>();
-
-            foreach (var headerValue in headerValues)
-            {
-                var parts = headerValue.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-                foreach (var part in parts)
-                {
-                    if (Guid.TryParse(part, out var guidValue))
-                    {
-                        parsed.Add(guidValue);
-                    }
-                }
-            }
-
-            return parsed;
         }
     }
 }

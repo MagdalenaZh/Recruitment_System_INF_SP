@@ -53,13 +53,20 @@ namespace AppilicationProcesserAPI.AggregateStates
                         break;
                     case AfterInterviewDisapprovedEvent applicationDisapprovedEvent:
                         {
+                            if (_userDecisionsMap.TryGetValue(applicationDisapprovedEvent.UserId, out var previousDecision))
+                            {
+                                if (previousDecision)
+                                {
+                                    _numberOfApprovals--;
+                                }
+                            }
+
                             _userDecisionsMap[applicationDisapprovedEvent.UserId] = false;
-                            applicationAggregate.TransitionToRejectedConcludedState(_aggregateId);
                         }
                         break;
                     case ApplicationRejectedEvent applicationRejectedEvent:
                         {
-                            applicationAggregate.TransitionToRejectedConcludedState(applicationRejectedEvent.AggregateId);
+                            applicationAggregate.TransitionToRejectedConcludedState(_aggregateId);
                         }
                         break;
                 }

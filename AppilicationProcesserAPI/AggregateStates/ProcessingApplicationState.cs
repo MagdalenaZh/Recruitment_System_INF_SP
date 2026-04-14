@@ -5,9 +5,9 @@ namespace AppilicationProcesserAPI.AggregateStates;
 
 public class ProcessingApplicationState : IApplicationState
 {
-    private int _numberOfApprovals;
-    private readonly Dictionary<Guid, bool> _userDecisionsMap;
 
+    private readonly Dictionary<Guid, bool> _userDecisionsMap;
+    private int _numberOfApprovals;
     private readonly Guid _aggregateId;
     private readonly int _requiredNumberOfApprovals;
 
@@ -32,23 +32,31 @@ public class ProcessingApplicationState : IApplicationState
     {
         ArgumentNullException.ThrowIfNull(domainEvent);
         if (domainEvent.AggregateId != _aggregateId) throw new InvalidOperationException($"Domain event with AggregateId {domainEvent.AggregateId} does not match the aggregate's ID");
-        
+
         switch (domainEvent)
         {
             case ApplicationApprovedEvent applicationApprovedEvent:
                 {
-                    _numberOfApprovals++;
                     _userDecisionsMap[applicationApprovedEvent.UserId] = true;
+                    _numberOfApprovals++;
+
                     if (_numberOfApprovals >= _requiredNumberOfApprovals)
                     {
-                        applicationAggregate.TransitionToApprovedState(_aggregateId, _numberOfApprovals, _requiredNumberOfApprovals, new Dictionary<Guid, bool>(_userDecisionsMap));
+                        applicationAggregate.TransitionToApprovedState(_aggregateId, _requiredNumberOfApprovals);
                     }
                 }
                 break;
             case ApplicationDisapprovedEvent applicationRejectedEvent:
                 {
+                    if (_userDecisionsMap.TryGetValue(applicationRejectedEvent.UserId, out var previousDecision))
+                    {
+                        if (previousDecision)
+                        {
+                            _numberOfApprovals--;
+                        }
+                    }
+
                     _userDecisionsMap[applicationRejectedEvent.UserId] = false;
-                    applicationAggregate.TransitionToRejectedConcludedState(_aggregateId);
                 }
                 break;
             case ApplicationRejectedEvent applicationRejectedEvent:
