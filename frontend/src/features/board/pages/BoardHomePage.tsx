@@ -1,15 +1,13 @@
-import { Navbar } from "../../../components/layout/Navbar/Navbar";
 import { DepartmentCardGrid } from "../components/DepartmentCardGrid";
 import { useBoardDepartments } from "../hooks/useBoardDepartments";
 import { BoardSectionNav } from "../components/BoardSectionNav";
+import { BoardShell } from "../components/BoardShell";
 
 export function BoardHomePage() {
   const { data, clubName, loading, error } = useBoardDepartments();
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-950 via-slate-950 to-slate-950">
-      <Navbar />
-
+    <BoardShell>
       <div className="pt-28">
         <div className="mx-auto max-w-6xl p-4 sm:p-6">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
@@ -50,6 +48,6 @@ export function BoardHomePage() {
           </div>
         </div>
       </div>
-    </div>
+    </BoardShell>
   );
 }

@@ -20,6 +20,8 @@ namespace AppilicationProcesserAPI.PersistanceServices
 
     public class SystemManagementProvider : ISystemManagementProvider
     {
+        private const string UserRoleName = "User";
+        private const string ClubAdminRoleName = "ClubAdmin";
         private static readonly JsonSerializerOptions _serializerOptions = new JsonSerializerOptions()
         {
             PropertyNameCaseInsensitive = true,
@@ -210,13 +212,18 @@ namespace AppilicationProcesserAPI.PersistanceServices
             using var sqlConnection = new SqlConnection(_connectionString);
             await sqlConnection.OpenAsync(cancellationToken).ConfigureAwait(false);
 
+            var userRoleId = await GetRoleIdByNameAsync(sqlConnection, UserRoleName, cancellationToken).ConfigureAwait(false);
+            var clubAdminRoleId = await GetRoleIdByNameAsync(sqlConnection, ClubAdminRoleName, cancellationToken).ConfigureAwait(false);
+
             using var demoteCommand = new SqlCommand(DbQueries.UpdateDemoteClubAdminToUser, sqlConnection);
             demoteCommand.Parameters.AddWithValue("@clubId", clubId);
+            demoteCommand.Parameters.AddWithValue("@roleId", userRoleId);
             await demoteCommand.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
 
             using var command = new SqlCommand(DbQueries.UpdatePromoteUserToClubAdmin, sqlConnection);
             command.Parameters.AddWithValue("@userId", userId);
             command.Parameters.AddWithValue("@clubId", clubId);
+            command.Parameters.AddWithValue("@roleId", clubAdminRoleId);
 
             try
             {
@@ -231,6 +238,20 @@ namespace AppilicationProcesserAPI.PersistanceServices
                 _logger.LogError(ex, "Failed Update in Users table");
                 throw new Exception("Event not registered");
             }
+        }
+
+        private static async Task<Guid> GetRoleIdByNameAsync(SqlConnection sqlConnection, string roleName, CancellationToken cancellationToken)
+        {
+            using var command = new SqlCommand("SELECT TOP 1 [RoleId] FROM [Roles] WHERE [Name] = @roleName", sqlConnection);
+            command.Parameters.AddWithValue("@roleName", roleName);
+
+            var result = await command.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false);
+            if (result is Guid roleId)
+            {
+                return roleId;
+            }
+
+            throw new Exception($"Role '{roleName}' not found.");
         }
     }
 }

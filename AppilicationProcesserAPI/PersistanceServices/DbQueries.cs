@@ -89,9 +89,9 @@
 
         internal const string UpdateUserRole = "UPDATE [Users] SET [RoleId] = @roleId WHERE [UserId] = @userId";
 
-        internal const string UpdateDemoteClubAdminToUser = "UPDATE [Users] SET [AdminClubId] = NULL WHERE [AdminClubId] = @clubId";
+        internal const string UpdateDemoteClubAdminToUser = "UPDATE [Users] SET [AdminClubId] = NULL, [RoleId] = @roleId WHERE [AdminClubId] = @clubId";
 
-        internal const string UpdatePromoteUserToClubAdmin = "UPDATE [Users] SET [AdminClubId] = @clubId WHERE [UserId] = @userId";
+        internal const string UpdatePromoteUserToClubAdmin = "UPDATE [Users] SET [AdminClubId] = @clubId, [RoleId] = @roleId WHERE [UserId] = @userId";
 
         internal const string UpdateApplicationStatus = "UPDATE [Applications] SET [Status] = @status WHERE [AggregateId] = @aggregateId";
 

@@ -9,18 +9,7 @@ import type { LoginRequest, LoginResponse } from "../types/auth";
 
 import { apiPost } from "../../../services/api";
 import { usePageTitle } from "../../clubs/hooks/usePageTitle";
-
-function isBoardMember(role: string | null | undefined): boolean {
-  return role === "BoardMember";
-}
-
-function isClubAdmin(role: string | null | undefined): boolean {
-  return role === "ClubAdmin";
-}
-
-function isSystemAdmin(role: string | null | undefined): boolean {
-  return role === "Admin";
-}
+import { getDefaultRouteForRole } from "../utils/routeAuthorization";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -53,16 +42,7 @@ export default function LoginPage() {
       );
 
       login(res);
-
-      if (isBoardMember(res.user.role)) {
-        nav("/board", { replace: true });
-      } else if (isClubAdmin(res.user.role)) {
-        nav("/club-admin", { replace: true });
-      } else if (isSystemAdmin(res.user.role)) {
-        nav("/sys-admin", { replace: true });
-      } else {
-        nav("/home", { replace: true });
-      }
+      nav(getDefaultRouteForRole(res.user.role), { replace: true });
     } catch (err: unknown) {
       if (err instanceof Error) {
         setError(err.message);

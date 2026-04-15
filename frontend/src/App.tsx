@@ -42,17 +42,28 @@ export default function App() {
       <Route
         path="/account"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute section="profile">
             <AccountLayout />
           </ProtectedRoute>
         }
       >
         <Route index element={<AccountProfilePage />} />
         <Route path="inbox" element={<AccountInboxPage />} />
-        <Route path="applications" element={<AccountApplicationsPage />} />
+        <Route
+          path="applications"
+          element={
+            <ProtectedRoute section="applicantTools">
+              <AccountApplicationsPage />
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="interview-booking"
-          element={<AccountInterviewBookingPage />}
+          element={
+            <ProtectedRoute section="applicantTools">
+              <AccountInterviewBookingPage />
+            </ProtectedRoute>
+          }
         />
       </Route>
 
@@ -60,7 +71,7 @@ export default function App() {
       <Route
         path="/clubs/:clubId/apply"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute section="applicantTools">
             <ApplicationFormPage />
           </ProtectedRoute>
         }
@@ -69,7 +80,7 @@ export default function App() {
       <Route
         path="/board"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute section="board">
             <BoardHomePage />
           </ProtectedRoute>
         }
@@ -77,7 +88,7 @@ export default function App() {
       <Route
         path="/board/departments/:departmentId/applications"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute section="board">
             <BoardDepartmentApplicationsPage />
           </ProtectedRoute>
         }
@@ -85,7 +96,7 @@ export default function App() {
       <Route
         path="/board/applications/:applicationId"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute section="board">
             <BoardApplicationDetailPage />
           </ProtectedRoute>
         }
@@ -93,7 +104,7 @@ export default function App() {
       <Route
         path="/board/interviews"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute section="board">
             <BoardInterviewsHomePage />
           </ProtectedRoute>
         }
@@ -102,7 +113,7 @@ export default function App() {
       <Route
         path="/club-admin"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute section="clubAdmin">
             <ClubAdminHomePage />
           </ProtectedRoute>
         }
@@ -110,7 +121,7 @@ export default function App() {
       <Route
         path="/club-admin/applications"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute section="clubAdmin">
             <BoardDepartmentApplicationsPage />
           </ProtectedRoute>
         }
@@ -118,7 +129,7 @@ export default function App() {
       <Route
         path="/club-admin/applications/:applicationId"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute section="clubAdmin">
             <ClubAdminApplicationDetailPage />
           </ProtectedRoute>
         }
@@ -126,7 +137,7 @@ export default function App() {
       <Route
         path="/club-admin/club-info"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute section="clubAdmin">
             <ClubAdminClubInfoPage />
           </ProtectedRoute>
         }
@@ -134,7 +145,7 @@ export default function App() {
       <Route
         path="/club-admin/interview-slots"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute section="clubAdmin">
             <ClubAdminInterviewSlotsPage />
           </ProtectedRoute>
         }
@@ -142,7 +153,7 @@ export default function App() {
       <Route
         path="/club-admin/final-decisions"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute section="clubAdmin">
             <ClubAdminFinalDecisionsPage />
           </ProtectedRoute>
         }
@@ -150,7 +161,7 @@ export default function App() {
       <Route
         path="/club-admin/application-management"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute section="clubAdmin">
             <ClubAdminApplicationManagementPage />
           </ProtectedRoute>
         }
@@ -159,7 +170,7 @@ export default function App() {
       <Route
         path="/sys-admin"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute section="systemAdmin">
             <SystemAdminLayout />
           </ProtectedRoute>
         }

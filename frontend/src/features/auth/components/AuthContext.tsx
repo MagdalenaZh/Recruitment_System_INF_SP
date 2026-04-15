@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useMemo, useState } from "react";
 import type { AuthUser, LoginResponse } from "../types/auth";
+import { getNormalizedUserRole } from "../utils/routeAuthorization";
 
 type AuthState = {
   token: string | null;
@@ -15,6 +16,20 @@ const AuthContext = createContext<AuthState | undefined>(undefined);
 const TOKEN_KEY = "auth_token";
 const USER_KEY = "auth_user";
 
+function normalizeAuthUser(user: AuthUser | null): AuthUser | null {
+  if (!user) return null;
+
+  const effectiveRole =
+    user.adminClubId && user.role !== "SystemAdmin" && user.role !== "Admin"
+      ? "ClubAdmin"
+      : getNormalizedUserRole(user.role);
+
+  return {
+    ...user,
+    role: effectiveRole,
+  };
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [token, setToken] = useState<string | null>(() =>
     localStorage.getItem(TOKEN_KEY),
@@ -25,7 +40,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!raw) return null;
 
     try {
-      return JSON.parse(raw) as AuthUser;
+      return normalizeAuthUser(JSON.parse(raw) as AuthUser);
     } catch {
       return null;
     }
@@ -38,10 +53,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       role: user?.role ?? null,
       isAuthenticated: !!token,
       login: (data) => {
+        const normalizedUser = normalizeAuthUser(data.user);
         localStorage.setItem(TOKEN_KEY, data.token);
-        localStorage.setItem(USER_KEY, JSON.stringify(data.user));
+        localStorage.setItem(USER_KEY, JSON.stringify(normalizedUser));
         setToken(data.token);
-        setUser(data.user);
+        setUser(normalizedUser);
       },
       logout: () => {
         localStorage.removeItem(TOKEN_KEY);

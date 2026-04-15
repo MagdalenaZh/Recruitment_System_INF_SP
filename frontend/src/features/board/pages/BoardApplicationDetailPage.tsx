@@ -1,5 +1,4 @@
 import { Link, useParams } from "react-router-dom";
-import { Navbar } from "../../../components/layout/Navbar/Navbar";
 import { ApplicationAnswersSection } from "../components/ApplicationAnswersSection";
 import { ApplicationAttachmentsSection } from "../components/ApplicationAttachmentsSection";
 import { ApplicationDecisionBar } from "../components/ApplicationDecisionBar";
@@ -7,6 +6,7 @@ import { ApplicationDetailHeader } from "../components/ApplicationDetailHeader";
 import { useBoardApplicationDetail } from "../hooks/useBoardApplicationDetail";
 import { useVoteOnApplication } from "../hooks/useVoteOnApplication";
 import type { BoardVote } from "../types/boardTypes";
+import { BoardShell } from "../components/BoardShell";
 
 export function BoardApplicationDetailPage() {
   const { applicationId } = useParams<{ applicationId: string }>();
@@ -37,9 +37,7 @@ export function BoardApplicationDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-950 via-slate-950 to-slate-950">
-      <Navbar />
-
+    <BoardShell>
       <div className="mx-auto max-w-6xl p-4 pb-24 pt-28 sm:p-6">
         <div className="flex items-center justify-between gap-4">
           <div>
@@ -91,6 +89,6 @@ export function BoardApplicationDetailPage() {
           />
         ) : null}
       </div>
-    </div>
+    </BoardShell>
   );
 }

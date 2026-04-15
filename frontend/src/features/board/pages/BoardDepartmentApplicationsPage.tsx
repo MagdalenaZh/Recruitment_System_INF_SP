@@ -3,7 +3,7 @@ import { ApplicationStackList } from "../components/ApplicationStackList";
 import { useDepartmentApplications } from "../hooks/useDepartmentApplications";
 import type { ApplicationStatus } from "../types/boardTypes";
 import { BoardSectionNav } from "../components/BoardSectionNav";
-import { Navbar } from "../../../components/layout/Navbar/Navbar";
+import { BoardShell } from "../components/BoardShell";
 
 export function BoardDepartmentApplicationsPage() {
   const { departmentId } = useParams<{ departmentId: string }>();
@@ -19,13 +19,11 @@ export function BoardDepartmentApplicationsPage() {
   } = useDepartmentApplications(departmentId);
 
   return (
-    <div className="relative min-h-screen bg-gradient-to-b from-blue-950 via-slate-950 to-slate-950">
+    <BoardShell className="relative">
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute -top-40 right-[-10rem] h-[28rem] w-[28rem] rounded-full bg-sky-500/10 blur-3xl" />
         <div className="absolute -bottom-56 left-[-12rem] h-[34rem] w-[34rem] rounded-full bg-indigo-500/10 blur-3xl" />
       </div>
-
-      <Navbar />
 
       <div className="relative mx-auto max-w-6xl p-4 pt-28 sm:p-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
@@ -117,7 +115,7 @@ export function BoardDepartmentApplicationsPage() {
           )}
         </div>
       </div>
-    </div>
+    </BoardShell>
   );
 }
 

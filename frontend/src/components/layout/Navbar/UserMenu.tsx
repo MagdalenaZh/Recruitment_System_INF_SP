@@ -3,6 +3,7 @@ import { useState, useRef, useEffect } from "react";
 import { useAuth } from "../../../features/auth/components/AuthContext";
 import { useUserProfile } from "../../../features/account/hooks/useUserProfile";
 import { Button } from "../../ui/Button";
+import { getNormalizedUserRole } from "../../../features/auth/utils/routeAuthorization";
 
 type MenuItem = {
   label: string;
@@ -14,7 +15,9 @@ function getMenuItems(
   role: string | null | undefined,
   hasApplicationUpdates: boolean,
 ): MenuItem[] {
-  if (role === "BoardMember") {
+  const normalizedRole = getNormalizedUserRole(role);
+
+  if (normalizedRole === "BoardMember") {
     return [
       { label: "My Profile", to: "/account" },
       { label: "Club Applications", to: "/board" },
@@ -22,14 +25,14 @@ function getMenuItems(
     ];
   }
 
-  if (role === "Admin") {
+  if (normalizedRole === "SystemAdmin") {
     return [
       { label: "My Profile", to: "/account" },
       { label: "System Admin", to: "/sys-admin" },
     ];
   }
 
-  if (role === "ClubAdmin") {
+  if (normalizedRole === "ClubAdmin") {
     return [
       { label: "My Profile", to: "/account" },
       { label: "Club Applications", to: "/board" },
@@ -63,12 +66,13 @@ export function UserMenu() {
 
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement | null>(null);
+  const normalizedRole = getNormalizedUserRole(role);
 
   const hasApplicationUpdates =
     isAuthenticated &&
-    role !== "BoardMember" &&
-    role !== "ClubAdmin" &&
-    role !== "Admin";
+    normalizedRole !== "BoardMember" &&
+    normalizedRole !== "ClubAdmin" &&
+    normalizedRole !== "SystemAdmin";
 
   const menuItems = getMenuItems(role, hasApplicationUpdates);
 

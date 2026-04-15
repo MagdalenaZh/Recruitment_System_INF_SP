@@ -15,6 +15,7 @@ namespace AppilicationProcesserAPI.Controllers
     public class AuthController : ControllerBase
     {
         private const string DefaultRoleName = "User";
+        private const string ClubAdminRoleName = "ClubAdmin";
         private const int ActiveStatus = 1;
 
         private readonly IConfiguration _config;
@@ -195,7 +196,8 @@ namespace AppilicationProcesserAPI.Controllers
             if (verifyResult == PasswordVerificationResult.Failed)
                 return Unauthorized("Invalid email or password.");
 
-            var token = CreateJwt(userId, dbEmail, roleName, firstName, lastName, departmentId, clubId, clubAdminId);
+            var effectiveRoleName = ResolveEffectiveRoleName(roleName, clubAdminId);
+            var token = CreateJwt(userId, dbEmail, effectiveRoleName, firstName, lastName, departmentId, clubId, clubAdminId);
 
             return Ok(new
             {
@@ -207,9 +209,10 @@ namespace AppilicationProcesserAPI.Controllers
                     email = dbEmail,
                     firstName,
                     lastName,
-                    role = roleName,
+                    role = effectiveRoleName,
                     departmentId,
-                    clubId
+                    clubId,
+                    adminClubId = clubAdminId
                 }
             });
         }
@@ -229,9 +232,12 @@ namespace AppilicationProcesserAPI.Controllers
 
             await using var cmd = new SqlCommand(@"
                 SELECT TOP 1
+                    u.UserId,
                     uc.Email,
                     u.FirstName,
                     u.LastName,
+                    u.DepartmentId,
+                    u.AdminClubId,
                     r.Name AS RoleName
                 FROM dbo.Users u
                 INNER JOIN dbo.UserCredentials uc ON uc.UserId = u.UserId
@@ -245,12 +251,26 @@ namespace AppilicationProcesserAPI.Controllers
             if (!await reader.ReadAsync())
                 return NotFound();
 
+            Guid? departmentId = reader.IsDBNull(reader.GetOrdinal("DepartmentId"))
+                ? null
+                : reader.GetGuid(reader.GetOrdinal("DepartmentId"));
+            Guid? adminClubId = reader.IsDBNull(reader.GetOrdinal("AdminClubId"))
+                ? null
+                : reader.GetGuid(reader.GetOrdinal("AdminClubId"));
+            Guid? clubId = await ResolveClubIdForDepartmentAsync(departmentId).ConfigureAwait(false);
+            var roleName = reader.GetString(reader.GetOrdinal("RoleName"));
+            var effectiveRoleName = ResolveEffectiveRoleName(roleName, adminClubId);
+
             return Ok(new CurrentUserResponse
             {
+                UserId = reader.GetGuid(reader.GetOrdinal("UserId")),
                 Email = reader.GetString(reader.GetOrdinal("Email")),
                 FirstName = reader.GetString(reader.GetOrdinal("FirstName")),
                 LastName = reader.GetString(reader.GetOrdinal("LastName")),
-                Role = reader.GetString(reader.GetOrdinal("RoleName"))
+                Role = effectiveRoleName,
+                DepartmentId = departmentId,
+                ClubId = clubId,
+                AdminClubId = adminClubId
             });
         }
 
@@ -323,6 +343,36 @@ namespace AppilicationProcesserAPI.Controllers
             );
 
             return new JwtSecurityTokenHandler().WriteToken(jwt);
+        }
+
+        private static string ResolveEffectiveRoleName(string roleName, Guid? adminClubId)
+        {
+            if (adminClubId.HasValue)
+            {
+                return ClubAdminRoleName;
+            }
+
+            return roleName;
+        }
+
+        private async Task<Guid?> ResolveClubIdForDepartmentAsync(Guid? departmentId)
+        {
+            if (!departmentId.HasValue)
+            {
+                return null;
+            }
+
+            await using var connection = new SqlConnection(_connectionString);
+            await connection.OpenAsync();
+
+            await using var command = new SqlCommand(@"
+                SELECT TOP 1 [ClubId]
+                FROM [Departments]
+                WHERE [DepartmentId] = @departmentId", connection);
+            command.Parameters.AddWithValue("@departmentId", departmentId.Value);
+
+            var result = await command.ExecuteScalarAsync();
+            return result is Guid clubId ? clubId : null;
         }
     }
 }

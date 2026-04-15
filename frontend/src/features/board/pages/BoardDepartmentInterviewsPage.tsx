@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { Navbar } from "../../../components/layout/Navbar/Navbar";
 import { BoardSectionNav } from "../components/BoardSectionNav";
 import { useBoardInterviews } from "../hooks/useBoardInterviews";
 import { getDepartmentsForClub } from "../../../services/applications/applicationStatusApi";
 import { resolveCurrentBoardClubId } from "../../../services/board/boardApi";
 import { filterSlotsByDepartment, getSlotPhase, groupSlotsByDate } from "../utils/interviewSchedule";
 import type { DepartmentDto } from "../../../types/account/accountApplications";
+import { BoardShell } from "../components/BoardShell";
 
 export function BoardDepartmentInterviewsPage() {
   const { departmentId } = useParams<{ departmentId: string }>();
@@ -54,9 +54,7 @@ export function BoardDepartmentInterviewsPage() {
   const recommendedLimit = department?.numberOfOpenPositions ?? "—";
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-950 via-slate-950 to-slate-950">
-      <Navbar />
-
+    <BoardShell>
       <div className="pt-28">
         <div className="mx-auto max-w-6xl p-4 sm:p-6">
           <Link
@@ -163,7 +161,7 @@ export function BoardDepartmentInterviewsPage() {
           )}
         </div>
       </div>
-    </div>
+    </BoardShell>
   );
 }
 

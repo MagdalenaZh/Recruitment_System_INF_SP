@@ -55,7 +55,7 @@ namespace AppilicationProcesserAPI.Security
             }
 
             var clubId = GetEffectiveClubId(user);
-            if (!clubId.HasValue || !HasRole(user, Roles.ClubAdmin, Roles.BoardMember))
+            if (!clubId.HasValue || !(IsClubAdmin(user) || HasRole(user, Roles.BoardMember)))
             {
                 return false;
             }
@@ -126,7 +126,7 @@ namespace AppilicationProcesserAPI.Security
                 return Task.FromResult(true);
             }
 
-            var allowed = HasRole(user, Roles.ClubAdmin, Roles.BoardMember) && GetEffectiveClubId(user) == clubId;
+            var allowed = (IsClubAdmin(user) || HasRole(user, Roles.BoardMember)) && GetEffectiveClubId(user) == clubId;
             return Task.FromResult(allowed);
         }
 
@@ -137,7 +137,7 @@ namespace AppilicationProcesserAPI.Security
                 return Task.FromResult(true);
             }
 
-            var allowed = HasRole(user, Roles.ClubAdmin) && GetAdminClubId(user) == clubId;
+            var allowed = IsClubAdmin(user) && GetAdminClubId(user) == clubId;
             return Task.FromResult(allowed);
         }
 
@@ -216,7 +216,7 @@ namespace AppilicationProcesserAPI.Security
                 return true;
             }
 
-            if (HasRole(user, Roles.ClubAdmin) && GetAdminClubId(user) == scope.ClubId)
+            if (IsClubAdmin(user) && GetAdminClubId(user) == scope.ClubId)
             {
                 return true;
             }
@@ -237,7 +237,7 @@ namespace AppilicationProcesserAPI.Security
                 return true;
             }
 
-            return HasRole(user, Roles.ClubAdmin) && GetAdminClubId(user) == scope.ClubId;
+            return IsClubAdmin(user) && GetAdminClubId(user) == scope.ClubId;
         }
 
         private bool CanAccessApplicationScope(ClaimsPrincipal user, ApplicationScope scope)
@@ -258,7 +258,7 @@ namespace AppilicationProcesserAPI.Security
                 return true;
             }
 
-            if (HasRole(user, Roles.ClubAdmin) && GetAdminClubId(user) == scope.ClubId)
+            if (IsClubAdmin(user) && GetAdminClubId(user) == scope.ClubId)
             {
                 return true;
             }
@@ -286,6 +286,11 @@ namespace AppilicationProcesserAPI.Security
         private Guid? GetEffectiveClubId(ClaimsPrincipal user)
         {
             return GetAdminClubId(user) ?? GetClubId(user);
+        }
+
+        private bool IsClubAdmin(ClaimsPrincipal user)
+        {
+            return HasRole(user, Roles.ClubAdmin) || GetAdminClubId(user).HasValue;
         }
 
         private async Task<bool> UserHasApplicationInClubAsync(Guid userId, Guid clubId, CancellationToken cancellationToken)

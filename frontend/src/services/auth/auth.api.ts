@@ -1,13 +1,28 @@
 import type { AuthUser } from "../../features/auth/types/auth";
+import { getNormalizedUserRole } from "../../features/auth/utils/routeAuthorization";
 
 const TOKEN_KEY = "auth_token";
 const USER_KEY = "auth_user";
+
+function normalizeStoredUser(user: AuthUser | null): AuthUser | null {
+  if (!user) return null;
+
+  const effectiveRole =
+    user.adminClubId && user.role !== "SystemAdmin" && user.role !== "Admin"
+      ? "ClubAdmin"
+      : getNormalizedUserRole(user.role);
+
+  return {
+    ...user,
+    role: effectiveRole,
+  };
+}
 
 export function getStoredUser(): AuthUser | null {
   const raw = localStorage.getItem(USER_KEY);
   if (!raw) return null;
   try {
-    return JSON.parse(raw) as AuthUser;
+    return normalizeStoredUser(JSON.parse(raw) as AuthUser);
   } catch {
     return null;
   }

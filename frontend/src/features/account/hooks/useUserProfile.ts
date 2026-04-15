@@ -10,7 +10,7 @@ import {
   getDepartmentsForClub,
 } from "../../../services/applications/applicationStatusApi";
 import { getStoredUser } from "../../../services/auth/auth.api";
-import { normalizeRole } from "../../../types/account/roles";
+import { getNormalizedUserRole } from "../../auth/utils/routeAuthorization";
 import type { UserProfile } from "../../../types/account/profile";
 
 function mapCurrentUserToProfile(
@@ -23,12 +23,15 @@ function mapCurrentUserToProfile(
     clubName?: string | null;
   },
 ): UserProfile {
+  const effectiveRoleSource =
+    (options?.adminClubId ?? user.adminClubId) ? "ClubAdmin" : user.role;
+
   return {
     userId: user.userId,
     email: user.email,
     firstName: user.firstName,
     lastName: user.lastName,
-    role: normalizeRole(user.role),
+    role: getNormalizedUserRole(effectiveRoleSource),
     avatarUrl: user.avatarUrl ?? null,
     academicYear: user.academicYear ?? null,
     studyMajor: user.studyMajor ?? null,
@@ -51,7 +54,9 @@ export function useUserProfile() {
       setLoading(true);
       const data = await getCurrentUser();
       const storedUser = getStoredUser();
-      const role = normalizeRole(data.role);
+      const effectiveRoleSource =
+        (data.adminClubId ?? storedUser?.adminClubId) ? "ClubAdmin" : data.role;
+      const role = getNormalizedUserRole(effectiveRoleSource);
       const clubId =
         data.clubId ??
         data.adminClubId ??

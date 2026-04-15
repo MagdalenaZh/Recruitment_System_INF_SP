@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from "react";
-import { Navbar } from "../../../components/layout/Navbar/Navbar";
 import { BoardSectionNav } from "../components/BoardSectionNav";
 import { InterviewDetailsDrawer } from "../components/InterviewDetailsDrawer";
 import { InterviewDecisionConfirmModal } from "../components/InterviewDecisionConfirmModal";
@@ -15,6 +14,7 @@ import {
   getSlotPhase,
   groupSlotsByDate,
 } from "../utils/interviewSchedule";
+import { BoardShell } from "../components/BoardShell";
 
 type PendingDecisionRequest = {
   slotId: string;
@@ -74,35 +74,31 @@ export function BoardInterviewsHomePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-blue-950 via-slate-950 to-slate-950">
-        <Navbar />
+      <BoardShell>
         <div className="mx-auto max-w-7xl p-6 pt-36">
           <div className="rounded-2xl border border-white/10 bg-white/5 p-6 text-slate-200">
             Loading interview schedule...
           </div>
         </div>
-      </div>
+      </BoardShell>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-blue-950 via-slate-950 to-slate-950">
-        <Navbar />
+      <BoardShell>
         <div className="mx-auto max-w-7xl p-6 pt-36">
           <div className="rounded-2xl border border-red-400/30 bg-red-500/10 p-6 text-red-300">
             <div className="font-semibold">Could not load interview schedule.</div>
             <div className="mt-2 text-sm">{error}</div>
           </div>
         </div>
-      </div>
+      </BoardShell>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-950 via-slate-950 to-slate-950">
-      <Navbar />
-
+    <BoardShell>
       <div className="pt-28">
         <div className="mx-auto max-w-7xl p-4 sm:p-6">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
@@ -321,7 +317,7 @@ export function BoardInterviewsHomePage() {
         onConfirm={() => void confirmDecision()}
         loading={decisionLoading}
       />
-    </div>
+    </BoardShell>
   );
 }
 
