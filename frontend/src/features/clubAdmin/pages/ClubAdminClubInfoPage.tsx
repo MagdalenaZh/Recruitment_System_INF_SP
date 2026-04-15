@@ -1,27 +1,27 @@
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { ClubAdminShell } from "../components/ClubAdminShell";
 import { ClubAdminPageHeader } from "../components/ClubAdminPageHeader";
+import { ClubAdminSectionNav } from "../components/ClubAdminSectionNav";
 import { useClubAdminClubInfo } from "../hooks/useClubAdminClubInfo";
 import { ClubAdminDepartmentManagementCard } from "../components/ClubAdminDepartmentManagementCard";
+import { ApplicationQuestionsManager } from "../components/ApplicationQuestionsManager";
 
-function toDateTimeLocalValue(value: string): string {
-  const date = new Date(value);
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  const hours = String(date.getHours()).padStart(2, "0");
-  const minutes = String(date.getMinutes()).padStart(2, "0");
-  return `${year}-${month}-${day}T${hours}:${minutes}`;
-}
-
-function toIsoString(value: string): string {
-  return new Date(value).toISOString();
-}
+const CATEGORY_OPTIONS = [
+  "Math & Science",
+  "Technology",
+  "Sports",
+  "Business",
+  "Politics",
+  "Art",
+  "Media & Journalism",
+  "Entrepreneurship",
+  "Music",
+  "Other",
+] as const;
 
 export function ClubAdminClubInfoPage() {
   const {
     data,
-    interviewSlots,
     loading,
     error,
     refetch,
@@ -29,55 +29,38 @@ export function ClubAdminClubInfoPage() {
     updateDepartment,
     createDepartment,
     updateClubInfo,
-    createInterviewSlot,
-    updateInterviewSlot,
   } = useClubAdminClubInfo();
 
+  const [clubName, setClubName] = useState("");
+  const [description, setDescription] = useState("");
+  const [category, setCategory] = useState("Other");
+  const [requiredApprovals, setRequiredApprovals] = useState(1);
   const [newDepartmentName, setNewDepartmentName] = useState("");
   const [newDepartmentDescription, setNewDepartmentDescription] = useState("");
   const [newDepartmentOpenPositions, setNewDepartmentOpenPositions] = useState(0);
-  const [newSlotStart, setNewSlotStart] = useState("");
-  const [newSlotEnd, setNewSlotEnd] = useState("");
+  const [savingClub, setSavingClub] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
 
-  const clubQuestionsCsv = useMemo(
-    () => (data?.admissionQuestions ?? []).join(", "),
-    [data?.admissionQuestions],
-  );
+  useEffect(() => {
+    if (!data) return;
+    setClubName(data.clubName);
+    setDescription(data.description);
+    setCategory(data.category || "Other");
+    setRequiredApprovals(Math.max(1, data.requiredApprovals || 1));
+  }, [data]);
 
   async function handleSaveClubInfo() {
     if (!data) return;
 
-    const nextName = window.prompt("Club name", data.clubName);
-    if (!nextName) return;
-
-    const nextDescription =
-      window.prompt("Club description", data.description) ?? data.description;
-    const nextCategory = window.prompt(
-      "Category (Math & Science, Technology, Sports, Business, Politics, Art, Media & Journalism, Entrepreneurship, Music, Other)",
-      data.category || "Other",
-    );
-    if (!nextCategory) return;
-
-    const nextQuestionsCsv = window.prompt(
-      "Application questions (comma-separated)",
-      clubQuestionsCsv,
-    );
-    const requiredApprovalsRaw = window.prompt("Required approvals", "1");
-    const requiredApprovals = Number(requiredApprovalsRaw ?? "1");
-
+    setSavingClub(true);
     try {
       await updateClubInfo({
-        clubName: nextName,
-        description: nextDescription,
-        category: nextCategory,
-        requiredApprovals:
-          Number.isFinite(requiredApprovals) && requiredApprovals > 0
-            ? requiredApprovals
-            : 1,
-        applicationQuestions:
-          nextQuestionsCsv?.split(",").map((q) => q.trim()).filter(Boolean) ?? [],
+        clubName: clubName.trim(),
+        description: description.trim(),
+        category,
+        requiredApprovals: Math.max(1, requiredApprovals),
+        applicationQuestions: data.admissionQuestions ?? [],
       });
       setMessage("Club info updated.");
       setSaveError(null);
@@ -85,6 +68,29 @@ export function ClubAdminClubInfoPage() {
       setSaveError(
         err instanceof Error ? err.message : "Failed to update club info.",
       );
+    } finally {
+      setSavingClub(false);
+    }
+  }
+
+  async function handleSaveQuestions(questions: string[]) {
+    if (!data) return;
+
+    try {
+      await updateClubInfo({
+        clubName: clubName.trim(),
+        description: description.trim(),
+        category,
+        requiredApprovals: Math.max(1, requiredApprovals),
+        applicationQuestions: questions,
+      });
+      setMessage("Application questions updated.");
+      setSaveError(null);
+    } catch (err) {
+      setSaveError(
+        err instanceof Error ? err.message : "Failed to update application questions.",
+      );
+      throw err;
     }
   }
 
@@ -109,32 +115,18 @@ export function ClubAdminClubInfoPage() {
     }
   }
 
-  async function handleCreateSlot() {
-    if (!newSlotStart || !newSlotEnd) return;
-
-    try {
-      await createInterviewSlot(toIsoString(newSlotStart), toIsoString(newSlotEnd));
-      setNewSlotStart("");
-      setNewSlotEnd("");
-      setMessage("Interview slot created.");
-      setSaveError(null);
-    } catch (err) {
-      setSaveError(
-        err instanceof Error ? err.message : "Failed to create interview slot.",
-      );
-    }
-  }
-
   return (
     <ClubAdminShell>
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <ClubAdminPageHeader
           backTo="/club-admin"
           backLabel="Back to admin home"
-          title="Edit club info"
-          description="Manage your club details, departments, and available interview slots."
+          title="Club settings"
+          description="Edit your club information, required approvals, departments, and application questions without leaving the page."
           onRefresh={refetch}
         />
+
+        <ClubAdminSectionNav />
 
         <div className="mt-8">
           {loading ? (
@@ -147,35 +139,102 @@ export function ClubAdminClubInfoPage() {
             </div>
           ) : data ? (
             <div className="space-y-5">
-              <div className="rounded-3xl border border-white/10 bg-white/10 p-6 backdrop-blur shadow-lg">
-                <div className="flex flex-col gap-4">
-                  <div className="flex flex-wrap gap-3">
-                    <div className="rounded-full border border-white/10 bg-white/10 px-3 py-1 text-sm font-semibold text-white">
-                      {data.clubName}
-                    </div>
+              <section className="rounded-3xl border border-white/10 bg-white/10 p-6 backdrop-blur shadow-lg">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.24em] text-sky-300">
+                      Club profile
+                    </p>
+                    <h2 className="mt-2 text-2xl font-semibold text-white">
+                      Edit core club information
+                    </h2>
+                  </div>
+                </div>
 
-                    {data.category ? (
-                      <div className="rounded-full border border-white/10 bg-white/10 px-3 py-1 text-sm text-slate-200">
-                        Category: {data.category}
-                      </div>
-                    ) : null}
+                <div className="mt-5 grid gap-4 md:grid-cols-2">
+                  <div>
+                    <label className="text-xs font-medium text-slate-300">Club name</label>
+                    <input
+                      value={clubName}
+                      onChange={(e) => setClubName(e.target.value)}
+                      className="mt-1 w-full rounded-xl border border-white/10 bg-white/10 px-3 py-2 text-sm text-white outline-none"
+                    />
                   </div>
 
-                  <p className="text-sm leading-7 text-slate-300">
-                    {data.description}
-                  </p>
+                  <div>
+                    <label className="text-xs font-medium text-slate-300">Category</label>
+                    <select
+                      value={category}
+                      onChange={(e) => setCategory(e.target.value)}
+                      className="mt-1 w-full rounded-xl border border-white/10 bg-slate-950/60 px-3 py-2 text-sm text-white outline-none"
+                    >
+                      {CATEGORY_OPTIONS.map((option) => (
+                        <option key={option} value={option}>
+                          {option}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
 
+                <div className="mt-4 grid gap-4 md:grid-cols-[1fr_220px]">
+                  <div>
+                    <label className="text-xs font-medium text-slate-300">Description</label>
+                    <textarea
+                      value={description}
+                      onChange={(e) => setDescription(e.target.value)}
+                      rows={5}
+                      className="mt-1 w-full rounded-xl border border-white/10 bg-white/10 px-3 py-3 text-sm text-white outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-medium text-slate-300">Required approvals</label>
+                    <input
+                      type="number"
+                      min={1}
+                      value={requiredApprovals}
+                      onChange={(e) => setRequiredApprovals(Number(e.target.value))}
+                      className="mt-1 w-full rounded-xl border border-white/10 bg-white/10 px-3 py-2 text-sm text-white outline-none"
+                    />
+                    <p className="mt-2 text-xs text-slate-400">
+                      Used across the recruitment flow when approvals are evaluated.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-5 flex flex-wrap justify-end gap-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setClubName(data.clubName);
+                      setDescription(data.description);
+                      setCategory(data.category || "Other");
+                      setRequiredApprovals(Math.max(1, data.requiredApprovals || 1));
+                      setMessage(null);
+                      setSaveError(null);
+                    }}
+                    className="rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-sm font-semibold text-slate-200 hover:bg-white/10"
+                  >
+                    Reset
+                  </button>
                   <button
                     type="button"
                     onClick={() => void handleSaveClubInfo()}
-                    className="w-fit rounded-xl border border-sky-300/20 bg-sky-500/10 px-4 py-2 text-sm font-semibold text-sky-100 hover:bg-sky-500/20"
+                    disabled={savingClub}
+                    className="rounded-xl border border-sky-300/20 bg-sky-500/10 px-4 py-2 text-sm font-semibold text-sky-100 hover:bg-sky-500/20 disabled:opacity-60"
                   >
-                    Edit club details
+                    {savingClub ? "Saving..." : "Save club info"}
                   </button>
                 </div>
-              </div>
+              </section>
 
-              <div className="rounded-3xl border border-white/10 bg-white/10 p-5 backdrop-blur shadow-lg">
+              <ApplicationQuestionsManager
+                initialQuestions={data.admissionQuestions ?? []}
+                onSave={handleSaveQuestions}
+              />
+
+              <section className="rounded-3xl border border-white/10 bg-white/10 p-5 backdrop-blur shadow-lg">
                 <h3 className="text-xl font-semibold text-white">Create department</h3>
                 <div className="mt-4 grid gap-3 md:grid-cols-3">
                   <input
@@ -206,7 +265,7 @@ export function ClubAdminClubInfoPage() {
                 >
                   Create department
                 </button>
-              </div>
+              </section>
 
               <div className="space-y-4">
                 {data.departments.map((department) => (
@@ -219,110 +278,12 @@ export function ClubAdminClubInfoPage() {
                 ))}
               </div>
 
-              <div className="rounded-3xl border border-white/10 bg-white/10 p-5 backdrop-blur shadow-lg">
-                <h3 className="text-xl font-semibold text-white">
-                  Available interview slots
-                </h3>
-
-                <div className="mt-4 grid gap-3 md:grid-cols-3">
-                  <input
-                    type="datetime-local"
-                    value={newSlotStart}
-                    onChange={(e) => setNewSlotStart(e.target.value)}
-                    className="rounded-xl border border-white/10 bg-white/10 px-3 py-2 text-sm text-white outline-none"
-                  />
-                  <input
-                    type="datetime-local"
-                    value={newSlotEnd}
-                    onChange={(e) => setNewSlotEnd(e.target.value)}
-                    className="rounded-xl border border-white/10 bg-white/10 px-3 py-2 text-sm text-white outline-none"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => void handleCreateSlot()}
-                    className="rounded-xl border border-sky-300/20 bg-sky-500/10 px-4 py-2 text-sm font-semibold text-sky-100 hover:bg-sky-500/20"
-                  >
-                    Create slot
-                  </button>
-                </div>
-
-                <div className="mt-5 space-y-3">
-                  {interviewSlots.length === 0 ? (
-                    <div className="rounded-2xl border border-dashed border-white/10 bg-white/5 p-4 text-sm text-slate-300">
-                      No available interview slots.
-                    </div>
-                  ) : (
-                    interviewSlots.map((slot) => (
-                      <InterviewSlotRow
-                        key={slot.slotId}
-                        slotId={slot.slotId}
-                        startTime={slot.startTime}
-                        endTime={slot.endTime}
-                        onSave={updateInterviewSlot}
-                      />
-                    ))
-                  )}
-                </div>
-              </div>
-
-              {message ? (
-                <div className="text-sm text-emerald-300">{message}</div>
-              ) : null}
+              {message ? <div className="text-sm text-emerald-300">{message}</div> : null}
               {saveError ? <div className="text-sm text-rose-300">{saveError}</div> : null}
             </div>
           ) : null}
         </div>
       </div>
     </ClubAdminShell>
-  );
-}
-
-function InterviewSlotRow({
-  slotId,
-  startTime,
-  endTime,
-  onSave,
-}: {
-  slotId: string;
-  startTime: string;
-  endTime: string;
-  onSave: (slotId: string, startTime: string, endTime: string) => Promise<void>;
-}) {
-  const [start, setStart] = useState(toDateTimeLocalValue(startTime));
-  const [end, setEnd] = useState(toDateTimeLocalValue(endTime));
-  const [saving, setSaving] = useState(false);
-
-  async function handleSave() {
-    setSaving(true);
-    try {
-      await onSave(slotId, toIsoString(start), toIsoString(end));
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  return (
-    <div className="grid gap-3 rounded-2xl border border-white/10 bg-white/5 p-4 md:grid-cols-[1fr_1fr_auto]">
-      <input
-        type="datetime-local"
-        value={start}
-        onChange={(e) => setStart(e.target.value)}
-        className="rounded-xl border border-white/10 bg-white/10 px-3 py-2 text-sm text-white outline-none"
-      />
-      <input
-        type="datetime-local"
-        value={end}
-        onChange={(e) => setEnd(e.target.value)}
-        className="rounded-xl border border-white/10 bg-white/10 px-3 py-2 text-sm text-white outline-none"
-      />
-      <button
-        type="button"
-        onClick={() => void handleSave()}
-        disabled={saving}
-        className="rounded-xl border border-white/15 bg-white/10 px-4 py-2 text-sm font-semibold text-white hover:bg-white/20 disabled:opacity-60"
-      >
-        {saving ? "Saving..." : "Update"}
-      </button>
-    </div>
   );
 }

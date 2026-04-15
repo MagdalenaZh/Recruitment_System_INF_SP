@@ -116,6 +116,9 @@ export type BoardInterviewDepartmentDecision = {
   roundOneStatus: "Approved" | "Rejected";
   roundTwoDecision: FinalInterviewDecision | null;
   finalDecision: FinalInterviewDecision | null;
+  roundTwoApproveVotes: number;
+  roundTwoRejectVotes: number;
+  requiredApprovals: number;
   targetSpots: number;
 };
 

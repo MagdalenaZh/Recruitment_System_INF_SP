@@ -13,6 +13,9 @@ export type UserProfile = {
   cvFileName?: string | null;
   departmentId?: string | null;
   departmentName?: string | null;
+  clubId?: string | null;
+  adminClubId?: string | null;
+  clubName?: string | null;
 };
 
 export type UpdateProfileRequest = {

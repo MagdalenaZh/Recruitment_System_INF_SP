@@ -4,6 +4,13 @@ import { Button } from "../../../components/ui/Button";
 import { Input } from "../../../components/ui/Input";
 import { useUserProfile } from "../hooks/useUserProfile";
 
+const ACADEMIC_YEAR_OPTIONS = [
+  "Freshman",
+  "Sophomore",
+  "Junior",
+  "Senior",
+] as const;
+
 export function AccountProfilePage() {
   const { profile, loading, updateProfile, uploadCv } = useUserProfile();
 
@@ -89,6 +96,7 @@ export function AccountProfilePage() {
 
   const isApplicant = profile.role === "Applicant" || profile.role === "User";
   const isBoardMember = profile.role === "BoardMember";
+  const isClubAdmin = profile.role === "ClubAdmin";
 
   return (
     <div className="space-y-6">
@@ -141,11 +149,18 @@ export function AccountProfilePage() {
           <label className="text-xs font-medium text-slate-600">
             Academic year
           </label>
-          <Input
+          <select
             value={academicYear}
             onChange={(e) => setAcademicYear(e.target.value)}
-            placeholder="Freshman, Sophomore, Junior..."
-          />
+            className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+          >
+            <option value="">Select academic year</option>
+            {ACADEMIC_YEAR_OPTIONS.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
         </div>
 
         <div>
@@ -171,6 +186,31 @@ export function AccountProfilePage() {
             </div>
             <p className="mt-1 text-xs text-slate-500">
               This is assigned by a club admin and cannot be edited here.
+            </p>
+          </div>
+
+          <div>
+            <label className="text-xs font-medium text-slate-600">
+              Club
+            </label>
+            <div className="mt-1 rounded-xl bg-slate-50 px-3 py-2 text-sm text-slate-700 ring-1 ring-slate-100">
+              {profile.clubName ?? "Not assigned"}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isClubAdmin && (
+        <div className="grid gap-4 md:grid-cols-2">
+          <div>
+            <label className="text-xs font-medium text-slate-600">
+              Club
+            </label>
+            <div className="mt-1 rounded-xl bg-slate-50 px-3 py-2 text-sm text-slate-700 ring-1 ring-slate-100">
+              {profile.clubName ?? "Not assigned"}
+            </div>
+            <p className="mt-1 text-xs text-slate-500">
+              This is based on your club-admin assignment and cannot be edited here.
             </p>
           </div>
         </div>

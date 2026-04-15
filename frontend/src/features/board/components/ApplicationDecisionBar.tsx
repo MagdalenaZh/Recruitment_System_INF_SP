@@ -14,8 +14,10 @@ export function ApplicationDecisionBar({
 }) {
   const btnBase =
     "rounded-xl px-4 py-2 text-sm font-semibold border transition disabled:opacity-60 disabled:cursor-not-allowed";
+  const showVoteSummary =
+    app.status === "Pending" || app.status === "Submitted";
   const canVote =
-    app.status === "Pending" || app.status === "Submitted" || app.status === "Interview";
+    app.status === "Pending" || app.status === "Submitted";
 
   const approveActive = app.myVote === "Approve";
   const rejectActive = app.myVote === "Reject";
@@ -33,46 +35,56 @@ export function ApplicationDecisionBar({
             <div className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-sm font-semibold text-slate-800">
               Status: {app.status}
             </div>
-            <div className="text-sm text-slate-600">
-              Your vote:{" "}
-              <span className="font-medium text-slate-900">{myVoteLabel}</span>
-            </div>
-            <div className="text-sm text-slate-600">
-              Board votes:{" "}
-              <span className="font-medium text-slate-900">
-                {app.totalVotes} ({app.approveVotes} approve / {app.rejectVotes} reject)
-              </span>
-            </div>
+            {showVoteSummary ? (
+              <>
+                <div className="text-sm text-slate-600">
+                  Your vote:{" "}
+                  <span className="font-medium text-slate-900">{myVoteLabel}</span>
+                </div>
+                <div className="text-sm text-slate-600">
+                  Board votes:{" "}
+                  <span className="font-medium text-slate-900">
+                    {app.totalVotes} ({app.approveVotes} approve / {app.rejectVotes} reject)
+                  </span>
+                </div>
+              </>
+            ) : (
+              <div className="text-sm text-slate-600">
+                Round one voting is complete. Ongoing interview votes are tracked from the interview workspace.
+              </div>
+            )}
           </div>
 
-          <div className="flex items-center gap-2">
-            <button
-              className={`${btnBase} ${
-                approveActive
-                  ? "border-emerald-300 bg-emerald-50 text-emerald-800"
-                  : "border-slate-200 bg-white text-slate-800 hover:bg-slate-50"
-              }`}
-              onClick={() => onVote("Approve")}
-              disabled={loading || !canVote}
-            >
-              Approve
-            </button>
+          {showVoteSummary ? (
+            <div className="flex items-center gap-2">
+              <button
+                className={`${btnBase} ${
+                  approveActive
+                    ? "border-emerald-300 bg-emerald-50 text-emerald-800"
+                    : "border-slate-200 bg-white text-slate-800 hover:bg-slate-50"
+                }`}
+                onClick={() => onVote("Approve")}
+                disabled={loading || !canVote}
+              >
+                Approve
+              </button>
 
-            <button
-              className={`${btnBase} ${
-                rejectActive
-                  ? "border-rose-300 bg-rose-50 text-rose-800"
-                  : "border-slate-200 bg-white text-slate-800 hover:bg-slate-50"
-              }`}
-              onClick={() => onVote("Reject")}
-              disabled={loading || !canVote}
-            >
-              Disapprove
-            </button>
-          </div>
+              <button
+                className={`${btnBase} ${
+                  rejectActive
+                    ? "border-rose-300 bg-rose-50 text-rose-800"
+                    : "border-slate-200 bg-white text-slate-800 hover:bg-slate-50"
+                }`}
+                onClick={() => onVote("Reject")}
+                disabled={loading || !canVote}
+              >
+                Disapprove
+              </button>
+            </div>
+          ) : null}
         </div>
 
-        {voterEntries.length > 0 ? (
+        {showVoteSummary && voterEntries.length > 0 ? (
           <div className="mt-3 border-t border-slate-100 pt-3">
             <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
               Board member votes
@@ -109,8 +121,7 @@ export function ApplicationDecisionBar({
 
         {!canVote ? (
           <div className="mt-3 text-sm text-slate-600">
-            Voting is available only while the application is in submitted, pending, or interview
-            review stages.
+            Voting is available only during round one from the application review stage.
           </div>
         ) : null}
 

@@ -71,6 +71,7 @@ export interface ClubAdminClubInfo {
   clubName: string;
   description: string;
   category: string;
+  requiredApprovals: number;
   admissionQuestions: string[];
   departments: ClubAdminClubDepartmentInfo[];
 }

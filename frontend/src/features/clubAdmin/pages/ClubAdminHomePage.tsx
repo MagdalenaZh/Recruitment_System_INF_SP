@@ -30,26 +30,26 @@ export function ClubAdminHomePage() {
 
         <div className="mt-10 grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
           <ClubAdminHomeCard
-            title="Club Info Manager"
-            description="View club details, departments, open positions, and manage department heads."
+            title="Club Settings"
+            description="Edit club information, departments, and application questions from one page."
             to="/club-admin/club-info"
           />
 
           <ClubAdminHomeCard
-            title="Application Manager"
-            description="Add, remove, and update the text-based application questions."
-            to="/club-admin/application-management"
+            title="Interview Slots"
+            description="Create and update the available interview booking slots for applicants."
+            to="/club-admin/interview-slots"
           />
 
           <ClubAdminHomeCard
-            title="Current Club Applications"
-            description="Review applications using the already implemented applications flow."
-            to="/board"
+            title="Final Decisions"
+            description="Review round-two-approved applicants and make the final admit or reject decision."
+            to="/club-admin/final-decisions"
           />
 
           <ClubAdminHomeCard
-            title="Interviews"
-            description="Open the interview page and manage the recruitment interview flow."
+            title="Applications & Interviews"
+            description="Jump into the shared applications and interview workspaces."
             to="/board/interviews"
           />
         </div>

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { boardApi, resolveCurrentBoardClubId, resolveCurrentUserId } from "../../../services/board/boardApi";
-import { getDepartmentsForClub, getLatestApplicationStates } from "../../../services/applications/applicationStatusApi";
+import { getAllClubs, getDepartmentsForClub, getLatestApplicationStates } from "../../../services/applications/applicationStatusApi";
 import {
   createRealtimeClientId,
   subscribeToApplicationStates,
@@ -8,6 +8,27 @@ import {
 import type { LatestApplicationStateResponse } from "../../../services/applications/applicationStateTypes";
 import type { ApplicationDetail } from "../types/boardTypes";
 import { applyUpdateToApplicationDetail, normalizeBaseStatus } from "../utils/applicationLiveState";
+
+function shouldHydrateLatestState(applicationStatus: number): boolean {
+  return applicationStatus !== 4 && applicationStatus !== 5;
+}
+
+function inferFallbackApprovals(
+  applicationStatus: number,
+  requiredApprovals: number,
+): Pick<ApplicationDetail, "approvalsCount" | "requiredApprovals"> {
+  if (applicationStatus === 3 || applicationStatus === 5 || applicationStatus === 6) {
+    return {
+      approvalsCount: requiredApprovals,
+      requiredApprovals,
+    };
+  }
+
+  return {
+    approvalsCount: 0,
+    requiredApprovals,
+  };
+}
 
 export function useBoardApplicationDetail(applicationId?: string) {
   const [data, setData] = useState<ApplicationDetail | null>(null);
@@ -29,17 +50,21 @@ export function useBoardApplicationDetail(applicationId?: string) {
       const clubId = resolveCurrentBoardClubId();
       if (!clubId) throw new Error("No club assigned to this board member.");
 
-      const [applications, departments, latestStates] = await Promise.all([
+      const [applications, departments, allClubs] = await Promise.all([
         boardApi.getApplicationsByClub(clubId),
         getDepartmentsForClub(clubId),
-        getLatestApplicationStates([applicationId]).catch((hydrateError) => {
-          console.error("[useBoardApplicationDetail] latest-state hydration failed", hydrateError);
-          return [] as LatestApplicationStateResponse[];
-        }),
+        getAllClubs(),
       ]);
 
       const application = applications.find((a) => a.applicationId === applicationId);
       if (!application) throw new Error("Application not found.");
+
+      const latestStates = shouldHydrateLatestState(application.applicationStatus)
+        ? await getLatestApplicationStates([applicationId]).catch((hydrateError) => {
+            console.error("[useBoardApplicationDetail] latest-state hydration failed", hydrateError);
+            return [] as LatestApplicationStateResponse[];
+          })
+        : [];
 
       // Fetch real name and email for the applicant. If lookup fails, keep page usable.
       const userInfo = await boardApi
@@ -47,6 +72,12 @@ export function useBoardApplicationDetail(applicationId?: string) {
         .catch(() => null);
 
       const department = departments.find((d) => d.departmentId === application.departmentId);
+      const clubRequiredApprovals =
+        allClubs.find((club) => club.clubId === clubId)?.requiredApprovals ?? 0;
+      const fallbackApprovals = inferFallbackApprovals(
+        application.applicationStatus,
+        clubRequiredApprovals,
+      );
 
       const mapped: ApplicationDetail = {
         id: application.applicationId,
@@ -55,8 +86,8 @@ export function useBoardApplicationDetail(applicationId?: string) {
           : application.userId,
         applicantEmail: userInfo?.email ?? "",
         status: normalizeBaseStatus(application.applicationStatus),
-        approvalsCount: 0,
-        requiredApprovals: 0,
+        approvalsCount: fallbackApprovals.approvalsCount,
+        requiredApprovals: fallbackApprovals.requiredApprovals,
         totalVotes: 0,
         approveVotes: 0,
         rejectVotes: 0,

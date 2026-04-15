@@ -46,7 +46,7 @@ export function InterviewDetailsDrawer({
     <div className="fixed inset-0 z-[80]">
       <div className="absolute inset-0 bg-slate-950/70 backdrop-blur-sm" onClick={onClose} />
 
-      <aside className="absolute right-0 top-0 h-full w-full max-w-2xl overflow-y-auto border-l border-white/10 bg-slate-950/95 shadow-2xl">
+      <aside className="absolute right-0 top-0 h-full w-full overflow-y-auto border-l border-white/10 bg-slate-950/95 shadow-2xl lg:w-1/2">
         <div className="sticky top-0 z-10 border-b border-white/10 bg-slate-950/95 px-4 py-4 backdrop-blur sm:px-6">
           <div className="flex items-start justify-between gap-4">
             <div>
@@ -254,6 +254,21 @@ export function InterviewDetailsDrawer({
                               ? "Your round two vote has been recorded. Final result stays pending until conclusion."
                               : "The interview slot has ended. You can submit your vote now."}
                         </p>
+
+                        <div className="mt-3 flex flex-wrap gap-2 text-xs">
+                          <span className="rounded-full border border-sky-400/30 bg-sky-400/15 px-3 py-1 font-semibold text-sky-100">
+                            Your vote: {department.roundTwoDecision ?? "pending"}
+                          </span>
+                          <span className="rounded-full border border-emerald-400/30 bg-emerald-400/15 px-3 py-1 font-semibold text-emerald-100">
+                            Approvals: {department.roundTwoApproveVotes}
+                          </span>
+                          <span className="rounded-full border border-rose-400/30 bg-rose-400/15 px-3 py-1 font-semibold text-rose-100">
+                            Rejections: {department.roundTwoRejectVotes}
+                          </span>
+                          <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 font-semibold text-slate-200">
+                            Required: {department.requiredApprovals}
+                          </span>
+                        </div>
                       </div>
 
                       <div className="flex shrink-0 items-center gap-2">

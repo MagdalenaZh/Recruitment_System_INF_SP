@@ -14,6 +14,7 @@ type ClubDto = {
   admissionQuestions: string[];
   description: string;
   category: number | string | null;
+  requiredApprovals?: number;
 };
 
 type DepartmentDto = {
@@ -154,6 +155,7 @@ export const clubAdminApi = {
       clubName: club.clubName,
       description: club.description ?? "",
       category: mapClubCategory(club.category),
+      requiredApprovals: club.requiredApprovals ?? 1,
       admissionQuestions: club.admissionQuestions ?? [],
       departments: departments.map((d) => ({
         departmentId: d.departmentId,

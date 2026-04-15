@@ -143,6 +143,7 @@ export function useClubAdminClubInfo() {
               clubName: next.clubName,
               description: next.description,
               category: next.category,
+              requiredApprovals: next.requiredApprovals,
               admissionQuestions: next.applicationQuestions,
             }
           : prev,

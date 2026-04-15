@@ -16,6 +16,8 @@ export type CurrentUserResponse = {
 
   departmentId?: string | null;
   departmentName?: string | null;
+  clubId?: string | null;
+  adminClubId?: string | null;
 };
 
 export type UpdateProfileRequest = {

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { boardApi, resolveCurrentBoardClubId, resolveCurrentUserId } from "../../../services/board/boardApi";
-import { getDepartmentsForClub, getLatestApplicationStates } from "../../../services/applications/applicationStatusApi";
+import { getAllClubs, getDepartmentsForClub, getLatestApplicationStates } from "../../../services/applications/applicationStatusApi";
 import {
   createRealtimeClientId,
   subscribeToApplicationStates,
@@ -11,10 +11,33 @@ import type { LatestApplicationStateResponse } from "../../../services/applicati
 import type { ApplicationListItem, ApplicationStatus } from "../types/boardTypes";
 import { applyUpdateToApplicationListItem, normalizeBaseStatus } from "../utils/applicationLiveState";
 
+function shouldHydrateLatestState(applicationStatus: number): boolean {
+  return applicationStatus !== 4 && applicationStatus !== 5;
+}
+
+function inferFallbackApprovals(
+  applicationStatus: number,
+  requiredApprovals: number,
+): Pick<ApplicationListItem, "approvalsCount" | "requiredApprovals"> {
+  if (applicationStatus === 3 || applicationStatus === 5 || applicationStatus === 6) {
+    return {
+      approvalsCount: requiredApprovals,
+      requiredApprovals,
+    };
+  }
+
+  return {
+    approvalsCount: 0,
+    requiredApprovals,
+  };
+}
+
 export function useDepartmentApplications(departmentId?: string) {
   const [applications, setApplications] = useState<UserApplicationDto[]>([]);
+  const [bookedApplicationIds, setBookedApplicationIds] = useState<Set<string>>(new Set());
   const [userInfoMap, setUserInfoMap] = useState<Record<string, UserInfoDto>>({});
   const [departmentName, setDepartmentName] = useState("Department");
+  const [clubRequiredApprovals, setClubRequiredApprovals] = useState(0);
   const [liveUpdates, setLiveUpdates] = useState<Record<string, LatestApplicationStateResponse>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -38,14 +61,20 @@ export function useDepartmentApplications(departmentId?: string) {
       const clubId = resolveCurrentBoardClubId();
       if (!clubId) throw new Error("No club assigned to this board member.");
 
-      const [applicationsResponse, departmentsResponse] = await Promise.all([
+      const [applicationsResponse, departmentsResponse, allClubs] = await Promise.all([
         boardApi.getApplicationsByDepartment(departmentId),
         getDepartmentsForClub(clubId),
+        getAllClubs(),
       ]);
 
       setApplications(applicationsResponse);
+      const bookedSlots = await boardApi.getBookedInterviewSlots(clubId);
+      setBookedApplicationIds(new Set(bookedSlots.map((slot) => slot.applicationId)));
       setDepartmentName(
         departmentsResponse.find((d) => d.departmentId === departmentId)?.departmentName ?? "Department",
+      );
+      setClubRequiredApprovals(
+        allClubs.find((club) => club.clubId === clubId)?.requiredApprovals ?? 0,
       );
 
       // Fetch real name + email for every unique applicant in parallel
@@ -62,7 +91,9 @@ export function useDepartmentApplications(departmentId?: string) {
       setUserInfoMap(infoMap);
 
       const stateSnapshots = await getLatestApplicationStates(
-        applicationsResponse.map((a) => a.applicationId),
+        applicationsResponse
+          .filter((application) => shouldHydrateLatestState(application.applicationStatus))
+          .map((application) => application.applicationId),
       ).catch((hydrateError) => {
         console.error("[useDepartmentApplications] latest-state hydration failed", hydrateError);
         return [] as LatestApplicationStateResponse[];
@@ -76,6 +107,7 @@ export function useDepartmentApplications(departmentId?: string) {
     } catch (e) {
       setError(e instanceof Error ? e.message : "Unknown error");
       setApplications([]);
+      setBookedApplicationIds(new Set());
       setUserInfoMap({});
       setLiveUpdates({});
     } finally {
@@ -115,6 +147,10 @@ export function useDepartmentApplications(departmentId?: string) {
       const applicantName = info
         ? `${info.firstName} ${info.lastName}`.trim()
         : app.userId;
+      const fallbackApprovals = inferFallbackApprovals(
+        app.applicationStatus,
+        clubRequiredApprovals,
+      );
 
       const baseItem: ApplicationListItem = {
         id: app.applicationId,
@@ -122,8 +158,8 @@ export function useDepartmentApplications(departmentId?: string) {
         applicantEmail: info?.email ?? "",
         status: normalizeBaseStatus(app.applicationStatus),
         submittedAt: "",
-        approvalsCount: 0,
-        requiredApprovals: 0,
+        approvalsCount: fallbackApprovals.approvalsCount,
+        requiredApprovals: fallbackApprovals.requiredApprovals,
         totalVotes: 0,
         approveVotes: 0,
         rejectVotes: 0,
@@ -134,9 +170,23 @@ export function useDepartmentApplications(departmentId?: string) {
       };
 
       const live = liveUpdates[app.applicationId];
-      return live ? applyUpdateToApplicationListItem(baseItem, live, currentUserId) : baseItem;
+      const nextItem = live
+        ? applyUpdateToApplicationListItem(baseItem, live, currentUserId)
+        : baseItem;
+
+      if (
+        bookedApplicationIds.has(app.applicationId) &&
+        nextItem.status === "InterviewPending"
+      ) {
+        return {
+          ...nextItem,
+          status: "Interview",
+        };
+      }
+
+      return nextItem;
     });
-  }, [applications, userInfoMap, departmentName, liveUpdates, currentUserId]);
+  }, [applications, bookedApplicationIds, userInfoMap, departmentName, liveUpdates, currentUserId, clubRequiredApprovals]);
 
   const filtered = useMemo(() => {
     return data.filter((item) => {

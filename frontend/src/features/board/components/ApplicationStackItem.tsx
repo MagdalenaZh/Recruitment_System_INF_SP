@@ -5,6 +5,8 @@ import type { ApplicationListItem } from "../types/boardTypes";
 export function ApplicationStackItem({ item }: { item: ApplicationListItem }) {
   const myVoteLabel =
     item.myVote === "Approve" ? "Approve" : item.myVote === "Reject" ? "Disapprove" : "-";
+  const showRoundOneVoteSummary =
+    item.status === "Submitted" || item.status === "Pending";
 
   return (
     <Link
@@ -36,16 +38,24 @@ export function ApplicationStackItem({ item }: { item: ApplicationListItem }) {
       </div>
 
       <div className="relative mt-3 flex flex-wrap items-center justify-between gap-3 text-sm text-slate-300">
-        <div>
-          Your vote: <span className="font-semibold text-white/90">{myVoteLabel}</span>
-        </div>
+        {showRoundOneVoteSummary ? (
+          <>
+            <div>
+              Your vote: <span className="font-semibold text-white/90">{myVoteLabel}</span>
+            </div>
 
-        <div className="text-xs text-slate-300">
-          Board votes:{" "}
-          <span className="font-semibold text-white/90">
-            {item.totalVotes} ({item.approveVotes} approve / {item.rejectVotes} reject)
-          </span>
-        </div>
+            <div className="text-xs text-slate-300">
+              Board votes:{" "}
+              <span className="font-semibold text-white/90">
+                {item.totalVotes} ({item.approveVotes} approve / {item.rejectVotes} reject)
+              </span>
+            </div>
+          </>
+        ) : (
+          <div className="text-xs text-slate-400">
+            Vote details for later stages are tracked from the interview flow.
+          </div>
+        )}
 
         <div className="flex items-center gap-2 text-slate-300">
           <span className="text-xs">Open</span>

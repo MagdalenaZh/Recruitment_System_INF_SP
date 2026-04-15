@@ -4,13 +4,13 @@ import { BoardSectionNav } from "../components/BoardSectionNav";
 import { InterviewDetailsDrawer } from "../components/InterviewDetailsDrawer";
 import { InterviewDecisionConfirmModal } from "../components/InterviewDecisionConfirmModal";
 import { InterviewPhaseBadge } from "../components/InterviewPhaseBadge";
+import { useBoardDepartments } from "../hooks/useBoardDepartments";
 import { useBoardInterviews } from "../hooks/useBoardInterviews";
 import type { BoardInterviewSlot, FinalInterviewDecision } from "../types/boardTypes";
 import {
   filterSlotsByDepartment,
   getCurrentInterview,
   getDecisionProgressLabel,
-  getDepartmentStats,
   getNextInterview,
   getSlotPhase,
   groupSlotsByDate,
@@ -26,6 +26,7 @@ type PendingDecisionRequest = {
 
 export function BoardInterviewsHomePage() {
   const { slots, clubName, loading, error, load, addNote, submitDecision } = useBoardInterviews();
+  const { data: departmentStats } = useBoardDepartments();
   const [departmentFilter, setDepartmentFilter] = useState("all");
   const [selectedSlotId, setSelectedSlotId] = useState<string | null>(null);
   const [pendingDecision, setPendingDecision] = useState<PendingDecisionRequest>(null);
@@ -41,7 +42,6 @@ export function BoardInterviewsHomePage() {
     [slots, departmentFilter],
   );
   const groupedSlots = useMemo(() => groupSlotsByDate(filteredSlots), [filteredSlots]);
-  const departmentStats = useMemo(() => getDepartmentStats(slots), [slots]);
   const currentInterview = useMemo(() => getCurrentInterview(filteredSlots), [filteredSlots]);
   const nextInterview = useMemo(() => getNextInterview(filteredSlots), [filteredSlots]);
   const selectedSlot = slots.find((slot) => slot.id === selectedSlotId) ?? null;
@@ -182,7 +182,16 @@ export function BoardInterviewsHomePage() {
                       <div className="flex items-start justify-between gap-4">
                         <div>
                           <h3 className="text-xl font-semibold text-white">{department.departmentName}</h3>
-                          <p className="mt-2 text-sm text-slate-300">
+                          <p
+                            className={[
+                              "mt-2 text-sm",
+                              department.approvedCount > department.targetSpots
+                                ? "text-rose-300"
+                                : department.approvedCount === department.targetSpots
+                                  ? "text-emerald-300"
+                                  : "text-sky-300",
+                            ].join(" ")}
+                          >
                             {department.approvedCount} / {department.targetSpots} approved
                           </p>
                         </div>

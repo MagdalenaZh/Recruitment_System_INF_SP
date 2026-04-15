@@ -39,6 +39,12 @@ export async function getLatestApplicationStates(
   return getCachedLatestStates(applicationIds);
 }
 
+export function primeLatestApplicationStates(
+  states: LatestApplicationStateResponse[],
+): void {
+  cacheLatestStates(states);
+}
+
 // All clubs in the system.
 export async function getAllClubs(): Promise<ClubDto[]> {
   return apiGet(`/api/recruitmentInfo/api/clubs`);

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 type Props = {
   initialQuestions: string[];
@@ -16,6 +16,10 @@ export function ApplicationQuestionsManager({
   const [error, setError] = useState<string | null>(null);
 
   const trimmedNewQuestion = useMemo(() => newQuestion.trim(), [newQuestion]);
+
+  useEffect(() => {
+    setQuestions(initialQuestions);
+  }, [initialQuestions]);
 
   function addQuestion() {
     if (!trimmedNewQuestion) return;

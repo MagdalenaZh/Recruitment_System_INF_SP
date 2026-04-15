@@ -28,6 +28,10 @@ import type {
 } from "../../../types/account/accountApplications";
 import type { ApplicationStage } from "../../../types/account/applicationStage";
 
+function shouldHydrateLatestState(applicationStatus: number): boolean {
+  return applicationStatus !== 4 && applicationStatus !== 5;
+}
+
 function mapApplicationStatusToStage(status: number): ApplicationStage {
   switch (status) {
     case 1:
@@ -165,7 +169,9 @@ export function useAccountApplications() {
         setApplications(mapped);
 
         const stateSnapshots = await getLatestApplicationStates(
-          mapped.map((application) => application.id),
+          userApplications
+            .filter((application) => shouldHydrateLatestState(application.applicationStatus))
+            .map((application) => application.applicationId),
         );
 
         setLatestStates(() => {

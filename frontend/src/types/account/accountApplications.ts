@@ -13,6 +13,7 @@ export type ClubDto = {
   clubName: string;
   description?: string;
   category?: string;
+  requiredApprovals?: number;
 };
 
 export type DepartmentDto = {

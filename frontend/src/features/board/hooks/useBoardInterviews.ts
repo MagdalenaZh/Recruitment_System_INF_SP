@@ -11,9 +11,12 @@ import {
   isAfterInterviewReviewState,
   isConcludedApplicationState,
   isHibernatedApplicationState,
+  isApprovedApplicationState,
+  isProcessingApplicationState,
   type LatestApplicationStateResponse,
 } from "../../../services/applications/applicationStateTypes";
 import type {
+  BoardInterviewDepartmentStats,
   BoardInterviewSlot,
   BoardInterviewNote,
   FinalInterviewDecision,
@@ -43,8 +46,19 @@ function deriveFinalDecision(
   return null;
 }
 
+function deriveFinalDecisionFromStatus(applicationStatus: number): FinalInterviewDecision | null {
+  if (applicationStatus === 5) return "Approved";
+  if (applicationStatus === 4) return "Rejected";
+  return null;
+}
+
+function shouldHydrateLatestState(applicationStatus: number): boolean {
+  return applicationStatus !== 4 && applicationStatus !== 5;
+}
+
 export function useBoardInterviews() {
   const [slots, setSlots] = useState<BoardInterviewSlot[]>([]);
+  const [departmentStats, setDepartmentStats] = useState<BoardInterviewDepartmentStats[]>([]);
   const [clubName, setClubName] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -69,8 +83,22 @@ export function useBoardInterviews() {
           });
 
           let roundTwoDecision = entry.roundTwoDecision;
+          let roundTwoApproveVotes = entry.roundTwoApproveVotes;
+          let roundTwoRejectVotes = entry.roundTwoRejectVotes;
+          let requiredApprovals = entry.requiredApprovals;
 
           if (isAfterInterviewReviewState(state) && currentUserId) {
+            let approveVotes = 0;
+            let rejectVotes = 0;
+            for (const vote of Object.values(state.userDecisionsMap)) {
+              if (vote === true) approveVotes += 1;
+              else if (vote === false) rejectVotes += 1;
+            }
+
+            roundTwoApproveVotes = approveVotes;
+            roundTwoRejectVotes = rejectVotes;
+            requiredApprovals = state.requiredNumberOfApprovals;
+
             const userVote = Object.entries(state.userDecisionsMap).find(
               ([userId]) => userId.toLowerCase() === currentUserId.toLowerCase(),
             )?.[1];
@@ -89,6 +117,9 @@ export function useBoardInterviews() {
           return {
             ...entry,
             roundTwoDecision,
+            roundTwoApproveVotes,
+            roundTwoRejectVotes,
+            requiredApprovals,
             finalDecision: finalDecision ?? entry.finalDecision,
           };
         }),
@@ -135,9 +166,16 @@ export function useBoardInterviews() {
         }
       }
 
-      const bookedAppIds = matchedSlots.map(({ app }) => app.applicationId);
-      const latestStates = bookedAppIds.length > 0
-        ? await getLatestApplicationStates(bookedAppIds).catch((hydrateError) => {
+      const currentClub = allClubs.find((c) => c.clubId === clubId);
+      const clubRequiredApprovals = currentClub?.requiredApprovals ?? 0;
+
+      const hydratableBookedAppIds = matchedSlots
+        .map(({ app }) => app)
+        .filter((app) => shouldHydrateLatestState(app.applicationStatus))
+        .map((app) => app.applicationId);
+
+      const latestStates = hydratableBookedAppIds.length > 0
+        ? await getLatestApplicationStates(hydratableBookedAppIds).catch((hydrateError) => {
             console.error("[useBoardInterviews] latest-state hydration failed", hydrateError);
             return [] as LatestApplicationStateResponse[];
           })
@@ -152,6 +190,8 @@ export function useBoardInterviews() {
         deptMap[department.departmentId] = department.departmentName;
         deptTargetMap[department.departmentId] = department.numberOfOpenPositions;
       }
+
+      const bookedApplicationIds = new Set(bookedSlots.map((slot) => slot.applicationId));
 
       const builtSlots: BoardInterviewSlot[] = matchedSlots.map(({ slot, app }) => {
         const user = userInfoMap[app.userId];
@@ -185,8 +225,19 @@ export function useBoardInterviews() {
               departmentId: app.departmentId,
               departmentName: deptMap[app.departmentId] ?? "Unknown",
               roundOneStatus: "Approved",
-              roundTwoDecision: null,
-              finalDecision: deriveFinalDecision(app.applicationId, stateMap),
+              roundTwoDecision:
+                app.applicationStatus === 5 || app.applicationStatus === 6
+                  ? "Approved"
+                  : null,
+              finalDecision:
+                deriveFinalDecision(app.applicationId, stateMap) ??
+                deriveFinalDecisionFromStatus(app.applicationStatus),
+              roundTwoApproveVotes:
+                app.applicationStatus === 5 || app.applicationStatus === 6
+                  ? Math.max(clubRequiredApprovals, 1)
+                  : 0,
+              roundTwoRejectVotes: 0,
+              requiredApprovals: clubRequiredApprovals,
               targetSpots: deptTargetMap[app.departmentId] ?? 0,
             },
           ],
@@ -199,9 +250,81 @@ export function useBoardInterviews() {
       });
 
       setSlots(hydratedSlots);
+      setDepartmentStats(
+        departments
+          .map((department) => {
+            const departmentApplications = allApplications.filter(
+              (application) => application.departmentId === department.departmentId,
+            );
+
+            let approvedCount = 0;
+            let rejectedCount = 0;
+            let pendingCount = 0;
+
+            for (const application of departmentApplications) {
+              const live = stateMap[application.applicationId];
+
+              if (live && isConcludedApplicationState(live)) {
+                if (live.conclusionResult === 4) rejectedCount += 1;
+                else approvedCount += 1;
+                continue;
+              }
+
+              if (live && isAfterInterviewReviewState(live)) {
+                if (
+                  live.currentNumberOfPostInterviewApprovals >=
+                  live.requiredNumberOfApprovals
+                ) {
+                  approvedCount += 1;
+                } else {
+                  pendingCount += 1;
+                }
+                continue;
+              }
+
+              if (live && isHibernatedApplicationState(live)) {
+                approvedCount += 1;
+                continue;
+              }
+
+              if (bookedApplicationIds.has(application.applicationId)) {
+                pendingCount += 1;
+                continue;
+              }
+
+              if (live && isApprovedApplicationState(live)) {
+                approvedCount += 1;
+                continue;
+              }
+
+              if (live && isProcessingApplicationState(live)) {
+                pendingCount += 1;
+                continue;
+              }
+
+              if (application.applicationStatus === 4) rejectedCount += 1;
+              else if (application.applicationStatus === 3) approvedCount += 1;
+              else pendingCount += 1;
+            }
+
+            return {
+              departmentId: department.departmentId,
+              departmentName: department.departmentName,
+              totalApplicants: departmentApplications.length,
+              approvedCount,
+              rejectedCount,
+              pendingCount,
+              targetSpots: department.numberOfOpenPositions,
+            };
+          })
+          .sort((left, right) =>
+            left.departmentName.localeCompare(right.departmentName),
+          ),
+      );
     } catch (e) {
       setError(e instanceof Error ? e.message : "Unknown error");
       setSlots([]);
+      setDepartmentStats([]);
       setClubName("");
     } finally {
       setLoading(false);
@@ -279,5 +402,15 @@ export function useBoardInterviews() {
     });
   }, [applicationIdsKey, clientId, applyLiveStateToSlot]);
 
-  return { slots, setSlots, clubName, loading, error, load, addNote, submitDecision };
+  return {
+    slots,
+    setSlots,
+    departmentStats,
+    clubName,
+    loading,
+    error,
+    load,
+    addNote,
+    submitDecision,
+  };
 }

@@ -23,6 +23,8 @@ import { ClubAdminHomePage } from "./features/clubAdmin/pages/ClubAdminHomePage.
 import { ClubAdminApplicationDetailPage } from "./features/clubAdmin/pages/ClubAdminApplicationDetailPage.tsx";
 import { ClubAdminClubInfoPage } from "./features/clubAdmin/pages/ClubAdminClubInfoPage.tsx";
 import { ClubAdminApplicationManagementPage } from "./features/clubAdmin/pages/ClubAdminApplicationManagementPage.tsx";
+import { ClubAdminInterviewSlotsPage } from "./features/clubAdmin/pages/ClubAdminInterviewSlotsPage.tsx";
+import { ClubAdminFinalDecisionsPage } from "./features/clubAdmin/pages/ClubAdminFinalDecisionsPage.tsx";
 
 import { SystemAdminLayout } from "./features/sysAdmin/pages/SystemAdminLayout.tsx";
 import { SystemAdminDashboardPage } from "./features/sysAdmin/pages/SystemAdminDashboardPage.tsx";
@@ -126,6 +128,22 @@ export default function App() {
         element={
           <ProtectedRoute>
             <ClubAdminClubInfoPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/club-admin/interview-slots"
+        element={
+          <ProtectedRoute>
+            <ClubAdminInterviewSlotsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/club-admin/final-decisions"
+        element={
+          <ProtectedRoute>
+            <ClubAdminFinalDecisionsPage />
           </ProtectedRoute>
         }
       />

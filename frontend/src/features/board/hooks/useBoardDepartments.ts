@@ -13,10 +13,21 @@ import type { UserApplicationDto, DepartmentDto } from "../../../types/account/a
 import type { LatestApplicationStateResponse } from "../../../services/applications/applicationStateTypes";
 import type { BoardDepartment } from "../types/boardTypes";
 import { inferStatusFromUpdate, normalizeBaseStatus } from "../utils/applicationLiveState";
+import {
+  isAfterInterviewReviewState,
+  isApprovedApplicationState,
+  isConcludedApplicationState,
+  isHibernatedApplicationState,
+} from "../../../services/applications/applicationStateTypes";
+
+function shouldHydrateLatestState(applicationStatus: number): boolean {
+  return applicationStatus !== 4 && applicationStatus !== 5;
+}
 
 export function useBoardDepartments() {
   const [departments, setDepartments] = useState<DepartmentDto[]>([]);
   const [applications, setApplications] = useState<UserApplicationDto[]>([]);
+  const [bookedApplicationIds, setBookedApplicationIds] = useState<Set<string>>(new Set());
   const [clubName, setClubName] = useState("");
   const [liveUpdates, setLiveUpdates] = useState<Record<string, LatestApplicationStateResponse>>({});
   const [loading, setLoading] = useState(true);
@@ -31,18 +42,22 @@ export function useBoardDepartments() {
       const clubId = resolveCurrentBoardClubId();
       if (!clubId) throw new Error("No club assigned to this board member.");
 
-      const [departmentsResponse, applicationsResponse, allClubs] = await Promise.all([
+      const [departmentsResponse, applicationsResponse, allClubs, bookedSlots] = await Promise.all([
         getDepartmentsForClub(clubId),
         boardApi.getApplicationsByClub(clubId),
         getAllClubs(),
+        boardApi.getBookedInterviewSlots(clubId),
       ]);
 
       setDepartments(departmentsResponse);
       setApplications(applicationsResponse);
+      setBookedApplicationIds(new Set(bookedSlots.map((slot) => slot.applicationId)));
       setClubName(allClubs.find((c) => c.clubId === clubId)?.clubName ?? "");
 
       const stateSnapshots = await getLatestApplicationStates(
-        applicationsResponse.map((a) => a.applicationId),
+        applicationsResponse
+          .filter((application) => shouldHydrateLatestState(application.applicationStatus))
+          .map((application) => application.applicationId),
       ).catch((hydrateError) => {
         console.error("[useBoardDepartments] latest-state hydration failed", hydrateError);
         return [] as LatestApplicationStateResponse[];
@@ -57,6 +72,7 @@ export function useBoardDepartments() {
       setError(e instanceof Error ? e.message : "Unknown error");
       setDepartments([]);
       setApplications([]);
+      setBookedApplicationIds(new Set());
       setClubName("");
       setLiveUpdates({});
     } finally {
@@ -99,9 +115,31 @@ export function useBoardDepartments() {
             ? (inferStatusFromUpdate(live) ?? normalizeBaseStatus(app.applicationStatus))
             : normalizeBaseStatus(app.applicationStatus);
 
-          if (status === "Approved" || status === "InterviewPending") acc.approvedCount += 1;
-          else if (status === "Rejected") acc.rejectedCount += 1;
-          else acc.pendingCount += 1;
+          if (live && isConcludedApplicationState(live)) {
+            if (live.conclusionResult === 4) acc.rejectedCount += 1;
+            else acc.approvedCount += 1;
+          } else if (live && isAfterInterviewReviewState(live)) {
+            if (
+              live.currentNumberOfPostInterviewApprovals >=
+              live.requiredNumberOfApprovals
+            ) {
+              acc.approvedCount += 1;
+            } else {
+              acc.pendingCount += 1;
+            }
+          } else if (live && isHibernatedApplicationState(live)) {
+            acc.approvedCount += 1;
+          } else if (bookedApplicationIds.has(app.applicationId)) {
+            acc.pendingCount += 1;
+          } else if (live && isApprovedApplicationState(live)) {
+            acc.approvedCount += 1;
+          } else if (status === "Approved" || status === "InterviewPending") {
+            acc.approvedCount += 1;
+          } else if (status === "Rejected") {
+            acc.rejectedCount += 1;
+          } else {
+            acc.pendingCount += 1;
+          }
 
           return acc;
         },
@@ -120,7 +158,7 @@ export function useBoardDepartments() {
         pendingCount: counts.pendingCount,
       };
     });
-  }, [departments, applications, liveUpdates]);
+  }, [departments, applications, bookedApplicationIds, liveUpdates]);
 
   return { data, clubName, loading, error, refetch: load };
 }
