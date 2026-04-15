@@ -1,5 +1,6 @@
 using AppilicationProcesserAPI;
 using AppilicationProcesserAPI.Configurations;
+using AppilicationProcesserAPI.Security;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
@@ -21,6 +22,7 @@ builder.Services.ConfigurePersistance();
 builder.Services.ConfigureCalendarProvider();
 builder.Services.ConfigureAggregateManagment();
 builder.Services.ConfigureMessageBus();
+builder.Services.AddScoped<IAuthorizationScopeService, AuthorizationScopeService>();
 
 builder.Services.AddCors(options =>
 {

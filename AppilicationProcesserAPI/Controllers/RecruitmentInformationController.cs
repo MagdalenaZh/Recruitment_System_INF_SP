@@ -1,7 +1,8 @@
-﻿using AppilicationProcesserAPI.AggregateStates;
+using AppilicationProcesserAPI.AggregateStates;
 using AppilicationProcesserAPI.Models;
 using AppilicationProcesserAPI.PersistanceServices;
 using AppilicationProcesserAPI.Representations;
+using AppilicationProcesserAPI.Security;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -15,15 +16,22 @@ namespace AppilicationProcesserAPI.Controllers
         private readonly IRecruitmentDataProvider _recruitmentDataProvider;
         private readonly ISystemManagementProvider _systemManagementProvider;
         private readonly ICalendarProvider _calendarProvider;
+        private readonly IAuthorizationScopeService _authorizationScopeService;
         private readonly ILogger<RecruitmentInformationController> _logger;
 
-        public RecruitmentInformationController(IAggregateReconstructor aggregateReconstructor, IRecruitmentDataProvider recruitmentDataProvider,
-            ISystemManagementProvider systemManagementProvider, ICalendarProvider calendarProvider, ILogger<RecruitmentInformationController> logger)
+        public RecruitmentInformationController(
+            IAggregateReconstructor aggregateReconstructor,
+            IRecruitmentDataProvider recruitmentDataProvider,
+            ISystemManagementProvider systemManagementProvider,
+            ICalendarProvider calendarProvider,
+            IAuthorizationScopeService authorizationScopeService,
+            ILogger<RecruitmentInformationController> logger)
         {
             _aggregateReconstructor = aggregateReconstructor;
             _recruitmentDataProvider = recruitmentDataProvider;
             _systemManagementProvider = systemManagementProvider;
             _calendarProvider = calendarProvider;
+            _authorizationScopeService = authorizationScopeService;
             _logger = logger;
         }
 
@@ -31,6 +39,11 @@ namespace AppilicationProcesserAPI.Controllers
         [HttpGet("api/user-information/{userId}")]
         public async Task<ActionResult<UserDatabaseModel>> GetUserInformation([FromRoute] Guid userId, CancellationToken cancellationToken)
         {
+            if (!await _authorizationScopeService.CanAccessUserAsync(User, userId, cancellationToken).ConfigureAwait(false))
+            {
+                return Forbid();
+            }
+
             try
             {
                 var userInfo = await _recruitmentDataProvider.GetApplicantUserInformationAsync(userId, cancellationToken).ConfigureAwait(false);
@@ -53,6 +66,11 @@ namespace AppilicationProcesserAPI.Controllers
         [HttpPost("api/latest-application-states")]
         public async Task<ActionResult<List<IStateRepresentation>>> GetLatestApplicationStates([FromBody] List<Guid> applicationIds, CancellationToken cancellationToken)
         {
+            if (!await _authorizationScopeService.CanAccessLatestApplicationStatesAsync(User, applicationIds, cancellationToken).ConfigureAwait(false))
+            {
+                return Forbid();
+            }
+
             try
             {
                 var representations = await _aggregateReconstructor.GetLatestAggregateStates(applicationIds, cancellationToken).ConfigureAwait(false);
@@ -61,7 +79,7 @@ namespace AppilicationProcesserAPI.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error retrieving latest application states");
-               return BadRequest();
+                return BadRequest();
             }
         }
 
@@ -80,79 +98,109 @@ namespace AppilicationProcesserAPI.Controllers
             }
         }
 
+        [Authorize]
         [HttpGet("api/booked-interview-slots/{clubId}")]
-        public async Task<List<BookedInterviewSlot>> GetBookedInterviewSlotsForClub([FromRoute] Guid clubId, CancellationToken cancellationToken)
+        public async Task<ActionResult<List<BookedInterviewSlot>>> GetBookedInterviewSlotsForClub([FromRoute] Guid clubId, CancellationToken cancellationToken)
         {
+            if (!await _authorizationScopeService.CanAccessApplicationsForClubAsync(User, clubId, cancellationToken).ConfigureAwait(false))
+            {
+                return Forbid();
+            }
+
             try
             {
                 var slots = await _calendarProvider.GetBookedInterviewSlotsForClubAsync(clubId, cancellationToken).ConfigureAwait(false);
-                return slots;
+                return Ok(slots);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error retrieving booked interview slots for ClubId: {ClubId}", clubId);
-                throw new Exception("An error occurred while retrieving booked interview slots for the club.");
+                return StatusCode(500, new { message = "An error occurred while retrieving booked interview slots for the club." });
             }
         }
 
-
+        [Authorize]
         [HttpGet("api/applications-user/{userId}")]
-        public async Task<List<ApplicationDatabaseModel>> GetAllApplicationsForUser([FromRoute] Guid userId, CancellationToken cancellationToken)
+        public async Task<ActionResult<List<ApplicationDatabaseModel>>> GetAllApplicationsForUser([FromRoute] Guid userId, CancellationToken cancellationToken)
         {
+            if (!await _authorizationScopeService.CanAccessApplicationsForUserAsync(User, userId, cancellationToken).ConfigureAwait(false))
+            {
+                return Forbid();
+            }
+
             try
             {
                 var applications = await _recruitmentDataProvider.GetAllApplicationsForUserAsync(userId, cancellationToken).ConfigureAwait(false);
-                return applications;
+                return Ok(applications);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error retrieving applications for UserId: {UserId}", userId);
-                throw new Exception("An error occurred while retrieving applications for the user.");
+                return StatusCode(500, new { message = "An error occurred while retrieving applications for the user." });
             }
         }
 
+        [Authorize]
         [HttpGet("api/user-rights/{userId}")]
-        public async Task<UserRightsDatabaseModel> GetUserRights([FromRoute] Guid userId, CancellationToken cancellationToken)
+        public async Task<ActionResult<UserRightsDatabaseModel>> GetUserRights([FromRoute] Guid userId, CancellationToken cancellationToken)
         {
+            var currentUserId = _authorizationScopeService.GetCurrentUserId(User);
+            if (!_authorizationScopeService.IsSystemAdmin(User) && currentUserId != userId)
+            {
+                return Forbid();
+            }
+
             try
             {
                 var userRights = await _recruitmentDataProvider.GetUserRightsAsync(userId, cancellationToken).ConfigureAwait(false);
-                return userRights;
+                return Ok(userRights);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error retrieving user rights for UserId: {UserId}", userId);
-                throw new Exception("An error occurred while retrieving user rights.");
+                return StatusCode(500, new { message = "An error occurred while retrieving user rights." });
             }
         }
 
+        [Authorize]
         [HttpGet("api/applications-department/{departmentId}")]
-        public async Task<List<ApplicationDatabaseModel>> GetAllApplicationsForDepartment([FromRoute] Guid departmentId, CancellationToken cancellationToken)
+        public async Task<ActionResult<List<ApplicationDatabaseModel>>> GetAllApplicationsForDepartment([FromRoute] Guid departmentId, CancellationToken cancellationToken)
         {
+            if (!await _authorizationScopeService.CanAccessApplicationsForDepartmentAsync(User, departmentId, cancellationToken).ConfigureAwait(false))
+            {
+                return Forbid();
+            }
+
             try
             {
                 var applications = await _recruitmentDataProvider.GetAllApplicationsForDepartmentAsync(departmentId, cancellationToken).ConfigureAwait(false);
-                return applications;
+                return Ok(applications);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error retrieving applications for DepartmentId: {DepartmentId}", departmentId);
-                throw new Exception("An error occurred while retrieving applications for the department.");
+                return StatusCode(500, new { message = "An error occurred while retrieving applications for the department." });
             }
         }
 
+        [Authorize]
         [HttpGet("api/applications-club/{clubId}")]
-        public async Task<List<ApplicationDatabaseModel>> GetAllApplicationsForClub([FromRoute] Guid clubId, CancellationToken cancellationToken)
+        public async Task<ActionResult<List<ApplicationDatabaseModel>>> GetAllApplicationsForClub([FromRoute] Guid clubId, CancellationToken cancellationToken)
         {
+            if (!await _authorizationScopeService.CanAccessApplicationsForClubAsync(User, clubId, cancellationToken).ConfigureAwait(false))
+            {
+                return Forbid();
+            }
+
             try
             {
                 var applications = await _recruitmentDataProvider.GetAllApplicationsForClubAsync(clubId, cancellationToken).ConfigureAwait(false);
-                return applications;
+                return Ok(applications);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error retrieving applications for ClubId: {ClubId}", clubId);
-                throw new Exception("An error occurred while retrieving applications for the club.");
+                return StatusCode(500, new { message = "An error occurred while retrieving applications for the club." });
             }
         }
 
@@ -186,16 +234,18 @@ namespace AppilicationProcesserAPI.Controllers
             }
         }
 
+        [Authorize]
         [HttpPost("api/create-club")]
         public async Task<IActionResult> CreateClub([FromBody] CreateClubRequest request, CancellationToken cancellationToken)
         {
+            if (!_authorizationScopeService.IsSystemAdmin(User))
+            {
+                return Forbid();
+            }
+
             try
             {
-                await _systemManagementProvider.CreateClubAsync(
-                    request.ClubName,
-                    request.Category,
-                    cancellationToken
-                ).ConfigureAwait(false);
+                await _systemManagementProvider.CreateClubAsync(request.ClubName, request.Category, cancellationToken).ConfigureAwait(false);
                 return Ok(new { message = "Club created successfully." });
             }
             catch (Exception ex)
@@ -205,9 +255,15 @@ namespace AppilicationProcesserAPI.Controllers
             }
         }
 
+        [Authorize]
         [HttpPost("api/create-department")]
         public async Task<IActionResult> CreateDepartment([FromBody] CreateDepartmentRequest request, CancellationToken cancellationToken)
         {
+            if (!await _authorizationScopeService.CanCreateDepartmentAsync(User, request.ClubId, cancellationToken).ConfigureAwait(false))
+            {
+                return Forbid();
+            }
+
             try
             {
                 await _systemManagementProvider.CreateDepartmentAsync(request.ClubId, request.DepartmentName, request.NumberOfOpenPositions, request.Description, cancellationToken).ConfigureAwait(false);
@@ -220,9 +276,15 @@ namespace AppilicationProcesserAPI.Controllers
             }
         }
 
+        [Authorize]
         [HttpPost("api/create-interview-slot")]
         public async Task<IActionResult> CreateInterviewSlot([FromBody] CreateInterviewSlotRequest request, CancellationToken cancellationToken)
         {
+            if (!await _authorizationScopeService.CanCreateInterviewSlotAsync(User, request.ClubId, cancellationToken).ConfigureAwait(false))
+            {
+                return Forbid();
+            }
+
             try
             {
                 await _systemManagementProvider.CreateInterviewSlot(request.ClubId, request.StartTime, request.EndTime, cancellationToken).ConfigureAwait(false);
@@ -235,13 +297,25 @@ namespace AppilicationProcesserAPI.Controllers
             }
         }
 
+        [Authorize]
         [HttpPut("api/update-club-information/{clubId}")]
         public async Task<IActionResult> UpdateAdmissionQuestions([FromRoute] Guid clubId, [FromBody] UpdateClubRequest updateClubRequest, CancellationToken cancellationToken)
         {
+            if (!await _authorizationScopeService.CanManageClubAsync(User, clubId, cancellationToken).ConfigureAwait(false))
+            {
+                return Forbid();
+            }
+
             try
             {
-                await _systemManagementProvider.UpdateClubInformationAsync(clubId, updateClubRequest.ClubName, updateClubRequest.ApplicationQuestions,
-                    updateClubRequest.RequiredApprovals, updateClubRequest.Description, updateClubRequest.Category, cancellationToken).ConfigureAwait(false);
+                await _systemManagementProvider.UpdateClubInformationAsync(
+                    clubId,
+                    updateClubRequest.ClubName,
+                    updateClubRequest.ApplicationQuestions,
+                    updateClubRequest.RequiredApprovals,
+                    updateClubRequest.Description,
+                    updateClubRequest.Category,
+                    cancellationToken).ConfigureAwait(false);
                 return Ok(new { message = "Admission questions updated successfully." });
             }
             catch (Exception ex)
@@ -251,13 +325,23 @@ namespace AppilicationProcesserAPI.Controllers
             }
         }
 
+        [Authorize]
         [HttpPut("api/update-department-information/{departmentId}")]
         public async Task<IActionResult> UpdateOpenPositionsForDepartment([FromRoute] Guid departmentId, [FromBody] UpdateDepartmentRequest updateDepartmentRequest, CancellationToken cancellationToken)
         {
+            if (!await _authorizationScopeService.CanManageDepartmentAsync(User, departmentId, cancellationToken).ConfigureAwait(false))
+            {
+                return Forbid();
+            }
+
             try
             {
-                await _systemManagementProvider.UpdateDepartmentInformationAsync(departmentId, updateDepartmentRequest.DepartmentName, updateDepartmentRequest.NumberOfOpenPositions,
-                    updateDepartmentRequest.Description, cancellationToken).ConfigureAwait(false);
+                await _systemManagementProvider.UpdateDepartmentInformationAsync(
+                    departmentId,
+                    updateDepartmentRequest.DepartmentName,
+                    updateDepartmentRequest.NumberOfOpenPositions,
+                    updateDepartmentRequest.Description,
+                    cancellationToken).ConfigureAwait(false);
                 return Ok(new { message = "Number of open positions updated successfully." });
             }
             catch (Exception ex)
@@ -267,10 +351,15 @@ namespace AppilicationProcesserAPI.Controllers
             }
         }
 
-
+        [Authorize]
         [HttpPut("api/update-interview-slot/{slotId}")]
         public async Task<IActionResult> UpdateInterviewSlot([FromRoute] Guid slotId, [FromBody] SlotTimes slotTime, CancellationToken cancellationToken)
         {
+            if (!await _authorizationScopeService.CanManageInterviewSlotAsync(User, slotId, cancellationToken).ConfigureAwait(false))
+            {
+                return Forbid();
+            }
+
             try
             {
                 await _systemManagementProvider.UpdateInterviewSlotAsync(slotId, slotTime.StartTime, slotTime.EndTime, cancellationToken).ConfigureAwait(false);
@@ -283,9 +372,15 @@ namespace AppilicationProcesserAPI.Controllers
             }
         }
 
+        [Authorize]
         [HttpPut("api/update-user-role/{userId}")]
         public async Task<IActionResult> UpdateUserRole([FromRoute] Guid userId, [FromBody] Guid roleId, CancellationToken cancellationToken)
         {
+            if (!_authorizationScopeService.IsSystemAdmin(User))
+            {
+                return Forbid();
+            }
+
             try
             {
                 await _systemManagementProvider.UpdateUserRole(userId, roleId, cancellationToken).ConfigureAwait(false);
@@ -298,9 +393,15 @@ namespace AppilicationProcesserAPI.Controllers
             }
         }
 
+        [Authorize]
         [HttpPut("api/update-user-promote-club-admin/{userId}")]
         public async Task<IActionResult> PromoteUserToClubAdmin([FromRoute] Guid userId, [FromBody] Guid clubId, CancellationToken cancellationToken)
         {
+            if (!_authorizationScopeService.IsSystemAdmin(User))
+            {
+                return Forbid();
+            }
+
             try
             {
                 await _systemManagementProvider.UpdateUserPromoteToClubAdminAsync(userId, clubId, cancellationToken).ConfigureAwait(false);
@@ -311,7 +412,6 @@ namespace AppilicationProcesserAPI.Controllers
                 _logger.LogError(ex, "Error promoting user with UserId: {UserId} to club admin for ClubId: {ClubId}", userId, clubId);
                 return StatusCode(500, "An error occurred while promoting the user to club admin.");
             }
-        } 
+        }
     }
 }
-

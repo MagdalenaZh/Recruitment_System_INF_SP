@@ -50,6 +50,18 @@ export function ClubAdminClubInfoPage() {
     setRequiredApprovals(Math.max(1, data.requiredApprovals || 1));
   }, [data]);
 
+  useEffect(() => {
+    if (!message) return;
+
+    const timeout = window.setTimeout(() => setMessage(null), 3500);
+    return () => window.clearTimeout(timeout);
+  }, [message]);
+
+  useEffect(() => {
+    setMessage(null);
+    setSaveError(null);
+  }, [clubName, description, category, requiredApprovals]);
+
   async function handleSaveClubInfo() {
     if (!data) return;
 
@@ -204,6 +216,18 @@ export function ClubAdminClubInfoPage() {
                 </div>
 
                 <div className="mt-5 flex flex-wrap justify-end gap-3">
+                  <div className="mr-auto flex min-h-10 items-center" aria-live="polite">
+                    {message ? (
+                      <div className="rounded-xl border border-emerald-300/20 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-200">
+                        {message}
+                      </div>
+                    ) : null}
+                    {saveError ? (
+                      <div className="rounded-xl border border-rose-300/20 bg-rose-500/10 px-3 py-2 text-sm text-rose-200">
+                        {saveError}
+                      </div>
+                    ) : null}
+                  </div>
                   <button
                     type="button"
                     onClick={() => {
@@ -277,9 +301,6 @@ export function ClubAdminClubInfoPage() {
                   />
                 ))}
               </div>
-
-              {message ? <div className="text-sm text-emerald-300">{message}</div> : null}
-              {saveError ? <div className="text-sm text-rose-300">{saveError}</div> : null}
             </div>
           ) : null}
         </div>
