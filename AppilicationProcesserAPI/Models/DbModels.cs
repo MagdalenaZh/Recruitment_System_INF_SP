@@ -133,4 +133,16 @@ namespace AppilicationProcesserAPI.Models
             Content = content;
         }
     }
+
+    public class RolesDatabaseModel 
+    {
+        public Guid RoleId { get; }
+        public string RoleName { get; }
+
+        public RolesDatabaseModel(Guid roleId, string roleName)
+        {
+            RoleId = roleId;
+            RoleName = roleName;
+        }
+    }
 }

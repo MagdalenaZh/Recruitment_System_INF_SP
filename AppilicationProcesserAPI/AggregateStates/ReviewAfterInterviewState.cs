@@ -37,7 +37,7 @@ namespace AppilicationProcesserAPI.AggregateStates
             ArgumentNullException.ThrowIfNull(domainEvent);
             if (domainEvent.AggregateId != _aggregateId) throw new InvalidOperationException($"Domain event with AggregateId {domainEvent.AggregateId} does not match the aggregate's ID");
 
-            if (domainEvent.Timestamp > _interviewSlot.EndTime)
+            if (domainEvent.Timestamp > _interviewSlot.StartTime)
             {
                 switch (domainEvent)
                 {

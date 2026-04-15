@@ -237,7 +237,7 @@ namespace AppilicationProcesserAPI.Controllers
 
         [Authorize]
         [HttpPost("api/create-club")]
-        public async Task<IActionResult> CreateClub([FromBody] CreateClubRequest request, CancellationToken cancellationToken)
+        public async Task<IActionResult> CreateClub([FromBody] DbRequestModels request, CancellationToken cancellationToken)
         {
             if (!_authorizationScopeService.IsSystemAdmin(User))
             {
@@ -466,6 +466,45 @@ namespace AppilicationProcesserAPI.Controllers
             {
                 _logger.LogError(ex, "Error updating note with NoteId: {NoteId}", noteId);
                 return StatusCode(500, "An error occurred while updating the note.");
+            }
+        }
+
+        [HttpPut("api/update-user-information")]
+        public async Task<IActionResult> UpdateUserInformation([FromBody] UpdateUserInformationRequest updateModel, CancellationToken cancellationToken)
+        {
+            if (User == null)
+                return Unauthorized();
+
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (userIdClaim == null)
+                return Unauthorized();
+
+            var userId = Guid.Parse(userIdClaim.Value);
+
+            try
+            {
+                await _systemManagementProvider.UpdateUserInformationAsync(userId, updateModel.FirstName, updateModel.LastName, updateModel.AcademicYear, updateModel.StudyMajor, cancellationToken).ConfigureAwait(false);
+                return Ok(new { message = "User information updated successfully." });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating user information for UserId: {UserId}", userId);
+                return StatusCode(500, "An error occurred while updating the user information.");
+            }
+        }
+
+        [HttpGet("api/roles")]
+        public async Task<ActionResult<List<RolesDatabaseModel>>> GetAllRoles(CancellationToken cancellationToken)
+        {
+            try
+            {
+                var roles = await _recruitmentDataProvider.GetAllRolesAsync(cancellationToken).ConfigureAwait(false);
+                return Ok(roles);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving roles");
+                return StatusCode(500, "An error occurred while retrieving roles.");
             }
         }
     }

@@ -24,6 +24,8 @@ namespace AppilicationProcesserAPI.PersistanceServices
         Task<UserRightsDatabaseModel> GetUserRightsAsync(Guid userId, CancellationToken cancellationToken);
 
         Task<List<NoteDatabaseModel>> GetAllNotesForApplicationAsync(Guid applicationId, CancellationToken cancellationToken);
+
+        Task<List<RolesDatabaseModel>> GetAllRolesAsync(CancellationToken cancellationToken);
     }
 
     public class RecruitmentDataProvider : IRecruitmentDataProvider
@@ -179,6 +181,25 @@ namespace AppilicationProcesserAPI.PersistanceServices
                 notes.Add(new NoteDatabaseModel(noteId, applicationId, userId, content));
             }
             return notes;
+        }
+
+        public async Task<List<RolesDatabaseModel>> GetAllRolesAsync(CancellationToken cancellationToken)
+        {
+            var roles = new List<RolesDatabaseModel>();
+            using var sqlConnection = new SqlConnection(_connectionString);
+            await sqlConnection.OpenAsync(cancellationToken).ConfigureAwait(false);
+
+            using var command = new SqlCommand(DbQueries.GetAllRoles, sqlConnection);
+            using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+
+            while (reader.Read())
+            {
+                var roleId = reader.GetGuid(0);
+                var roleName = reader.GetString(1);
+                roles.Add(new RolesDatabaseModel(roleId, roleName));
+            }
+
+            return roles;
         }
 
         public async Task<UserDatabaseModel?> GetApplicantUserInformationAsync(Guid userId, CancellationToken cancellationToken)

@@ -2,13 +2,13 @@
 
 namespace AppilicationProcesserAPI.Models
 {
-    public class CreateClubRequest
+    public class DbRequestModels
     {
         public string ClubName { get; }
 
         public ClubCategories Category { get; }
 
-        public CreateClubRequest(string clubName, ClubCategories category)
+        public DbRequestModels(string clubName, ClubCategories category)
         {
             ClubName = clubName;
             Category = category;
@@ -84,6 +84,21 @@ namespace AppilicationProcesserAPI.Models
         {
             StartTime = startTime;
             EndTime = endTime;
+        }
+    }
+
+    public class UpdateUserInformationRequest
+    {
+        public string FirstName { get; }
+        public string LastName { get; }
+        public string AcademicYear { get; }
+        public string StudyMajor { get; }
+        public UpdateUserInformationRequest(string firstName, string lastName, string academicYear, string studyMajor)
+        {
+            FirstName = firstName;
+            LastName = lastName;
+            AcademicYear = academicYear;
+            StudyMajor = studyMajor;
         }
     }
 }

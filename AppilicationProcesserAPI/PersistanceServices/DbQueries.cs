@@ -66,6 +66,8 @@
             """;
 
         internal const string GetAllNotesForApplication = "SELECT [NoteId], [UserId], [Payload] FROM [Notes] WHERE [ApplicationId] = @applicationId";
+
+        internal const string GetAllRoles = "SELECT [RoleId], [Name] FROM [Roles]";
         #endregion
 
         #region INSERT QUERIES
@@ -102,6 +104,8 @@
         internal const string UpdateUserDepartment = "UPDATE [Users] SET [DepartmentId] = @departmentId WHERE [UserId] = @userId";
 
         internal const string UpdateNote = "UPDATE [Notes] SET [Payload] = @payload WHERE [NoteId] = @noteId";
+
+        internal const string UpdateUserInformation = "UPDATE [Users] SET [FirstName] = @firstName, [LastName] = @lastName, [AcademicYear] = @academicYear, [StudyMajor] = @studyMajor WHERE [UserId] = @userId";
         #endregion
     }
 }

@@ -1,5 +1,4 @@
-﻿using AppilicationProcesserAPI.MessageQueue;
-using Microsoft.Data.SqlClient;
+﻿using Microsoft.Data.SqlClient;
 using System.Text.Json;
 
 namespace AppilicationProcesserAPI.PersistanceServices
@@ -18,6 +17,7 @@ namespace AppilicationProcesserAPI.PersistanceServices
 
         Task UpdateUserRoleAsync(Guid userId, Guid roleId, CancellationToken cancellationToken);
         Task UpdateUserPromoteToClubAdminAsync(Guid userId, Guid clubId, CancellationToken cancellationToken);
+        Task UpdateUserInformationAsync(Guid userId, string firstName, string lastName, string academicYear, string studyMajor, CancellationToken cancellationToken);
     }
 
     public class SystemManagementProvider : ISystemManagementProvider
@@ -300,6 +300,33 @@ namespace AppilicationProcesserAPI.PersistanceServices
             }
 
             throw new Exception($"Role '{roleName}' not found.");
+        }
+
+        public async Task UpdateUserInformationAsync(Guid userId, string firstName, string lastName, string academicYear, string major, CancellationToken cancellationToken)
+        {
+            using var sqlConnection = new SqlConnection(_connectionString);
+            await sqlConnection.OpenAsync(cancellationToken).ConfigureAwait(false);
+
+            using var command = new SqlCommand(DbQueries.UpdateUserInformation, sqlConnection);
+            command.Parameters.AddWithValue("@userId", userId);
+            command.Parameters.AddWithValue("@firstName", firstName);
+            command.Parameters.AddWithValue("@lastName", lastName);
+            command.Parameters.AddWithValue("@academicYear", academicYear);
+            command.Parameters.AddWithValue("@major", major);
+
+            try
+            {
+                var rowsAffected = await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+                if (rowsAffected == 0)
+                {
+                    throw new Exception("Update failed");
+                }
+            }
+            catch (SqlException ex)
+            {
+                _logger.LogError(ex, "Failed Update in Users table");
+                throw;
+            }
         }
     }
 }
