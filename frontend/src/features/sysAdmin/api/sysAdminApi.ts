@@ -58,6 +58,13 @@ type MessageResponse = {
   message: string;
 };
 
+type UserInfoDto = {
+  userId: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+};
+
 function mapClub(dto: ClubDto): SysAdminClub {
   return {
     clubId: dto.clubId,
@@ -168,6 +175,13 @@ export async function promoteUserToClubAdmin(
   return apiPut<string, MessageResponse>(
     `/api/recruitmentInfo/api/update-user-promote-club-admin/${userId}`,
     clubId,
+    true,
+  );
+}
+
+export async function getUserInformation(userId: string): Promise<UserInfoDto> {
+  return apiGet<UserInfoDto>(
+    `/api/recruitmentInfo/api/user-information/${userId}`,
     true,
   );
 }

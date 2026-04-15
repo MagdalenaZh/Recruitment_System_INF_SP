@@ -1,6 +1,3 @@
-// API for application status, clubs, and departments.
-// Used by both applicant-facing pages and board member hooks.
-
 import { apiGet, apiPost } from "../api";
 import { getStoredUserId } from "../auth/auth.api";
 import type { UserApplicationDto, ClubDto, DepartmentDto } from "../../types/account/accountApplications";
@@ -8,14 +5,12 @@ import { parseLatestApplicationStates, type LatestApplicationStateResponse } fro
 
 const SNAPSHOT_CACHE_STORAGE_KEY_PREFIX = "applicationUpdates:latestSnapshots";
 
-// Applications submitted by the currently logged-in user.
 export async function getApplicationsForCurrentUser(): Promise<UserApplicationDto[]> {
   const userId = getStoredUserId();
   if (!userId) throw new Error("Missing user id.");
   return apiGet(`/api/recruitmentInfo/api/applications-user/${userId}`);
 }
 
-// Latest state snapshots for a list of application IDs.
 export async function getLatestApplicationStates(
   applicationIds: string[],
 ): Promise<LatestApplicationStateResponse[]> {
@@ -45,12 +40,10 @@ export function primeLatestApplicationStates(
   cacheLatestStates(states);
 }
 
-// All clubs in the system.
 export async function getAllClubs(): Promise<ClubDto[]> {
   return apiGet(`/api/recruitmentInfo/api/clubs`);
 }
 
-// Departments belonging to a specific club.
 export async function getDepartmentsForClub(clubId: string): Promise<DepartmentDto[]> {
   return apiGet(`/api/recruitmentInfo/api/departments-club/${clubId}`);
 }
@@ -66,7 +59,7 @@ function cacheLatestStates(states: LatestApplicationStateResponse[]): void {
     }
     window.localStorage.setItem(cacheKey, JSON.stringify(current));
   } catch {
-    // Ignore cache write errors.
+   
   }
 }
 

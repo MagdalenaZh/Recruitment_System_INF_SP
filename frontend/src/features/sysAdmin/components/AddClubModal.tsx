@@ -1,6 +1,19 @@
 import { useState } from "react";
 import type { CreateClubInput } from "../types/sysAdminTypes";
 
+const CATEGORY_OPTIONS = [
+  "Math & Science",
+  "Technology",
+  "Sports",
+  "Business",
+  "Politics",
+  "Art",
+  "Media & Journalism",
+  "Entrepreneurship",
+  "Music",
+  "Other",
+] as const;
+
 type AddClubModalProps = {
   open: boolean;
   onClose: () => void;
@@ -29,7 +42,7 @@ export function AddClubModal({ open, onClose, onSubmit }: AddClubModalProps) {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
-    if (!form.clubName.trim() || !form.description.trim()) {
+    if (!form.clubName.trim()) {
       return;
     }
 
@@ -73,17 +86,23 @@ export function AddClubModal({ open, onClose, onSubmit }: AddClubModalProps) {
             className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none placeholder:text-slate-500"
           />
 
-          <input
+          <select
             value={form.category ?? ""}
             onChange={(e) => handleChange("category", e.target.value)}
-            placeholder="Category (optional)"
-            className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none placeholder:text-slate-500"
-          />
+            className="w-full rounded-2xl border border-white/10 bg-slate-950/60 px-4 py-3 text-white outline-none"
+          >
+            <option value="">Choose category</option>
+            {CATEGORY_OPTIONS.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
 
           <textarea
             value={form.description}
             onChange={(e) => handleChange("description", e.target.value)}
-            placeholder="Description"
+            placeholder="Description (optional)"
             rows={5}
             className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none placeholder:text-slate-500"
           />

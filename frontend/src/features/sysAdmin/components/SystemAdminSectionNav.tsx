@@ -1,8 +1,7 @@
 import { NavLink } from "react-router-dom";
 
 const links = [
-  { to: "/sys-admin", label: "Overview", end: true },
-  { to: "/sys-admin/clubs", label: "Manage Clubs" },
+  { to: "/sys-admin", label: "Club Management", end: true },
 ];
 
 export function SystemAdminSectionNav() {

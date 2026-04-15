@@ -32,7 +32,6 @@ export type CurrentUserResponse = {
 };
 
 export async function getCurrentUser(): Promise<CurrentUserResponse> {
-  // Use what's already stored from login — no extra network call
   const stored = getStoredUser();
   if (stored) {
     return {

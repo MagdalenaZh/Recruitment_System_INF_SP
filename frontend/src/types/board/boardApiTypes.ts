@@ -1,6 +1,3 @@
-// Types matching backend board-member API responses.
-// Shared application/club/department DTOs live in types/account/accountApplications.ts.
-
 export type UserInfoDto = {
   userId: string;
   firstName: string;
