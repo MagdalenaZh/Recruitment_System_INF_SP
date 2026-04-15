@@ -30,11 +30,11 @@ public class FakeSystemManagementProvider : ISystemManagementProvider
 {
     public Task CreateClubAsync(string clubName, ClubCategories category, CancellationToken cancellationToken) => Task.CompletedTask;
     public Task CreateDepartmentAsync(Guid clubId, string departmentName, int numberOfOpenPositions, string description, CancellationToken cancellationToken) => Task.CompletedTask;
-    public Task CreateInterviewSlot(Guid clubId, DateTimeOffset startTime, DateTimeOffset endTime, CancellationToken cancellationToken) => Task.CompletedTask;
+    public Task CreateInterviewSlotAsync(Guid clubId, DateTimeOffset startTime, DateTimeOffset endTime, CancellationToken cancellationToken) => Task.CompletedTask;
     public Task UpdateClubInformationAsync(Guid clubId, string clubName, List<string> applicationQuestions, int requiredApprovals, string description, ClubCategories category, CancellationToken cancellationToken) => Task.CompletedTask;
     public Task UpdateDepartmentInformationAsync(Guid departmentId, string departmentName, int numberOfOpenPositions, string description, CancellationToken cancellationToken) => Task.CompletedTask;
     public Task UpdateInterviewSlotAsync(Guid slotId, DateTimeOffset newStartTime, DateTimeOffset newEndTime, CancellationToken cancellationToken) => Task.CompletedTask;
-    public Task UpdateUserRole(Guid userId, Guid roleId, CancellationToken cancellationToken) => Task.CompletedTask;
+    public Task UpdateUserRoleAsync(Guid userId, Guid roleId, CancellationToken cancellationToken) => Task.CompletedTask;
     public Task UpdateUserPromoteToClubAdminAsync(Guid userId, Guid clubId, CancellationToken cancellationToken) => Task.CompletedTask;
 }
 

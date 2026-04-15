@@ -64,6 +64,8 @@
             INNER JOIN [Roles] AS r ON u.[RoleId] = r.[RoleId] 
             WHERE u.[UserId] = @userId
             """;
+
+        internal const string GetAllNotesForApplication = "SELECT [NoteId], [UserId], [Payload] FROM [Notes] WHERE [ApplicationId] = @applicationId";
         #endregion
 
         #region INSERT QUERIES
@@ -78,6 +80,8 @@
         internal const string InsertDepartment = "INSERT INTO [Departments] ([DepartmentId], [ClubId], [DepartmentName], [OpenPositions], [Description]) VALUES (@departmentId, @clubId, @departmentName, @openPositions, @description)";
 
         internal const string InsertInterviewSlot = "INSERT INTO [InterviewSlots] ([SlotId], [ClubId], [StartTime], [EndTime]) VALUES (@slotId, @clubId, @startTime, @endTime)";
+
+        internal const string InsertNote = "INSERT INTO [Notes] ([NoteId], [ApplicationId], [UserId], [Payload]) VALUES (@noteId, @applicationId, @userId, @payload)";
         #endregion
 
         #region UPDATE QUERIES
@@ -96,6 +100,8 @@
         internal const string UpdateApplicationStatus = "UPDATE [Applications] SET [Status] = @status WHERE [AggregateId] = @aggregateId";
 
         internal const string UpdateUserDepartment = "UPDATE [Users] SET [DepartmentId] = @departmentId WHERE [UserId] = @userId";
+
+        internal const string UpdateNote = "UPDATE [Notes] SET [Payload] = @payload WHERE [NoteId] = @noteId";
         #endregion
     }
 }

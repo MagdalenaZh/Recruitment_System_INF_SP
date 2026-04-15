@@ -22,6 +22,8 @@ namespace AppilicationProcesserAPI.PersistanceServices
         Task<UserDatabaseModel?> GetApplicantUserInformationAsync(Guid userId, CancellationToken cancellationToken);
 
         Task<UserRightsDatabaseModel> GetUserRightsAsync(Guid userId, CancellationToken cancellationToken);
+
+        Task<List<NoteDatabaseModel>> GetAllNotesForApplicationAsync(Guid applicationId, CancellationToken cancellationToken);
     }
 
     public class RecruitmentDataProvider : IRecruitmentDataProvider
@@ -158,6 +160,27 @@ namespace AppilicationProcesserAPI.PersistanceServices
             return clubs;
         }
 
+        public async Task<List<NoteDatabaseModel>> GetAllNotesForApplicationAsync(Guid applicationId, CancellationToken cancellationToken)
+        {
+            var notes = new List<NoteDatabaseModel>();
+
+            using var sqlConnection = new SqlConnection(_connectionString);
+            await sqlConnection.OpenAsync(cancellationToken).ConfigureAwait(false);
+
+            using var command = new SqlCommand(DbQueries.GetAllNotesForApplication, sqlConnection);
+            command.Parameters.AddWithValue("@applicationId", applicationId);
+            using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+
+            while (reader.Read())
+            {
+                var noteId = reader.GetGuid(0);
+                var userId = reader.GetGuid(1);
+                var content = reader.GetString(2);
+                notes.Add(new NoteDatabaseModel(noteId, applicationId, userId, content));
+            }
+            return notes;
+        }
+
         public async Task<UserDatabaseModel?> GetApplicantUserInformationAsync(Guid userId, CancellationToken cancellationToken)
         {
             using var sqlConnection = new SqlConnection(_connectionString);
@@ -175,7 +198,7 @@ namespace AppilicationProcesserAPI.PersistanceServices
                 var email = reader.IsDBNull(3) ? string.Empty : reader.GetString(3);
                 var academicYear = reader.IsDBNull(4) ? string.Empty : reader.GetString(4);
                 var studyMajor = reader.IsDBNull(5) ? string.Empty : reader.GetString(5);
-               return new UserDatabaseModel(id, firstName, lastName, email, academicYear, studyMajor);
+                return new UserDatabaseModel(id, firstName, lastName, email, academicYear, studyMajor);
             }
             return null;
         }
@@ -212,7 +235,8 @@ namespace AppilicationProcesserAPI.PersistanceServices
             command.Parameters.AddWithValue("@departmentId", departmentId);
             using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
 
-            if (reader.Read()) {
+            if (reader.Read())
+            {
                 var requiredNumberOfApprovals = reader.GetInt32(0);
                 return requiredNumberOfApprovals;
             }

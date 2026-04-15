@@ -118,5 +118,19 @@ namespace AppilicationProcesserAPI.Models
             ClubAdminId = clubAdminId;
         }
     }
-}
 
+    public class NoteDatabaseModel
+    {
+        public Guid NoteId { get; }
+        public Guid ApplicationId { get; }
+        public Guid UserId { get; }
+        public string Content { get; }
+        public NoteDatabaseModel(Guid noteId, Guid applicationId, Guid userId, string content)
+        {
+            NoteId = noteId;
+            ApplicationId = applicationId;
+            UserId = userId;
+            Content = content;
+        }
+    }
+}

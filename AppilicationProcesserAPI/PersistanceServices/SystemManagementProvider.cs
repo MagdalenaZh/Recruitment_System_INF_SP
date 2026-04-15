@@ -8,13 +8,15 @@ namespace AppilicationProcesserAPI.PersistanceServices
     {
         Task CreateClubAsync(string clubName, ClubCategories category, CancellationToken cancellationToken);
         Task CreateDepartmentAsync(Guid clubId, string departmentName, int numberOfOpenPositions, string description, CancellationToken cancellationToken);
-        Task CreateInterviewSlot(Guid clubId, DateTimeOffset startTime, DateTimeOffset endTime, CancellationToken cancellationToken);
+        Task CreateInterviewSlotAsync(Guid clubId, DateTimeOffset startTime, DateTimeOffset endTime, CancellationToken cancellationToken);
+        Task CreateApplicationNoteAsync(Guid applicationId, Guid userId, string payload, CancellationToken cancellationToken);
 
         Task UpdateClubInformationAsync(Guid clubId, string clubName, List<string> applicationQuestions, int requiredApprovals, string description, ClubCategories category, CancellationToken cancellationToken);
         Task UpdateDepartmentInformationAsync(Guid departmentId, string departmentName, int numberOfOpenPositions, string description, CancellationToken cancellationToken);
         Task UpdateInterviewSlotAsync(Guid slotId, DateTimeOffset newStartTime, DateTimeOffset newEndTime, CancellationToken cancellationToken);
+        Task UpdateApplicationNoteAsync(Guid noteId, string payload, CancellationToken cancellationToken);
 
-        Task UpdateUserRole(Guid userId, Guid roleId, CancellationToken cancellationToken);
+        Task UpdateUserRoleAsync(Guid userId, Guid roleId, CancellationToken cancellationToken);
         Task UpdateUserPromoteToClubAdminAsync(Guid userId, Guid clubId, CancellationToken cancellationToken);
     }
 
@@ -53,7 +55,7 @@ namespace AppilicationProcesserAPI.PersistanceServices
             catch (SqlException ex)
             {
                 _logger.LogError(ex, "Failed Insert in Clubs table");
-                throw new Exception("Event not registered");
+                throw;
             }
         }
 
@@ -76,11 +78,11 @@ namespace AppilicationProcesserAPI.PersistanceServices
             catch (SqlException ex)
             {
                 _logger.LogError(ex, "Failed Insert in Departments table");
-                throw new Exception("Event not registered");
+                throw;
             }
         }
 
-        public async Task CreateInterviewSlot(Guid clubId, DateTimeOffset startTime, DateTimeOffset endTime, CancellationToken cancellationToken)
+        public async Task CreateInterviewSlotAsync(Guid clubId, DateTimeOffset startTime, DateTimeOffset endTime, CancellationToken cancellationToken)
         {
             using var sqlConnection = new SqlConnection(_connectionString);
             await sqlConnection.OpenAsync(cancellationToken).ConfigureAwait(false);
@@ -98,7 +100,7 @@ namespace AppilicationProcesserAPI.PersistanceServices
             catch (SqlException ex)
             {
                 _logger.LogError(ex, "Failed Insert in InterviewSlots table");
-                throw new Exception("Event not registered");
+                throw;
             }
         }
 
@@ -128,7 +130,7 @@ namespace AppilicationProcesserAPI.PersistanceServices
             catch (SqlException ex)
             {
                 _logger.LogError(ex, "Failed Update in Clubs table");
-                throw new Exception("Event not registered");
+                throw;
             }
         }
 
@@ -153,7 +155,7 @@ namespace AppilicationProcesserAPI.PersistanceServices
             catch (SqlException ex)
             {
                 _logger.LogError(ex, "Failed Update in InterviewSlots table");
-                throw new Exception("Event not registered");
+                throw;
             }
         }
 
@@ -179,11 +181,11 @@ namespace AppilicationProcesserAPI.PersistanceServices
             catch (SqlException ex)
             {
                 _logger.LogError(ex, "Failed Update in Department table");
-                throw new Exception("Event not registered");
+                throw;
             }
         }
 
-        public async Task UpdateUserRole(Guid userId, Guid roleId, CancellationToken cancellationToken)
+        public async Task UpdateUserRoleAsync(Guid userId, Guid roleId, CancellationToken cancellationToken)
         {
             using var sqlConnection = new SqlConnection(_connectionString);
             await sqlConnection.OpenAsync(cancellationToken).ConfigureAwait(false);
@@ -203,7 +205,7 @@ namespace AppilicationProcesserAPI.PersistanceServices
             catch (SqlException ex)
             {
                 _logger.LogError(ex, "Failed Update in Users table");
-                throw new Exception("Event not registered");
+                throw;
             }
         }
 
@@ -236,7 +238,53 @@ namespace AppilicationProcesserAPI.PersistanceServices
             catch (SqlException ex)
             {
                 _logger.LogError(ex, "Failed Update in Users table");
-                throw new Exception("Event not registered");
+                throw;
+            }
+        }
+
+        public async Task CreateApplicationNoteAsync(Guid applicationId, Guid userId, string payload, CancellationToken cancellationToken)
+        {
+            using var sqlConnection = new SqlConnection(_connectionString);
+            await sqlConnection.OpenAsync(cancellationToken).ConfigureAwait(false);
+
+            using var command = new SqlCommand(DbQueries.InsertNote, sqlConnection);
+            command.Parameters.AddWithValue("@noteId", Guid.NewGuid());
+            command.Parameters.AddWithValue("@applicationId", applicationId);
+            command.Parameters.AddWithValue("@userId", userId);
+            command.Parameters.AddWithValue("@payload", payload);
+
+            try
+            {
+                await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+            }
+            catch (SqlException ex)
+            {
+                _logger.LogError(ex, "Failed Insert in Notes table");
+                throw;
+            }
+        }
+
+        public async Task UpdateApplicationNoteAsync(Guid noteId, string payload, CancellationToken cancellationToken)
+        {
+            using var sqlConnection = new SqlConnection(_connectionString);
+            await sqlConnection.OpenAsync(cancellationToken).ConfigureAwait(false);
+
+            using var command = new SqlCommand(DbQueries.UpdateNote, sqlConnection);
+            command.Parameters.AddWithValue("@noteId", noteId);
+            command.Parameters.AddWithValue("@payload", payload);
+
+            try
+            {
+                var rowsAffected = await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+                if (rowsAffected == 0)
+                {
+                    throw new Exception("Update failed");
+                }
+            }
+            catch (SqlException ex)
+            {
+                _logger.LogError(ex, "Failed Update in Notes table");
+                throw;
             }
         }
 

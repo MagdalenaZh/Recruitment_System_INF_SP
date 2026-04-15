@@ -5,6 +5,7 @@ using AppilicationProcesserAPI.Representations;
 using AppilicationProcesserAPI.Security;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace AppilicationProcesserAPI.Controllers
 {
@@ -287,7 +288,7 @@ namespace AppilicationProcesserAPI.Controllers
 
             try
             {
-                await _systemManagementProvider.CreateInterviewSlot(request.ClubId, request.StartTime, request.EndTime, cancellationToken).ConfigureAwait(false);
+                await _systemManagementProvider.CreateInterviewSlotAsync(request.ClubId, request.StartTime, request.EndTime, cancellationToken).ConfigureAwait(false);
                 return Ok(new { message = "Interview slot created successfully." });
             }
             catch (Exception ex)
@@ -383,7 +384,7 @@ namespace AppilicationProcesserAPI.Controllers
 
             try
             {
-                await _systemManagementProvider.UpdateUserRole(userId, roleId, cancellationToken).ConfigureAwait(false);
+                await _systemManagementProvider.UpdateUserRoleAsync(userId, roleId, cancellationToken).ConfigureAwait(false);
                 return Ok(new { message = "User role updated successfully." });
             }
             catch (Exception ex)
@@ -411,6 +412,60 @@ namespace AppilicationProcesserAPI.Controllers
             {
                 _logger.LogError(ex, "Error promoting user with UserId: {UserId} to club admin for ClubId: {ClubId}", userId, clubId);
                 return StatusCode(500, "An error occurred while promoting the user to club admin.");
+            }
+        }
+
+        [HttpPost("api/create-note/{applicationId}")]
+        public async Task<IActionResult> CreateNoteForApplication([FromRoute] Guid applicationId, [FromBody] string noteData, CancellationToken cancellationToken)
+        {
+            if (User == null)
+                return Unauthorized();
+
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (userIdClaim == null)
+                return Unauthorized();
+
+            var userId = Guid.Parse(userIdClaim.Value);
+
+            try
+            {
+                await _systemManagementProvider.CreateApplicationNoteAsync(applicationId, userId, noteData, cancellationToken).ConfigureAwait(false);
+                return Ok(new { message = "Note created successfully for the application." });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error creating note for ApplicationId: {ApplicationId}", applicationId);
+                return StatusCode(500, "An error occurred while creating the note for the application.");
+            }
+        }
+
+        [HttpGet("api/notes-application/{applicationId}")]
+        public async Task<ActionResult<List<NoteDatabaseModel>>> GetAllNotesForApplication([FromRoute] Guid applicationId, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var notes = await _recruitmentDataProvider.GetAllNotesForApplicationAsync(applicationId, cancellationToken).ConfigureAwait(false);
+                return Ok(notes);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving notes for ApplicationId: {ApplicationId}", applicationId);
+                return StatusCode(500, "An error occurred while retrieving notes for the application.");
+            }
+        }
+
+        [HttpPut("api/update-note/{noteId}")]
+        public async Task<IActionResult> UpdateNote([FromRoute] Guid noteId, [FromBody] string noteData, CancellationToken cancellationToken)
+        {
+            try
+            {
+                await _systemManagementProvider.UpdateApplicationNoteAsync(noteId, noteData, cancellationToken).ConfigureAwait(false);
+                return Ok(new { message = "Note updated successfully." });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating note with NoteId: {NoteId}", noteId);
+                return StatusCode(500, "An error occurred while updating the note.");
             }
         }
     }
