@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   bookInterviewSlot,
-  getApplicationsForUser,
   getAvailableInterviewSlotsForClub,
 } from "../api/interviewApi";
 import {
+  getApplicationsForCurrentUser,
   getAllClubs,
   getDepartmentsForClub,
 } from "../../../services/applications/applicationStatusApi";
@@ -96,7 +96,7 @@ export function useInterviewBooking(userId?: string) {
 
     try {
       const [data, clubs] = await Promise.all([
-        getApplicationsForUser(userId),
+        getApplicationsForCurrentUser(),
         getAllClubs(),
       ]);
 
@@ -115,13 +115,13 @@ export function useInterviewBooking(userId?: string) {
         const department = application.departmentId
           ? departmentMap.get(application.departmentId)
           : undefined;
-        const clubId = application.clubId ?? department?.clubId;
+        const clubId = department?.clubId;
 
         return {
           ...application,
           clubId,
-          clubName: application.clubName ?? (clubId ? clubNameMap.get(clubId) : undefined),
-          departmentName: application.departmentName ?? department?.departmentName,
+          clubName: clubId ? clubNameMap.get(clubId) : undefined,
+          departmentName: department?.departmentName,
         };
       });
 

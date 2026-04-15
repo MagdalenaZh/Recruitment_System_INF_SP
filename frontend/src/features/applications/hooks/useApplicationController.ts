@@ -8,7 +8,8 @@ import {
 } from "../pages/validation/application.validation";
 
 import { submitApplication } from "../../../services/applications/applications.api";
-import { getCurrentUser, getStoredUserId } from "../../../services/auth/auth.api";
+import { getStoredUserId } from "../../../services/auth/auth.api";
+import { getCurrentUser } from "../../../services/account/accountApi";
 
 import type {
   ApplicationQuestion,

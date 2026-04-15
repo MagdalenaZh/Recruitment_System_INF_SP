@@ -3,8 +3,8 @@ import {
   getApplicationsForCurrentUser,
   getAllClubs,
   getDepartmentsForClub,
-} from "../../../services/account/accountApplications.api";
-import { getLatestApplicationStates } from "../../../services/applications/applicationStatusApi";
+  getLatestApplicationStates,
+} from "../../../services/applications/applicationStatusApi";
 import {
   createRealtimeClientId,
   subscribeToApplicationStates,
