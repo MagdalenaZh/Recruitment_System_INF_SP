@@ -64,8 +64,8 @@ namespace AppilicationProcesserAPI.Controllers
         }
 
         [Authorize]
-        [HttpPost("api/latest-application-states")]
-        public async Task<ActionResult<List<IStateRepresentation>>> GetLatestApplicationStates([FromBody] List<Guid> applicationIds, CancellationToken cancellationToken)
+        [HttpGet("api/latest-application-states")]
+        public async Task<ActionResult<List<IStateRepresentation>>> GetLatestApplicationStates([FromQuery] List<Guid> applicationIds, CancellationToken cancellationToken)
         {
             if (!await _authorizationScopeService.CanAccessLatestApplicationStatesAsync(User, applicationIds, cancellationToken).ConfigureAwait(false))
             {
