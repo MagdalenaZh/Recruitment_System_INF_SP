@@ -7,13 +7,12 @@ type Props = {
 export function InterviewPhaseBadge({ phase }: Props) {
   const className =
     phase === "Live now"
-      ? "border-emerald-400/30 bg-emerald-400/15 text-emerald-100"
+      ? "border-emerald-100 bg-emerald-50 text-emerald-700"
       : phase === "Ready for decision"
-        ? "border-amber-400/30 bg-amber-400/15 text-amber-100"
+        ? "border-amber-100 bg-amber-50 text-amber-700"
         : phase === "Decision submitted"
-          ? "border-sky-400/30 bg-sky-400/15 text-sky-100"
-          : "border-white/10 bg-white/5 text-slate-200";
-
+          ? "border-sky-100 bg-sky-50 text-sky-700"
+          : "border-slate-200 bg-slate-50 text-slate-600";
   return (
     <span
       className={`inline-flex rounded-full border px-3 py-1 text-xs font-semibold ${className}`}

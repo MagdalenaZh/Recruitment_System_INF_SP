@@ -6,86 +6,82 @@ export function DepartmentCard({ d }: { d: BoardDepartment }) {
     <Link
       to={`/board/departments/${d.departmentId}/applications`}
       className={[
-        "group relative block overflow-hidden rounded-2xl",
-        "bg-white/5 backdrop-blur-md",
-        "border border-white/10",
-        "shadow-[0_10px_30px_-12px_rgba(0,0,0,0.65)]",
+        "group relative block overflow-hidden rounded-[28px]",
+        "border border-slate-200/80 bg-white/95 backdrop-blur",
+        "shadow-[0_20px_50px_-35px_rgba(15,23,42,0.28)]",
         "transition-all duration-300 ease-out",
-        "hover:-translate-y-1 hover:border-white/20 hover:bg-white/8",
-        "hover:shadow-[0_18px_50px_-18px_rgba(0,0,0,0.75)]",
-        "focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/60 focus-visible:ring-offset-0",
+        "hover:-translate-y-1 hover:border-blue-200",
+        "hover:shadow-[0_30px_70px_-35px_rgba(37,99,235,0.18)]",
+        "focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/60",
       ].join(" ")}
     >
       <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-        <div className="absolute -top-24 -right-24 h-56 w-56 rounded-full bg-sky-400/15 blur-3xl" />
-        <div className="absolute -bottom-28 -left-28 h-64 w-64 rounded-full bg-indigo-400/10 blur-3xl" />
+        <div className="absolute -top-24 -right-24 h-56 w-56 rounded-full bg-blue-400/10 blur-3xl" />
+        <div className="absolute -bottom-28 -left-28 h-64 w-64 rounded-full bg-sky-300/15 blur-3xl" />
       </div>
 
       <div className="relative p-6">
-        <div className="flex min-h-[6.5rem] items-start justify-between gap-6">
-          <div>
-            <h3 className="text-2xl font-semibold text-white/95">
+        <div className="flex items-start justify-between gap-4">
+          <div className="min-w-0">
+            <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-400">
+              Department
+            </p>
+            <h3 className="mt-1 text-2xl font-semibold tracking-tight text-slate-950">
               {d.departmentName}
             </h3>
-
-            <p className="mt-2 text-sm text-slate-300">
-              Total applications:{" "}
-              <span className="font-semibold text-white/90">
-                {d.totalApplicants}
-              </span>
-            </p>
-
-            <p className="mt-2 text-sm text-slate-400">
-              Open positions:{" "}
-              <span className="font-semibold text-white/85">
-                {d.targetSpots}
-              </span>
-            </p>
           </div>
 
-          <div className="shrink-0">
-            <div
-              className={[
-                "rounded-full px-3 py-1 text-xs font-semibold",
-                "border border-white/10 bg-white/10 text-white/90",
-                "transition-colors duration-300",
-                "group-hover:border-white/20 group-hover:bg-white/15",
-              ].join(" ")}
-            >
-              {d.pendingCount} pending
+          <div className="shrink-0 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-sm font-semibold text-blue-700">
+            {d.pendingCount} pending
+          </div>
+        </div>
+
+        <div className="mt-2 grid grid-cols-2 gap-3">
+          <div className="flex min-h-[88px] flex-col px-4 py-4">
+            <div className="text-xs font-medium uppercase tracking-wide text-slate-500">
+              Total applications
+            </div>
+            <div className="mt-auto text-lg font-bold leading-none text-slate-900">
+              {d.totalApplicants}
+            </div>
+          </div>
+
+          <div className="flex min-h-[88px] flex-col  px-4 py-4">
+            <div className="text-xs font-medium uppercase tracking-wide text-slate-500">
+              Open positions
+            </div>
+            <div className="mt-auto text-lg font-bold leading-none text-slate-900">
+              {d.targetSpots}
             </div>
           </div>
         </div>
 
-        <div className="mt-6 grid grid-cols-3 gap-2 text-xs text-slate-300">
-          <div className="rounded-xl border border-white/10 bg-slate-950/40 p-3">
-            <div className="text-slate-400">Approved</div>
-            <div className="mt-1 text-sm font-semibold text-emerald-200">
+        <div className="mt-1 grid grid-cols-2 gap-3">
+          <div className="rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3">
+            <div className="text-xs font-medium uppercase tracking-wide text-emerald-700">
+              Approved
+            </div>
+            <div className="mt-1 text-lg font-bold text-emerald-700">
               {d.approvedCount}
             </div>
           </div>
 
-          <div className="rounded-xl border border-white/10 bg-slate-950/40 p-3">
-            <div className="text-slate-400">Rejected</div>
-            <div className="mt-1 text-sm font-semibold text-rose-200">
-              {d.rejectedCount}
+          <div className="rounded-2xl border border-rose-100 bg-rose-50 px-4 py-3">
+            <div className="text-xs font-medium uppercase tracking-wide text-rose-700">
+              Rejected
             </div>
-          </div>
-
-          <div className="rounded-xl border border-white/10 bg-slate-950/40 p-3">
-            <div className="text-slate-400">Pending</div>
-            <div className="mt-1 text-sm font-semibold text-sky-200">
-              {d.pendingCount}
+            <div className="mt-1 text-lg font-bold text-rose-700">
+              {d.rejectedCount}
             </div>
           </div>
         </div>
 
-        <div className="mt-6 flex items-center justify-end gap-2 text-sm text-slate-300">
-          <span className="transition-colors duration-300 group-hover:text-white/90">
-            Click to review applications
-          </span>
-          <span className="transition-transform duration-300 group-hover:translate-x-1">
-            →
+        <div className="mt-5 flex justify-end">
+          <span className="inline-flex items-center gap-1 text-sm font-medium text-blue-700 transition-all duration-300 group-hover:text-blue-800">
+            Review applications
+            <span className="transition-transform duration-300 group-hover:translate-x-1">
+              →
+            </span>
           </span>
         </div>
       </div>

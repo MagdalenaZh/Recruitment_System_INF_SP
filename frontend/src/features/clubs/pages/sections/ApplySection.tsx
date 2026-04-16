@@ -77,24 +77,34 @@ export function ApplySection({
   }
 
   return (
-    <section className="bg-slate-50 pb-14 text-slate-900">
+    <section className="bg-slate-50 pb-16 text-slate-900">
       <div className="mx-auto max-w-6xl px-4">
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm flex items-center justify-between">
-          <div>
-            <h2 className="text-xl font-semibold">Apply</h2>
-            <p className="mt-2 text-sm text-slate-600">
-              Ready to apply to {clubName}?
-            </p>
-          </div>
+        <p className="text-2xl mb-6 font-semibold uppercase tracking-[0.24em] text-blue-700">
+          Apply
+        </p>
+        <div className="rounded-[30px] border border-slate-200 bg-white p-8 shadow-[0_24px_60px_-42px_rgba(15,23,42,0.35)]">
+          <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+            <div>
+              <h2 className="text-2xl font-semibold tracking-tight text-slate-950">
+                Ready to apply to {clubName}?
+              </h2>
+              <p className="mt-2 text-sm leading-6 text-slate-600">
+                If you think {clubName} is the right place for you, do not waste
+                any time and apply for the opportunity to join the club.
+                Complete the application form, answer the required questions
+                carefully, and submit!
+              </p>
+            </div>
 
-          <button
-            type="button"
-            onClick={() => void onApplyClick()}
-            disabled={checking}
-            className="shrink-0 rounded-full bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-700"
-          >
-            {checking ? "Checking..." : "Apply now"}
-          </button>
+            <button
+              type="button"
+              onClick={() => void onApplyClick()}
+              disabled={checking}
+              className="shrink-0 rounded-full bg-blue-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-blue-700"
+            >
+              {checking ? "Checking..." : "Apply now"}
+            </button>
+          </div>
         </div>
       </div>
     </section>

@@ -2,46 +2,65 @@ import { DepartmentCardGrid } from "../components/DepartmentCardGrid";
 import { useBoardDepartments } from "../hooks/useBoardDepartments";
 import { BoardSectionNav } from "../components/BoardSectionNav";
 import { BoardShell } from "../components/BoardShell";
+import { getStoredUser } from "../../../services/auth/auth.api";
 
 export function BoardHomePage() {
   const { data, clubName, loading, error } = useBoardDepartments();
+  const currentUser = getStoredUser();
+  const userName = currentUser?.firstName ?? "there";
 
   return (
     <BoardShell>
-      <div className="pt-28">
-        <div className="mx-auto max-w-6xl p-4 sm:p-6">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+      <div className="pt-28 mb-20">
+        <div className="mx-auto max-w-7xl p-4 sm:p-6">
+          <div className="mb-10">
+            <BoardSectionNav />
+          </div>
+
+          <div className="">
             <div>
-              <h1 className="text-3xl font-semibold text-white">Welcome back</h1>
               {clubName && (
-                <p className="mt-2 text-base font-medium text-sky-300">{clubName}</p>
+                <p className="mt-4 mb-8 text-4xl font-bold tracking-tight text-slate-950">
+                  {clubName}
+                </p>
               )}
-              <p className="mt-6 text-lg font-medium text-slate-300">
-                {clubName ? `Current Applications for ${clubName}` : "Current Applications"}
+              <p className="text-3xl font-semibold uppercase tracking-[0.24em] text-blue-700">
+                Board workspace
               </p>
-              <p className="mt-2 text-sm text-slate-400">
+
+              <h1 className="mt-2 text-2xl font-semibold text-blue-700">
+                Welcome back, {userName}!
+              </h1>
+            </div>
+          </div>
+
+          <div className="mt-10 rounded-[28px] border border-blue-100/70 bg-white/60 p-6 shadow-[0_20px_50px_-35px_rgba(37,99,235,0.18)] backdrop-blur-sm">
+            <div className="mb-10">
+              <p className="text-2xl font-medium text-slate-800">
+                {clubName
+                  ? `Current Applications for ${clubName}`
+                  : "Current Applications"}
+              </p>
+              <p className="mt-2 text-lg text-slate-600">
                 Open a department to view applicants and vote on applications.
               </p>
             </div>
 
-          </div>
-
-          <BoardSectionNav />
-
-          <div className="mt-10">
             {loading ? (
-              <div className="rounded-2xl border border-white/10 bg-white/10 p-6 text-slate-200 shadow">
+              <div className="rounded-2xl border border-slate-200 bg-white p-6 text-slate-600 shadow-sm">
                 Loading departments...
               </div>
             ) : error ? (
-              <div className="rounded-2xl border border-red-400/30 bg-red-500/10 p-6 text-red-300">
-                <div className="font-semibold">Could not load board departments.</div>
+              <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-red-700">
+                <div className="font-semibold">
+                  Could not load board departments.
+                </div>
                 <div className="mt-2 text-sm">{error}</div>
               </div>
             ) : data && data.length > 0 ? (
               <DepartmentCardGrid departments={data} />
             ) : (
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-6 text-slate-300">
+              <div className="rounded-2xl border border-slate-200 bg-white p-6 text-slate-500">
                 No departments found for this board member.
               </div>
             )}

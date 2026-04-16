@@ -103,7 +103,7 @@ export function BoardInterviewsHomePage() {
     return (
       <BoardShell>
         <div className="mx-auto max-w-7xl p-6 pt-36">
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-6 text-slate-200">
+          <div className="rounded-[28px] border border-blue-100/70 bg-white/70 p-6 text-slate-600 shadow-sm backdrop-blur-sm">
             Loading interview schedule...
           </div>
         </div>
@@ -115,7 +115,7 @@ export function BoardInterviewsHomePage() {
     return (
       <BoardShell>
         <div className="mx-auto max-w-7xl p-6 pt-36">
-          <div className="rounded-2xl border border-red-400/30 bg-red-500/10 p-6 text-red-300">
+          <div className="rounded-[28px] border border-red-200 bg-red-50/90 p-6 text-red-700 shadow-sm">
             <div className="font-semibold">
               Could not load interview schedule.
             </div>
@@ -132,15 +132,15 @@ export function BoardInterviewsHomePage() {
         <div className="mx-auto max-w-7xl p-4 sm:p-6">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div>
-              <h1 className="text-3xl font-semibold text-white">
+              <h1 className="text-3xl font-semibold tracking-tight text-slate-900">
                 Interview day schedule
               </h1>
               {clubName ? (
-                <p className="mt-2 text-base font-medium text-sky-300">
+                <p className="mt-2 text-base font-medium text-blue-700">
                   {clubName}
                 </p>
               ) : null}
-              <p className="mt-2 max-w-3xl text-sm text-slate-300 sm:text-base">
+              <p className="mt-2 max-w-3xl text-sm text-slate-600 sm:text-base">
                 One centralized page for the board. Open any slot to see the
                 applicant&apos;s full application, notes, and final voting
                 controls.
@@ -201,13 +201,13 @@ export function BoardInterviewsHomePage() {
           </div>
 
           {departmentStats.length > 0 && (
-            <div className="mt-8">
+            <div className="mt-8 rounded-[30px] border border-blue-100/70 bg-white/60 p-5 shadow-[0_20px_50px_-35px_rgba(37,99,235,0.16)] backdrop-blur-sm">
               <div className="flex items-center justify-between gap-4">
                 <div>
-                  <h2 className="text-xl font-semibold text-white">
+                  <h2 className="text-xl font-semibold text-slate-900">
                     Department overview
                   </h2>
-                  <p className="mt-1 text-sm text-slate-400">
+                  <p className="mt-1 text-sm text-slate-500">
                     Track approvals per department while working from the
                     central timeline.
                   </p>
@@ -216,10 +216,10 @@ export function BoardInterviewsHomePage() {
                   type="button"
                   onClick={() => setDepartmentFilter("all")}
                   className={[
-                    "rounded-full px-4 py-2 text-sm font-semibold transition",
+                    "rounded-full border px-4 py-2 text-sm font-semibold transition",
                     departmentFilter === "all"
-                      ? "border border-sky-400/40 bg-sky-400/15 text-white"
-                      : "border border-white/10 bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white",
+                      ? "border-blue-200 bg-blue-50 text-blue-700"
+                      : "border-slate-200 bg-white text-slate-600 hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700",
                   ].join(" ")}
                 >
                   Show all
@@ -241,26 +241,26 @@ export function BoardInterviewsHomePage() {
                         )
                       }
                       className={[
-                        "rounded-2xl border p-5 text-left transition",
+                        "rounded-[24px] border p-5 text-left transition-all duration-300",
                         active
-                          ? "border-sky-400/40 bg-sky-400/10 shadow-[0_10px_30px_-12px_rgba(56,189,248,0.35)]"
-                          : "border-white/10 bg-white/5 hover:bg-white/10",
+                          ? "border-blue-200 bg-blue-50/80 shadow-[0_18px_40px_-30px_rgba(37,99,235,0.28)]"
+                          : "border-slate-200 bg-white/85 hover:-translate-y-0.5 hover:border-blue-200 hover:bg-white",
                       ].join(" ")}
                     >
                       <div className="flex items-start justify-between gap-4">
                         <div>
-                          <h3 className="text-xl font-semibold text-white">
+                          <h3 className="text-xl font-semibold text-slate-900">
                             {department.departmentName}
                           </h3>
                           <p
                             className={[
-                              "mt-2 text-sm",
+                              "mt-2 text-sm font-medium",
                               department.approvedCount > department.targetSpots
-                                ? "text-rose-300"
+                                ? "text-rose-600"
                                 : department.approvedCount ===
                                     department.targetSpots
-                                  ? "text-emerald-300"
-                                  : "text-sky-300",
+                                  ? "text-emerald-600"
+                                  : "text-blue-600",
                             ].join(" ")}
                           >
                             {department.approvedCount} /{" "}
@@ -271,29 +271,30 @@ export function BoardInterviewsHomePage() {
                           className={[
                             "rounded-full border px-3 py-1 text-xs font-semibold",
                             active
-                              ? "border-sky-400/40 bg-sky-400/15 text-sky-100"
-                              : "border-white/10 bg-white/5 text-slate-200",
+                              ? "border-blue-200 bg-blue-100 text-blue-700"
+                              : "border-slate-200 bg-slate-50 text-slate-600",
                           ].join(" ")}
                         >
                           {department.pendingCount} pending
                         </span>
                       </div>
-                      <div className="mt-4 grid grid-cols-3 gap-2 text-xs text-slate-300">
-                        <div className="rounded-xl border border-white/10 bg-slate-950/40 p-3">
-                          <div className="text-slate-400">Applicants</div>
-                          <div className="mt-1 text-sm font-semibold text-white">
+
+                      <div className="mt-4 grid grid-cols-3 gap-2 text-xs">
+                        <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                          <div className="text-slate-500">Applicants</div>
+                          <div className="mt-1 text-sm font-semibold text-slate-900">
                             {department.totalApplicants}
                           </div>
                         </div>
-                        <div className="rounded-xl border border-white/10 bg-slate-950/40 p-3">
-                          <div className="text-slate-400">Approved</div>
-                          <div className="mt-1 text-sm font-semibold text-emerald-200">
+                        <div className="rounded-xl border border-emerald-100 bg-emerald-50 p-3">
+                          <div className="text-emerald-700">Approved</div>
+                          <div className="mt-1 text-sm font-semibold text-emerald-700">
                             {department.approvedCount}
                           </div>
                         </div>
-                        <div className="rounded-xl border border-white/10 bg-slate-950/40 p-3">
-                          <div className="text-slate-400">Rejected</div>
-                          <div className="mt-1 text-sm font-semibold text-rose-200">
+                        <div className="rounded-xl border border-rose-100 bg-rose-50 p-3">
+                          <div className="text-rose-700">Rejected</div>
+                          <div className="mt-1 text-sm font-semibold text-rose-700">
                             {department.rejectedCount}
                           </div>
                         </div>
@@ -306,7 +307,7 @@ export function BoardInterviewsHomePage() {
           )}
 
           {slots.length === 0 ? (
-            <div className="mt-10 rounded-2xl border border-white/10 bg-white/5 p-6 text-slate-300">
+            <div className="mt-10 rounded-[28px] border border-blue-100/70 bg-white/70 p-6 text-slate-600 shadow-sm backdrop-blur-sm">
               No booked interview slots found for this club.
             </div>
           ) : (
@@ -314,14 +315,14 @@ export function BoardInterviewsHomePage() {
               {groupedSlots.map((group) => (
                 <section
                   key={group.date}
-                  className="rounded-3xl border border-white/10 bg-white/5 p-5 backdrop-blur-md"
+                  className="rounded-[30px] border border-blue-100/70 bg-white/60 p-5 shadow-[0_20px_50px_-35px_rgba(37,99,235,0.16)] backdrop-blur-sm"
                 >
                   <div className="flex items-center justify-between gap-4">
                     <div>
-                      <h2 className="text-xl font-semibold text-white">
+                      <h2 className="text-xl font-semibold text-slate-900">
                         {group.date}
                       </h2>
-                      <p className="mt-1 text-sm text-slate-400">
+                      <p className="mt-1 text-sm text-slate-500">
                         {group.slots.length} interview slot
                         {group.slots.length === 1 ? "" : "s"} on this date
                       </p>
@@ -337,45 +338,45 @@ export function BoardInterviewsHomePage() {
                           type="button"
                           onClick={() => setSelectedSlotId(slot.id)}
                           className={[
-                            "w-full rounded-2xl border p-4 text-left transition",
+                            "w-full rounded-[24px] border p-4 text-left transition-all duration-300",
                             selectedSlotId === slot.id
-                              ? "border-sky-400/40 bg-sky-400/10"
-                              : "border-white/10 bg-slate-950/40 hover:border-white/20 hover:bg-white/5",
+                              ? "border-blue-200 bg-blue-50/80 shadow-[0_18px_40px_-30px_rgba(37,99,235,0.2)]"
+                              : "border-slate-200 bg-white/90 hover:-translate-y-0.5 hover:border-blue-200 hover:bg-white",
                           ].join(" ")}
                         >
                           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                             <div className="min-w-0">
                               <div className="flex flex-wrap items-center gap-3">
-                                <div className="text-lg font-semibold text-white">
+                                <div className="text-lg font-semibold text-slate-900">
                                   {slot.startTime}-{slot.endTime}
                                 </div>
                                 <InterviewPhaseBadge phase={phase} />
                               </div>
-                              <div className="mt-3 text-xl font-semibold text-white">
+                              <div className="mt-3 text-xl font-semibold text-slate-900">
                                 {slot.candidateName}
                               </div>
-                              <div className="mt-1 text-sm text-slate-400">
+                              <div className="mt-1 text-sm text-slate-600">
                                 {slot.candidateEmail}
                               </div>
-                              <div className="mt-1 text-sm text-slate-400">
+                              <div className="mt-1 text-sm text-slate-500">
                                 {slot.clubName} • {slot.departmentName}
                               </div>
                               <div className="mt-4 flex flex-wrap gap-2">
                                 {slot.decisions.map((decision) => (
                                   <span
                                     key={decision.departmentId}
-                                    className="rounded-full border border-sky-400/20 bg-sky-400/10 px-3 py-1 text-xs font-semibold text-sky-100"
+                                    className="rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700"
                                   >
                                     {decision.departmentName}
                                   </span>
                                 ))}
                               </div>
-                              <div className="mt-4 text-sm text-slate-300">
+                              <div className="mt-4 text-sm text-slate-600">
                                 {getDecisionProgressLabel(slot)}
                               </div>
                             </div>
                             <div className="flex shrink-0 items-center gap-3">
-                              <span className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-slate-200">
+                              <span className="rounded-full border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-700">
                                 Open details
                               </span>
                             </div>
@@ -424,10 +425,10 @@ function SummaryCard({
   subtext: string;
 }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-      <div className="text-sm text-slate-400">{label}</div>
-      <div className="mt-2 text-lg font-semibold text-white">{value}</div>
-      <div className="mt-2 text-sm text-slate-300">{subtext}</div>
+    <div className="rounded-[24px] border border-blue-100/70 bg-white/70 p-4 shadow-sm backdrop-blur-sm">
+      <div className="text-sm font-medium text-slate-500">{label}</div>
+      <div className="mt-2 text-lg font-semibold text-slate-900">{value}</div>
+      <div className="mt-2 text-sm text-slate-600">{subtext}</div>
     </div>
   );
 }

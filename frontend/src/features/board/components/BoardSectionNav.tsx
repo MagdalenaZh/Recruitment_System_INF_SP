@@ -5,7 +5,7 @@ export function BoardSectionNav() {
     "inline-flex items-center rounded-full px-4 py-2 text-sm font-semibold transition";
 
   return (
-    <div className="mt-6 flex flex-wrap gap-2">
+    <div className="mt-6 flex flex-wrap gap-2 rounded-2xl border border-slate-200 bg-white p-2 shadow-sm">
       <NavLink
         to="/board"
         end
@@ -13,8 +13,8 @@ export function BoardSectionNav() {
           [
             baseClasses,
             isActive
-              ? "border border-sky-400/40 bg-sky-400/15 text-white"
-              : "border border-white/10 bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white",
+              ? "border border-blue-200 bg-blue-600 text-white shadow-sm"
+              : "border border-transparent bg-white text-slate-600 hover:border-slate-200 hover:bg-slate-50 hover:text-slate-900",
           ].join(" ")
         }
       >
@@ -27,8 +27,8 @@ export function BoardSectionNav() {
           [
             baseClasses,
             isActive
-              ? "border border-sky-400/40 bg-sky-400/15 text-white"
-              : "border border-white/10 bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white",
+              ? "border border-blue-200 bg-blue-600 text-white shadow-sm"
+              : "border border-transparent bg-white text-slate-600 hover:border-slate-200 hover:bg-slate-50 hover:text-slate-900",
           ].join(" ")
         }
       >
