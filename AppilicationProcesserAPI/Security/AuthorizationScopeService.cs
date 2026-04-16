@@ -17,10 +17,13 @@ namespace AppilicationProcesserAPI.Security
         Task<bool> CanManageInterviewSlotAsync(ClaimsPrincipal user, Guid slotId, CancellationToken cancellationToken);
         Task<bool> CanCreateDepartmentAsync(ClaimsPrincipal user, Guid clubId, CancellationToken cancellationToken);
         Task<bool> CanCreateInterviewSlotAsync(ClaimsPrincipal user, Guid clubId, CancellationToken cancellationToken);
+        Task<bool> CanAssignBoardMemberAsync(ClaimsPrincipal user, Guid departmentId, CancellationToken cancellationToken);
         Task<bool> CanSubmitApplicationAsync(ClaimsPrincipal user, Guid departmentId, CancellationToken cancellationToken);
         Task<bool> CanBookInterviewSlotAsync(ClaimsPrincipal user, Guid applicationId, CancellationToken cancellationToken);
         Task<bool> CanReviewApplicationAsync(ClaimsPrincipal user, Guid applicationId, CancellationToken cancellationToken);
         Task<bool> CanConcludeApplicationAsync(ClaimsPrincipal user, Guid applicationId, CancellationToken cancellationToken);
+        Task<bool> CanAccessNoteAsync(ClaimsPrincipal user, Guid applicationId, CancellationToken cancellationToken);
+        Task<bool> CanEditNoteAsync(ClaimsPrincipal user, Guid noteId, CancellationToken cancellationToken);
         bool IsSystemAdmin(ClaimsPrincipal user);
     }
 
@@ -169,6 +172,9 @@ namespace AppilicationProcesserAPI.Security
         public Task<bool> CanCreateInterviewSlotAsync(ClaimsPrincipal user, Guid clubId, CancellationToken cancellationToken) =>
             CanManageClubAsync(user, clubId, cancellationToken);
 
+        public Task<bool> CanAssignBoardMemberAsync(ClaimsPrincipal user, Guid departmentId, CancellationToken cancellationToken) =>
+            CanManageDepartmentAsync(user, departmentId, cancellationToken);
+
         public async Task<bool> CanSubmitApplicationAsync(ClaimsPrincipal user, Guid departmentId, CancellationToken cancellationToken)
         {
             var currentUserId = GetCurrentUserId(user);
@@ -238,6 +244,30 @@ namespace AppilicationProcesserAPI.Security
             }
 
             return IsClubAdmin(user) && GetAdminClubId(user) == scope.ClubId;
+        }
+
+        public Task<bool> CanAccessNoteAsync(ClaimsPrincipal user, Guid applicationId, CancellationToken cancellationToken) =>
+            CanAccessApplicationAsync(user, applicationId, cancellationToken);
+
+        public async Task<bool> CanEditNoteAsync(ClaimsPrincipal user, Guid noteId, CancellationToken cancellationToken)
+        {
+            var scope = await GetNoteScopeAsync(noteId, cancellationToken).ConfigureAwait(false);
+            if (scope is null)
+            {
+                return false;
+            }
+
+            var currentUserId = GetCurrentUserId(user);
+            if (!currentUserId.HasValue)
+            {
+                return false;
+            }
+
+            if (IsSystemAdmin(user) || scope.AuthorUserId == currentUserId.Value)
+            {
+                return true;
+            }
+            return false;
         }
 
         private bool CanAccessApplicationScope(ClaimsPrincipal user, ApplicationScope scope)
@@ -368,7 +398,35 @@ namespace AppilicationProcesserAPI.Security
                 reader.GetGuid(2));
         }
 
+        private async Task<NoteScope?> GetNoteScopeAsync(Guid noteId, CancellationToken cancellationToken)
+        {
+            const string sql = """
+                SELECT TOP 1 nt.[UserId], dept.[ClubId]
+                FROM [Notes] AS nt
+                INNER JOIN [Applications] AS appl ON appl.[AggregateId] = nt.[ApplicationId]
+                INNER JOIN [Departments] AS dept ON dept.[DepartmentId] = appl.[DepartmentId]
+                WHERE nt.[NoteId] = @noteId
+                """;
+
+            await using var connection = new SqlConnection(_connectionString);
+            await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
+
+            await using var command = new SqlCommand(sql, connection);
+            command.Parameters.AddWithValue("@noteId", noteId);
+
+            await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+            if (!await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
+            {
+                return null;
+            }
+
+            return new NoteScope(
+                reader.GetGuid(0),
+                reader.GetGuid(1));
+        }
+
         private sealed record ApplicationScope(Guid UserId, Guid DepartmentId, Guid ClubId);
+        private sealed record NoteScope(Guid AuthorUserId, Guid ClubId);
 
         private static class Roles
         {

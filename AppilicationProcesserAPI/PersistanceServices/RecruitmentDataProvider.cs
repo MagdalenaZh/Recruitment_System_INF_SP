@@ -145,15 +145,15 @@ namespace AppilicationProcesserAPI.PersistanceServices
             {
                 var clubId = reader.GetGuid(0);
                 var clubmentName = reader.GetString(1);
-                var applicationQuestions = reader.GetString(2);
-                var description = reader.GetString(3);
-                var category = (ClubCategories)reader.GetInt32(4);
+                var applicationQuestions = reader.IsDBNull(2) ? "[]" : reader.GetString(2);
+                var description = reader.IsDBNull(3) ? string.Empty : reader.GetString(3);
+                var category = reader.IsDBNull(4) ? ClubCategories.Other : (ClubCategories)reader.GetInt32(4);
 
                 var seriaizedQuestionaire = JsonSerializer.Deserialize<List<string>>(applicationQuestions, _serializerOptions);
 
                 if (seriaizedQuestionaire is null)
                 {
-                    throw new Exception($"Failed to deserialize admissionQuestions for club {clubId}");
+                    seriaizedQuestionaire = new List<string>();
                 }
 
                 clubs.Add(new ClubDatabaseModel(clubId, clubmentName, seriaizedQuestionaire, description, category));
@@ -178,7 +178,10 @@ namespace AppilicationProcesserAPI.PersistanceServices
                 var noteId = reader.GetGuid(0);
                 var userId = reader.GetGuid(1);
                 var content = reader.GetString(2);
-                notes.Add(new NoteDatabaseModel(noteId, applicationId, userId, content));
+                var firstName = reader.IsDBNull(3) ? string.Empty : reader.GetString(3);
+                var lastName = reader.IsDBNull(4) ? string.Empty : reader.GetString(4);
+                var authorName = $"{firstName} {lastName}".Trim();
+                notes.Add(new NoteDatabaseModel(noteId, applicationId, userId, content, string.IsNullOrWhiteSpace(authorName) ? userId.ToString() : authorName));
             }
             return notes;
         }

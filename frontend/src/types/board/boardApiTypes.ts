@@ -12,3 +12,11 @@ export type BookedInterviewSlotDto = {
   startTime: string;
   endTime: string;
 };
+
+export type ApplicationNoteDto = {
+  noteId: string;
+  applicationId: string;
+  userId: string;
+  content: string;
+  authorName: string;
+};

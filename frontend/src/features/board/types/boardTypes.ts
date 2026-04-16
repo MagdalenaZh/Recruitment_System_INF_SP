@@ -105,8 +105,9 @@ export type BoardInterviewAttachment = {
 
 export type BoardInterviewNote = {
   id: string;
-  author: string;
-  createdAt: string;
+  authorId: string;
+  authorName: string;
+  createdAt?: string | null;
   text: string;
 };
 

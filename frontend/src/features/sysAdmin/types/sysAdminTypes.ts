@@ -54,3 +54,8 @@ export interface ClubAdminAssignment {
   clubId: string;
   userId: string;
 }
+
+export interface SysAdminRole {
+  roleId: string;
+  roleName: string;
+}

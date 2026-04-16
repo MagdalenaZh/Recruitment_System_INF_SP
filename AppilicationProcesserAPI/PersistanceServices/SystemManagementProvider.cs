@@ -17,6 +17,8 @@ namespace AppilicationProcesserAPI.PersistanceServices
 
         Task UpdateUserRoleAsync(Guid userId, Guid roleId, CancellationToken cancellationToken);
         Task UpdateUserPromoteToClubAdminAsync(Guid userId, Guid clubId, CancellationToken cancellationToken);
+        Task AssignClubAdminAsync(Guid userId, Guid clubId, Guid roleId, CancellationToken cancellationToken);
+        Task AssignBoardMemberAsync(Guid userId, Guid departmentId, Guid roleId, CancellationToken cancellationToken);
         Task UpdateUserInformationAsync(Guid userId, string firstName, string lastName, string academicYear, string studyMajor, CancellationToken cancellationToken);
     }
 
@@ -40,12 +42,17 @@ namespace AppilicationProcesserAPI.PersistanceServices
 
         public async Task CreateClubAsync(string clubName, ClubCategories category, CancellationToken cancellationToken)
         {
+            var serializedQuestions = JsonSerializer.Serialize(new List<string>(), _serializerOptions);
+
             using var sqlConnection = new SqlConnection(_connectionString);
             await sqlConnection.OpenAsync(cancellationToken).ConfigureAwait(false);
 
             using var command = new SqlCommand(DbQueries.InsertClub, sqlConnection);
             command.Parameters.AddWithValue("@clubId", Guid.NewGuid());
             command.Parameters.AddWithValue("@clubName", clubName);
+            command.Parameters.AddWithValue("@applicationQuestions", serializedQuestions);
+            command.Parameters.AddWithValue("@description", string.Empty);
+            command.Parameters.AddWithValue("@requiredApprovals", 1);
             command.Parameters.AddWithValue("@category", category);
 
             try
@@ -242,6 +249,63 @@ namespace AppilicationProcesserAPI.PersistanceServices
             }
         }
 
+        public async Task AssignClubAdminAsync(Guid userId, Guid clubId, Guid roleId, CancellationToken cancellationToken)
+        {
+            using var sqlConnection = new SqlConnection(_connectionString);
+            await sqlConnection.OpenAsync(cancellationToken).ConfigureAwait(false);
+
+            var userRoleId = await GetRoleIdByNameAsync(sqlConnection, UserRoleName, cancellationToken).ConfigureAwait(false);
+
+            using var demoteCommand = new SqlCommand(DbQueries.UpdateDemoteClubAdminToUser, sqlConnection);
+            demoteCommand.Parameters.AddWithValue("@clubId", clubId);
+            demoteCommand.Parameters.AddWithValue("@roleId", userRoleId);
+            await demoteCommand.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+
+            using var command = new SqlCommand(DbQueries.UpdateAssignClubAdmin, sqlConnection);
+            command.Parameters.AddWithValue("@userId", userId);
+            command.Parameters.AddWithValue("@clubId", clubId);
+            command.Parameters.AddWithValue("@roleId", roleId);
+
+            try
+            {
+                var rowsAffected = await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+                if (rowsAffected == 0)
+                {
+                    throw new Exception("Update failed");
+                }
+            }
+            catch (SqlException ex)
+            {
+                _logger.LogError(ex, "Failed assigning club admin in Users table");
+                throw;
+            }
+        }
+
+        public async Task AssignBoardMemberAsync(Guid userId, Guid departmentId, Guid roleId, CancellationToken cancellationToken)
+        {
+            using var sqlConnection = new SqlConnection(_connectionString);
+            await sqlConnection.OpenAsync(cancellationToken).ConfigureAwait(false);
+
+            using var command = new SqlCommand(DbQueries.UpdateAssignBoardMember, sqlConnection);
+            command.Parameters.AddWithValue("@userId", userId);
+            command.Parameters.AddWithValue("@departmentId", departmentId);
+            command.Parameters.AddWithValue("@roleId", roleId);
+
+            try
+            {
+                var rowsAffected = await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+                if (rowsAffected == 0)
+                {
+                    throw new Exception("Update failed");
+                }
+            }
+            catch (SqlException ex)
+            {
+                _logger.LogError(ex, "Failed assigning board member in Users table");
+                throw;
+            }
+        }
+
         public async Task CreateApplicationNoteAsync(Guid applicationId, Guid userId, string payload, CancellationToken cancellationToken)
         {
             using var sqlConnection = new SqlConnection(_connectionString);
@@ -312,7 +376,7 @@ namespace AppilicationProcesserAPI.PersistanceServices
             command.Parameters.AddWithValue("@firstName", firstName);
             command.Parameters.AddWithValue("@lastName", lastName);
             command.Parameters.AddWithValue("@academicYear", academicYear);
-            command.Parameters.AddWithValue("@major", major);
+            command.Parameters.AddWithValue("@studyMajor", major);
 
             try
             {

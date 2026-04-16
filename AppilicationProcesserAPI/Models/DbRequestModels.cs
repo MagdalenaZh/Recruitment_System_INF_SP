@@ -101,4 +101,28 @@ namespace AppilicationProcesserAPI.Models
             StudyMajor = studyMajor;
         }
     }
+
+    public class AssignClubAdminRequest
+    {
+        public Guid ClubId { get; }
+        public Guid RoleId { get; }
+
+        public AssignClubAdminRequest(Guid clubId, Guid roleId)
+        {
+            ClubId = clubId;
+            RoleId = roleId;
+        }
+    }
+
+    public class AssignBoardMemberRequest
+    {
+        public Guid DepartmentId { get; }
+        public Guid RoleId { get; }
+
+        public AssignBoardMemberRequest(Guid departmentId, Guid roleId)
+        {
+            DepartmentId = departmentId;
+            RoleId = roleId;
+        }
+    }
 }

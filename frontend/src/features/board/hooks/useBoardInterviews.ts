@@ -168,6 +168,26 @@ export function useBoardInterviews() {
 
       const currentClub = allClubs.find((c) => c.clubId === clubId);
       const clubRequiredApprovals = currentClub?.requiredApprovals ?? 0;
+      const notesResults = await Promise.allSettled(
+        matchedSlots.map(({ app }) => boardApi.getApplicationNotes(app.applicationId)),
+      );
+      const notesMap: Record<string, BoardInterviewNote[]> = {};
+      for (let i = 0; i < matchedSlots.length; i += 1) {
+        const applicationId = matchedSlots[i].app.applicationId;
+        const result = notesResults[i];
+        if (result.status !== "fulfilled") {
+          notesMap[applicationId] = [];
+          continue;
+        }
+
+        notesMap[applicationId] = result.value.map((note) => ({
+          id: note.noteId,
+          authorId: note.userId,
+          authorName: note.authorName,
+          createdAt: null,
+          text: note.content,
+        }));
+      }
 
       const hydratableBookedAppIds = matchedSlots
         .map(({ app }) => app)
@@ -219,7 +239,7 @@ export function useBoardInterviews() {
             answer: String(answer ?? ""),
           })),
           attachments: [],
-          notes: [],
+          notes: notesMap[app.applicationId] ?? [],
           decisions: [
             {
               departmentId: app.departmentId,
@@ -331,24 +351,30 @@ export function useBoardInterviews() {
     }
   }, [applyLiveStateToSlot]);
 
-  const addNote = useCallback((slotId: string, text: string) => {
+  const addNote = useCallback(async (slotId: string, text: string) => {
     const trimmed = text.trim();
     if (!trimmed) return;
 
-    const currentUserId = resolveCurrentUserId();
-    const note: BoardInterviewNote = {
-      id: `note-${Date.now()}`,
-      author: currentUserId ?? "Board member",
-      createdAt: new Date().toLocaleString(),
-      text: trimmed,
-    };
+    const slot = slots.find((entry) => entry.id === slotId);
+    if (!slot) return;
+
+    await boardApi.createApplicationNote(slot.applicationId, trimmed);
+
+    const refreshedNotes = await boardApi.getApplicationNotes(slot.applicationId);
+    const mappedNotes: BoardInterviewNote[] = refreshedNotes.map((note) => ({
+      id: note.noteId,
+      authorId: note.userId,
+      authorName: note.authorName,
+      createdAt: null,
+      text: note.content,
+    }));
 
     setSlots((prev) =>
-      prev.map((slot) =>
-        slot.id === slotId ? { ...slot, notes: [...slot.notes, note] } : slot,
+      prev.map((entry) =>
+        entry.id === slotId ? { ...entry, notes: mappedNotes } : entry,
       ),
     );
-  }, []);
+  }, [slots]);
 
   const submitDecision = useCallback(
     async (applicationId: string, departmentId: string, decision: FinalInterviewDecision) => {
@@ -402,6 +428,37 @@ export function useBoardInterviews() {
     });
   }, [applicationIdsKey, clientId, applyLiveStateToSlot]);
 
+  const refreshNotes = useCallback(async (slotId: string) => {
+    const slot = slots.find((entry) => entry.id === slotId);
+    if (!slot) return;
+
+    const refreshedNotes = await boardApi.getApplicationNotes(slot.applicationId);
+    const mappedNotes: BoardInterviewNote[] = refreshedNotes.map((note) => ({
+      id: note.noteId,
+      authorId: note.userId,
+      authorName: note.authorName,
+      createdAt: null,
+      text: note.content,
+    }));
+
+    setSlots((prev) =>
+      prev.map((entry) =>
+        entry.id === slotId ? { ...entry, notes: mappedNotes } : entry,
+      ),
+    );
+  }, [slots]);
+
+  const updateNote = useCallback(async (slotId: string, noteId: string, text: string) => {
+    const trimmed = text.trim();
+    if (!trimmed) return;
+
+    const slot = slots.find((entry) => entry.id === slotId);
+    if (!slot) return;
+
+    await boardApi.updateApplicationNote(noteId, trimmed);
+    await refreshNotes(slotId);
+  }, [refreshNotes, slots]);
+
   return {
     slots,
     setSlots,
@@ -411,6 +468,8 @@ export function useBoardInterviews() {
     error,
     load,
     addNote,
+    refreshNotes,
+    updateNote,
     submitDecision,
   };
 }

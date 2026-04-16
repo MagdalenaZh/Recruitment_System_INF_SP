@@ -26,6 +26,8 @@ export function AccountProfilePage() {
 
   const [saving, setSaving] = useState(false);
   const [uploadingCv, setUploadingCv] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!profile) return;
@@ -70,21 +72,52 @@ export function AccountProfilePage() {
   async function onSave() {
     if (!profile) return;
 
+    const normalizedAcademicYear = academicYear.trim();
+    const normalizedStudyMajor = studyMajor.trim();
+    const hasAcademicYear = normalizedAcademicYear.length > 0;
+    const hasStudyMajor = normalizedStudyMajor.length > 0;
+
     setSaving(true);
+    setSaveSuccess(null);
+    setSaveError(null);
+
+    if (hasAcademicYear !== hasStudyMajor) {
+      setSaving(false);
+      setSaveError(
+        "Academic year and study major should be filled in together, or both left empty.",
+      );
+      return;
+    }
+
     try {
       await updateProfile({
         firstName,
         lastName,
-        academicYear: academicYear || null,
-        studyMajor: studyMajor || null,
+        academicYear: normalizedAcademicYear || null,
+        studyMajor: normalizedStudyMajor || null,
         cvUrl: profile.cvUrl ?? null,
         cvFileName: selectedCvName ?? profile.cvFileName ?? null,
         avatarUrl: profile.avatarUrl ?? null,
       });
+      setSaveSuccess("Profile updated successfully.");
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Failed to update profile.";
+      setSaveError(
+        message.includes("StudyMajor")
+          ? "Study major is required by the backend. Fill in both academic year and study major, then try again."
+          : message,
+      );
     } finally {
       setSaving(false);
     }
   }
+
+  useEffect(() => {
+    if (!saveSuccess) return;
+    const timeout = window.setTimeout(() => setSaveSuccess(null), 3500);
+    return () => window.clearTimeout(timeout);
+  }, [saveSuccess]);
 
   if (loading) {
     return <div className="text-sm text-slate-600">Loading profile...</div>;
@@ -105,6 +138,18 @@ export function AccountProfilePage() {
           View and update your personal information.
         </p>
       </div>
+
+      {saveSuccess ? (
+        <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">
+          {saveSuccess}
+        </div>
+      ) : null}
+
+      {saveError ? (
+        <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+          {saveError}
+        </div>
+      ) : null}
 
       <div className="grid gap-4 md:grid-cols-2">
         <div>
@@ -190,9 +235,7 @@ export function AccountProfilePage() {
           </div>
 
           <div>
-            <label className="text-xs font-medium text-slate-600">
-              Club
-            </label>
+            <label className="text-xs font-medium text-slate-600">Club</label>
             <div className="mt-1 rounded-xl bg-slate-50 px-3 py-2 text-sm text-slate-700 ring-1 ring-slate-100">
               {profile.clubName ?? "Not assigned"}
             </div>
@@ -203,14 +246,13 @@ export function AccountProfilePage() {
       {isClubAdmin && (
         <div className="grid gap-4 md:grid-cols-2">
           <div>
-            <label className="text-xs font-medium text-slate-600">
-              Club
-            </label>
+            <label className="text-xs font-medium text-slate-600">Club</label>
             <div className="mt-1 rounded-xl bg-slate-50 px-3 py-2 text-sm text-slate-700 ring-1 ring-slate-100">
               {profile.clubName ?? "Not assigned"}
             </div>
             <p className="mt-1 text-xs text-slate-500">
-              This is based on your club-admin assignment and cannot be edited here.
+              This is based on your club-admin assignment and cannot be edited
+              here.
             </p>
           </div>
         </div>

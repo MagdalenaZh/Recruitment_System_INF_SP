@@ -5,6 +5,7 @@ import { ClubAdminSectionNav } from "../components/ClubAdminSectionNav";
 import { useClubAdminClubInfo } from "../hooks/useClubAdminClubInfo";
 import { ClubAdminDepartmentManagementCard } from "../components/ClubAdminDepartmentManagementCard";
 import { ApplicationQuestionsManager } from "../components/ApplicationQuestionsManager";
+import { AssignBoardMemberModal } from "../components/AssignBoardMemberModal";
 
 const CATEGORY_OPTIONS = [
   "Math & Science",
@@ -29,7 +30,12 @@ export function ClubAdminClubInfoPage() {
     updateDepartment,
     createDepartment,
     updateClubInfo,
+    assignBoardMember,
   } = useClubAdminClubInfo();
+  const [
+    pendingBoardAssignmentDepartmentId,
+    setPendingBoardAssignmentDepartmentId,
+  ] = useState<string | null>(null);
 
   const [clubName, setClubName] = useState("");
   const [description, setDescription] = useState("");
@@ -37,7 +43,8 @@ export function ClubAdminClubInfoPage() {
   const [requiredApprovals, setRequiredApprovals] = useState(1);
   const [newDepartmentName, setNewDepartmentName] = useState("");
   const [newDepartmentDescription, setNewDepartmentDescription] = useState("");
-  const [newDepartmentOpenPositions, setNewDepartmentOpenPositions] = useState(0);
+  const [newDepartmentOpenPositions, setNewDepartmentOpenPositions] =
+    useState(0);
   const [savingClub, setSavingClub] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -100,7 +107,9 @@ export function ClubAdminClubInfoPage() {
       setSaveError(null);
     } catch (err) {
       setSaveError(
-        err instanceof Error ? err.message : "Failed to update application questions.",
+        err instanceof Error
+          ? err.message
+          : "Failed to update application questions.",
       );
       throw err;
     }
@@ -124,6 +133,29 @@ export function ClubAdminClubInfoPage() {
       setSaveError(
         err instanceof Error ? err.message : "Failed to create department.",
       );
+    }
+  }
+
+  async function handleAssignBoardMember(userId: string) {
+    if (!pendingBoardAssignmentDepartmentId) return;
+
+    try {
+      const assignedName = await assignBoardMember(
+        userId,
+        pendingBoardAssignmentDepartmentId,
+      );
+      setMessage(
+        assignedName
+          ? `${assignedName} assigned as department head.`
+          : "Department head assigned.",
+      );
+      setSaveError(null);
+      setPendingBoardAssignmentDepartmentId(null);
+    } catch (err) {
+      setSaveError(
+        err instanceof Error ? err.message : "Failed to assign board member.",
+      );
+      throw err;
     }
   }
 
@@ -165,7 +197,9 @@ export function ClubAdminClubInfoPage() {
 
                 <div className="mt-5 grid gap-4 md:grid-cols-2">
                   <div>
-                    <label className="text-xs font-medium text-slate-300">Club name</label>
+                    <label className="text-xs font-medium text-slate-300">
+                      Club name
+                    </label>
                     <input
                       value={clubName}
                       onChange={(e) => setClubName(e.target.value)}
@@ -174,7 +208,9 @@ export function ClubAdminClubInfoPage() {
                   </div>
 
                   <div>
-                    <label className="text-xs font-medium text-slate-300">Category</label>
+                    <label className="text-xs font-medium text-slate-300">
+                      Category
+                    </label>
                     <select
                       value={category}
                       onChange={(e) => setCategory(e.target.value)}
@@ -191,7 +227,9 @@ export function ClubAdminClubInfoPage() {
 
                 <div className="mt-4 grid gap-4 md:grid-cols-[1fr_220px]">
                   <div>
-                    <label className="text-xs font-medium text-slate-300">Description</label>
+                    <label className="text-xs font-medium text-slate-300">
+                      Description
+                    </label>
                     <textarea
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
@@ -201,22 +239,30 @@ export function ClubAdminClubInfoPage() {
                   </div>
 
                   <div>
-                    <label className="text-xs font-medium text-slate-300">Required approvals</label>
+                    <label className="text-xs font-medium text-slate-300">
+                      Required approvals
+                    </label>
                     <input
                       type="number"
                       min={1}
                       value={requiredApprovals}
-                      onChange={(e) => setRequiredApprovals(Number(e.target.value))}
+                      onChange={(e) =>
+                        setRequiredApprovals(Number(e.target.value))
+                      }
                       className="mt-1 w-full rounded-xl border border-white/10 bg-white/10 px-3 py-2 text-sm text-white outline-none"
                     />
                     <p className="mt-2 text-xs text-slate-400">
-                      Used across the recruitment flow when approvals are evaluated.
+                      Used across the recruitment flow when approvals are
+                      evaluated.
                     </p>
                   </div>
                 </div>
 
                 <div className="mt-5 flex flex-wrap justify-end gap-3">
-                  <div className="mr-auto flex min-h-10 items-center" aria-live="polite">
+                  <div
+                    className="mr-auto flex min-h-10 items-center"
+                    aria-live="polite"
+                  >
                     {message ? (
                       <div className="rounded-xl border border-emerald-300/20 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-200">
                         {message}
@@ -234,7 +280,9 @@ export function ClubAdminClubInfoPage() {
                       setClubName(data.clubName);
                       setDescription(data.description);
                       setCategory(data.category || "Other");
-                      setRequiredApprovals(Math.max(1, data.requiredApprovals || 1));
+                      setRequiredApprovals(
+                        Math.max(1, data.requiredApprovals || 1),
+                      );
                       setMessage(null);
                       setSaveError(null);
                     }}
@@ -259,7 +307,9 @@ export function ClubAdminClubInfoPage() {
               />
 
               <section className="rounded-3xl border border-white/10 bg-white/10 p-5 backdrop-blur shadow-lg">
-                <h3 className="text-xl font-semibold text-white">Create department</h3>
+                <h3 className="text-xl font-semibold text-white">
+                  Create department
+                </h3>
                 <div className="mt-4 grid gap-3 md:grid-cols-3">
                   <input
                     value={newDepartmentName}
@@ -271,13 +321,17 @@ export function ClubAdminClubInfoPage() {
                     type="number"
                     min={0}
                     value={newDepartmentOpenPositions}
-                    onChange={(e) => setNewDepartmentOpenPositions(Number(e.target.value))}
+                    onChange={(e) =>
+                      setNewDepartmentOpenPositions(Number(e.target.value))
+                    }
                     placeholder="Open positions"
                     className="rounded-xl border border-white/10 bg-white/10 px-3 py-2 text-sm text-white outline-none"
                   />
                   <input
                     value={newDepartmentDescription}
-                    onChange={(e) => setNewDepartmentDescription(e.target.value)}
+                    onChange={(e) =>
+                      setNewDepartmentDescription(e.target.value)
+                    }
                     placeholder="Description"
                     className="rounded-xl border border-white/10 bg-white/10 px-3 py-2 text-sm text-white outline-none"
                   />
@@ -298,6 +352,7 @@ export function ClubAdminClubInfoPage() {
                     department={department}
                     onSaveOpenPositions={updateOpenPositions}
                     onSaveDepartment={updateDepartment}
+                    onAssignBoardMember={setPendingBoardAssignmentDepartmentId}
                   />
                 ))}
               </div>
@@ -305,6 +360,18 @@ export function ClubAdminClubInfoPage() {
           ) : null}
         </div>
       </div>
+
+      <AssignBoardMemberModal
+        open={pendingBoardAssignmentDepartmentId !== null}
+        departmentName={
+          data?.departments.find(
+            (department) =>
+              department.departmentId === pendingBoardAssignmentDepartmentId,
+          )?.departmentName ?? ""
+        }
+        onClose={() => setPendingBoardAssignmentDepartmentId(null)}
+        onSubmit={handleAssignBoardMember}
+      />
     </ClubAdminShell>
   );
 }

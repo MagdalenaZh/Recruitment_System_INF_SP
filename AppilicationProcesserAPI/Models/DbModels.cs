@@ -125,12 +125,14 @@ namespace AppilicationProcesserAPI.Models
         public Guid ApplicationId { get; }
         public Guid UserId { get; }
         public string Content { get; }
-        public NoteDatabaseModel(Guid noteId, Guid applicationId, Guid userId, string content)
+        public string AuthorName { get; }
+        public NoteDatabaseModel(Guid noteId, Guid applicationId, Guid userId, string content, string authorName)
         {
             NoteId = noteId;
             ApplicationId = applicationId;
             UserId = userId;
             Content = content;
+            AuthorName = authorName;
         }
     }
 

@@ -7,8 +7,11 @@ import { clubAdminApi } from "../../../services/clubAdmin/clubAdminApi";
 
 export function useClubAdminClubInfo() {
   const [data, setData] = useState<ClubAdminClubInfo | null>(null);
-  const [interviewSlots, setInterviewSlots] = useState<ClubAdminInterviewSlot[]>(
-    [],
+  const [interviewSlots, setInterviewSlots] = useState<
+    ClubAdminInterviewSlot[]
+  >([]);
+  const [boardMemberRoleId, setBoardMemberRoleId] = useState<string | null>(
+    null,
   );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -21,7 +24,14 @@ export function useClubAdminClubInfo() {
       const result = await clubAdminApi.getCurrentClubInfo();
       setData(result);
 
-      const slots = await clubAdminApi.getAvailableInterviewSlots(result.clubId);
+      const roles = await clubAdminApi.getAvailableRoles();
+      setBoardMemberRoleId(
+        roles.find((role) => role.roleName === "BoardMember")?.roleId ?? null,
+      );
+
+      const slots = await clubAdminApi.getAvailableInterviewSlots(
+        result.clubId,
+      );
       setInterviewSlots(
         slots.map((slot) => ({
           slotId: slot.slotId,
@@ -30,7 +40,9 @@ export function useClubAdminClubInfo() {
         })),
       );
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load club info.");
+      setError(
+        err instanceof Error ? err.message : "Failed to load club info.",
+      );
     } finally {
       setLoading(false);
     }
@@ -175,6 +187,49 @@ export function useClubAdminClubInfo() {
     [],
   );
 
+  const assignBoardMember = useCallback(
+    async (userId: string, departmentId: string) => {
+      if (!boardMemberRoleId) {
+        throw new Error('Role "BoardMember" is not available.');
+      }
+
+      await clubAdminApi.assignBoardMember(
+        userId,
+        departmentId,
+        boardMemberRoleId,
+      );
+
+      let assignedName: string | null = null;
+      try {
+        const user = await clubAdminApi.getUserInformation(userId);
+        assignedName =
+          `${user.firstName} ${user.lastName}`.trim() || user.email;
+      } catch {
+        assignedName = userId;
+      }
+
+      setData((prev) => {
+        if (!prev) return prev;
+
+        return {
+          ...prev,
+          departments: prev.departments.map((department) =>
+            department.departmentId === departmentId
+              ? {
+                  ...department,
+                  headUserId: userId,
+                  headName: assignedName,
+                }
+              : department,
+          ),
+        };
+      });
+
+      return assignedName;
+    },
+    [boardMemberRoleId],
+  );
+
   return {
     data,
     interviewSlots,
@@ -187,5 +242,6 @@ export function useClubAdminClubInfo() {
     updateClubInfo,
     createInterviewSlot,
     updateInterviewSlot,
+    assignBoardMember,
   };
 }

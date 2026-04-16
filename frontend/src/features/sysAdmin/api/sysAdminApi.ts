@@ -8,6 +8,7 @@ import type {
   CreateDepartmentInput,
   SysAdminClub,
   SysAdminDepartment,
+  SysAdminRole,
   UpdateClubInput,
   UpdateDepartmentInput,
 } from "../types/sysAdminTypes";
@@ -63,6 +64,11 @@ type UserInfoDto = {
   firstName: string;
   lastName: string;
   email: string;
+};
+
+type RoleDto = {
+  roleId: string;
+  roleName: string;
 };
 
 function mapClub(dto: ClubDto): SysAdminClub {
@@ -175,6 +181,37 @@ export async function promoteUserToClubAdmin(
   return apiPut<string, MessageResponse>(
     `/api/recruitmentInfo/api/update-user-promote-club-admin/${userId}`,
     clubId,
+    true,
+  );
+}
+
+export async function assignClubAdmin(
+  userId: string,
+  clubId: string,
+  roleId: string,
+): Promise<MessageResponse> {
+  return apiPut<{ clubId: string; roleId: string }, MessageResponse>(
+    `/api/recruitmentInfo/api/assign-club-admin/${userId}`,
+    { clubId, roleId },
+    true,
+  );
+}
+
+export async function getAvailableRoles(): Promise<SysAdminRole[]> {
+  const roles = await apiGet<RoleDto[]>("/api/recruitmentInfo/api/roles", true);
+  return roles.map((role) => ({
+    roleId: role.roleId,
+    roleName: role.roleName,
+  }));
+}
+
+export async function updateUserRole(
+  userId: string,
+  roleId: string,
+): Promise<MessageResponse> {
+  return apiPut<string, MessageResponse>(
+    `/api/recruitmentInfo/api/update-user-role/${userId}`,
+    roleId,
     true,
   );
 }

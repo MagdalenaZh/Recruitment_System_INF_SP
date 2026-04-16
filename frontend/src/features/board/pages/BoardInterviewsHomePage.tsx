@@ -5,7 +5,10 @@ import { InterviewDecisionConfirmModal } from "../components/InterviewDecisionCo
 import { InterviewPhaseBadge } from "../components/InterviewPhaseBadge";
 import { useBoardDepartments } from "../hooks/useBoardDepartments";
 import { useBoardInterviews } from "../hooks/useBoardInterviews";
-import type { BoardInterviewSlot, FinalInterviewDecision } from "../types/boardTypes";
+import type {
+  BoardInterviewSlot,
+  FinalInterviewDecision,
+} from "../types/boardTypes";
 import {
   filterSlotsByDepartment,
   getCurrentInterview,
@@ -25,11 +28,22 @@ type PendingDecisionRequest = {
 } | null;
 
 export function BoardInterviewsHomePage() {
-  const { slots, clubName, loading, error, load, addNote, submitDecision } = useBoardInterviews();
+  const {
+    slots,
+    clubName,
+    loading,
+    error,
+    load,
+    addNote,
+    refreshNotes,
+    updateNote,
+    submitDecision,
+  } = useBoardInterviews();
   const { data: departmentStats } = useBoardDepartments();
   const [departmentFilter, setDepartmentFilter] = useState("all");
   const [selectedSlotId, setSelectedSlotId] = useState<string | null>(null);
-  const [pendingDecision, setPendingDecision] = useState<PendingDecisionRequest>(null);
+  const [pendingDecision, setPendingDecision] =
+    useState<PendingDecisionRequest>(null);
   const [decisionLoading, setDecisionLoading] = useState(false);
 
   useEffect(() => {
@@ -41,9 +55,18 @@ export function BoardInterviewsHomePage() {
     () => filterSlotsByDepartment(slots, departmentFilter),
     [slots, departmentFilter],
   );
-  const groupedSlots = useMemo(() => groupSlotsByDate(filteredSlots), [filteredSlots]);
-  const currentInterview = useMemo(() => getCurrentInterview(filteredSlots), [filteredSlots]);
-  const nextInterview = useMemo(() => getNextInterview(filteredSlots), [filteredSlots]);
+  const groupedSlots = useMemo(
+    () => groupSlotsByDate(filteredSlots),
+    [filteredSlots],
+  );
+  const currentInterview = useMemo(
+    () => getCurrentInterview(filteredSlots),
+    [filteredSlots],
+  );
+  const nextInterview = useMemo(
+    () => getNextInterview(filteredSlots),
+    [filteredSlots],
+  );
   const selectedSlot = slots.find((slot) => slot.id === selectedSlotId) ?? null;
 
   useEffect(() => {
@@ -69,7 +92,11 @@ export function BoardInterviewsHomePage() {
   }
 
   const totalPendingAcrossView = filteredSlots.reduce((sum, slot) => {
-    return sum + slot.decisions.filter((decision) => decision.finalDecision === null).length;
+    return (
+      sum +
+      slot.decisions.filter((decision) => decision.finalDecision === null)
+        .length
+    );
   }, 0);
 
   if (loading) {
@@ -89,7 +116,9 @@ export function BoardInterviewsHomePage() {
       <BoardShell>
         <div className="mx-auto max-w-7xl p-6 pt-36">
           <div className="rounded-2xl border border-red-400/30 bg-red-500/10 p-6 text-red-300">
-            <div className="font-semibold">Could not load interview schedule.</div>
+            <div className="font-semibold">
+              Could not load interview schedule.
+            </div>
             <div className="mt-2 text-sm">{error}</div>
           </div>
         </div>
@@ -103,11 +132,18 @@ export function BoardInterviewsHomePage() {
         <div className="mx-auto max-w-7xl p-4 sm:p-6">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div>
-              <h1 className="text-3xl font-semibold text-white">Interview day schedule</h1>
-              {clubName ? <p className="mt-2 text-base font-medium text-sky-300">{clubName}</p> : null}
+              <h1 className="text-3xl font-semibold text-white">
+                Interview day schedule
+              </h1>
+              {clubName ? (
+                <p className="mt-2 text-base font-medium text-sky-300">
+                  {clubName}
+                </p>
+              ) : null}
               <p className="mt-2 max-w-3xl text-sm text-slate-300 sm:text-base">
-                One centralized page for the board. Open any slot to see the applicant&apos;s full
-                application, notes, and final voting controls.
+                One centralized page for the board. Open any slot to see the
+                applicant&apos;s full application, notes, and final voting
+                controls.
               </p>
             </div>
           </div>
@@ -117,13 +153,33 @@ export function BoardInterviewsHomePage() {
           <div className="mt-8 grid gap-4 md:grid-cols-3 xl:grid-cols-4">
             <SummaryCard
               label="Now interviewing"
-              value={currentInterview ? `${currentInterview.startTime} ${currentInterview.candidateName}` : "No live interview"}
-              subtext={currentInterview ? currentInterview.decisions.map((decision) => decision.departmentName).join(" • ") : "No slot is currently live."}
+              value={
+                currentInterview
+                  ? `${currentInterview.startTime} ${currentInterview.candidateName}`
+                  : "No live interview"
+              }
+              subtext={
+                currentInterview
+                  ? currentInterview.decisions
+                      .map((decision) => decision.departmentName)
+                      .join(" • ")
+                  : "No slot is currently live."
+              }
             />
             <SummaryCard
               label="Next applicant"
-              value={nextInterview ? `${nextInterview.startTime} ${nextInterview.candidateName}` : "No next interview"}
-              subtext={nextInterview ? nextInterview.decisions.map((decision) => decision.departmentName).join(" • ") : "All remaining slots are completed."}
+              value={
+                nextInterview
+                  ? `${nextInterview.startTime} ${nextInterview.candidateName}`
+                  : "No next interview"
+              }
+              subtext={
+                nextInterview
+                  ? nextInterview.decisions
+                      .map((decision) => decision.departmentName)
+                      .join(" • ")
+                  : "All remaining slots are completed."
+              }
             />
             <SummaryCard
               label="Pending decisions"
@@ -132,7 +188,14 @@ export function BoardInterviewsHomePage() {
             />
             <SummaryCard
               label="Current filter"
-              value={departmentFilter === "all" ? "All departments" : (departmentStats.find((department) => department.departmentId === departmentFilter)?.departmentName ?? "Department")}
+              value={
+                departmentFilter === "all"
+                  ? "All departments"
+                  : (departmentStats.find(
+                      (department) =>
+                        department.departmentId === departmentFilter,
+                    )?.departmentName ?? "Department")
+              }
               subtext="Use the department cards below to narrow the schedule."
             />
           </div>
@@ -141,9 +204,12 @@ export function BoardInterviewsHomePage() {
             <div className="mt-8">
               <div className="flex items-center justify-between gap-4">
                 <div>
-                  <h2 className="text-xl font-semibold text-white">Department overview</h2>
+                  <h2 className="text-xl font-semibold text-white">
+                    Department overview
+                  </h2>
                   <p className="mt-1 text-sm text-slate-400">
-                    Track approvals per department while working from the central timeline.
+                    Track approvals per department while working from the
+                    central timeline.
                   </p>
                 </div>
                 <button
@@ -167,7 +233,13 @@ export function BoardInterviewsHomePage() {
                     <button
                       key={department.departmentId}
                       type="button"
-                      onClick={() => setDepartmentFilter((prev) => prev === department.departmentId ? "all" : department.departmentId)}
+                      onClick={() =>
+                        setDepartmentFilter((prev) =>
+                          prev === department.departmentId
+                            ? "all"
+                            : department.departmentId,
+                        )
+                      }
                       className={[
                         "rounded-2xl border p-5 text-left transition",
                         active
@@ -177,18 +249,22 @@ export function BoardInterviewsHomePage() {
                     >
                       <div className="flex items-start justify-between gap-4">
                         <div>
-                          <h3 className="text-xl font-semibold text-white">{department.departmentName}</h3>
+                          <h3 className="text-xl font-semibold text-white">
+                            {department.departmentName}
+                          </h3>
                           <p
                             className={[
                               "mt-2 text-sm",
                               department.approvedCount > department.targetSpots
                                 ? "text-rose-300"
-                                : department.approvedCount === department.targetSpots
+                                : department.approvedCount ===
+                                    department.targetSpots
                                   ? "text-emerald-300"
                                   : "text-sky-300",
                             ].join(" ")}
                           >
-                            {department.approvedCount} / {department.targetSpots} approved
+                            {department.approvedCount} /{" "}
+                            {department.targetSpots} approved
                           </p>
                         </div>
                         <span
@@ -205,15 +281,21 @@ export function BoardInterviewsHomePage() {
                       <div className="mt-4 grid grid-cols-3 gap-2 text-xs text-slate-300">
                         <div className="rounded-xl border border-white/10 bg-slate-950/40 p-3">
                           <div className="text-slate-400">Applicants</div>
-                          <div className="mt-1 text-sm font-semibold text-white">{department.totalApplicants}</div>
+                          <div className="mt-1 text-sm font-semibold text-white">
+                            {department.totalApplicants}
+                          </div>
                         </div>
                         <div className="rounded-xl border border-white/10 bg-slate-950/40 p-3">
                           <div className="text-slate-400">Approved</div>
-                          <div className="mt-1 text-sm font-semibold text-emerald-200">{department.approvedCount}</div>
+                          <div className="mt-1 text-sm font-semibold text-emerald-200">
+                            {department.approvedCount}
+                          </div>
                         </div>
                         <div className="rounded-xl border border-white/10 bg-slate-950/40 p-3">
                           <div className="text-slate-400">Rejected</div>
-                          <div className="mt-1 text-sm font-semibold text-rose-200">{department.rejectedCount}</div>
+                          <div className="mt-1 text-sm font-semibold text-rose-200">
+                            {department.rejectedCount}
+                          </div>
                         </div>
                       </div>
                     </button>
@@ -236,9 +318,12 @@ export function BoardInterviewsHomePage() {
                 >
                   <div className="flex items-center justify-between gap-4">
                     <div>
-                      <h2 className="text-xl font-semibold text-white">{group.date}</h2>
+                      <h2 className="text-xl font-semibold text-white">
+                        {group.date}
+                      </h2>
                       <p className="mt-1 text-sm text-slate-400">
-                        {group.slots.length} interview slot{group.slots.length === 1 ? "" : "s"} on this date
+                        {group.slots.length} interview slot
+                        {group.slots.length === 1 ? "" : "s"} on this date
                       </p>
                     </div>
                   </div>
@@ -266,8 +351,12 @@ export function BoardInterviewsHomePage() {
                                 </div>
                                 <InterviewPhaseBadge phase={phase} />
                               </div>
-                              <div className="mt-3 text-xl font-semibold text-white">{slot.candidateName}</div>
-                              <div className="mt-1 text-sm text-slate-400">{slot.candidateEmail}</div>
+                              <div className="mt-3 text-xl font-semibold text-white">
+                                {slot.candidateName}
+                              </div>
+                              <div className="mt-1 text-sm text-slate-400">
+                                {slot.candidateEmail}
+                              </div>
                               <div className="mt-1 text-sm text-slate-400">
                                 {slot.clubName} • {slot.departmentName}
                               </div>
@@ -281,7 +370,9 @@ export function BoardInterviewsHomePage() {
                                   </span>
                                 ))}
                               </div>
-                              <div className="mt-4 text-sm text-slate-300">{getDecisionProgressLabel(slot)}</div>
+                              <div className="mt-4 text-sm text-slate-300">
+                                {getDecisionProgressLabel(slot)}
+                              </div>
                             </div>
                             <div className="flex shrink-0 items-center gap-3">
                               <span className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-slate-200">
@@ -305,6 +396,8 @@ export function BoardInterviewsHomePage() {
         slot={selectedSlot}
         onClose={() => setSelectedSlotId(null)}
         onAddNote={addNote}
+        onRefreshNotes={refreshNotes}
+        onUpdateNote={updateNote}
         onRequestDecision={(request) => setPendingDecision(request)}
       />
 

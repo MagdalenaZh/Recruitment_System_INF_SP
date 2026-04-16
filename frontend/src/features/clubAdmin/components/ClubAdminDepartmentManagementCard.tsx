@@ -13,17 +13,21 @@ type Props = {
     openPositions: number,
     description: string,
   ) => Promise<void>;
+  onAssignBoardMember: (departmentId: string) => void;
 };
 
 export function ClubAdminDepartmentManagementCard({
   department,
   onSaveOpenPositions,
   onSaveDepartment,
+  onAssignBoardMember,
 }: Props) {
   const [departmentName, setDepartmentName] = useState<string>(
     department.departmentName,
   );
-  const [description, setDescription] = useState<string>(department.description);
+  const [description, setDescription] = useState<string>(
+    department.description,
+  );
   const [openPositions, setOpenPositions] = useState<number>(
     department.openPositions,
   );
@@ -100,29 +104,21 @@ export function ClubAdminDepartmentManagementCard({
             {department.description}
           </p>
 
-          <div className="mt-5 flex flex-wrap gap-3">
-            <div className="rounded-full border border-white/10 bg-white/10 px-3 py-1 text-sm text-slate-200">
-              Head:{" "}
+          <div className="mt-5 flex flex-wrap items-center gap-3">
+            <div className="rounded-full border border-emerald-300/20 bg-emerald-500/10 px-3 py-1 text-sm text-emerald-100">
+              Department head:{" "}
               <span className="font-semibold text-white">
-                {department.headName ?? "No head assigned yet"}
+                {department.headName ?? "Not assigned"}
               </span>
             </div>
 
             <button
               type="button"
               className="rounded-full border border-white/10 bg-white/10 px-3 py-1 text-sm font-semibold text-white hover:bg-white/20"
-              onClick={() => {
-                alert(
-                  "Department head assignment UI should open here later. Best option: searchable modal with user lookup.",
-                );
-              }}
+              onClick={() => onAssignBoardMember(department.departmentId)}
             >
-              {department.headName ? "Reassign head" : "Assign head"}
+              {department.headUserId ? "Reassign head" : "Assign head"}
             </button>
-
-            <div className="rounded-full border border-amber-300/20 bg-amber-500/10 px-3 py-1 text-sm text-amber-200">
-              Head assignment endpoint not ready
-            </div>
           </div>
         </div>
 

@@ -415,11 +415,56 @@ namespace AppilicationProcesserAPI.Controllers
             }
         }
 
+        [Authorize]
+        [HttpPut("api/assign-club-admin/{userId}")]
+        public async Task<IActionResult> AssignClubAdmin([FromRoute] Guid userId, [FromBody] AssignClubAdminRequest request, CancellationToken cancellationToken)
+        {
+            if (!_authorizationScopeService.IsSystemAdmin(User))
+            {
+                return Forbid();
+            }
+
+            try
+            {
+                await _systemManagementProvider.AssignClubAdminAsync(userId, request.ClubId, request.RoleId, cancellationToken).ConfigureAwait(false);
+                return Ok(new { message = "Club admin assigned successfully." });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error assigning club admin for UserId: {UserId}, ClubId: {ClubId}, RoleId: {RoleId}", userId, request.ClubId, request.RoleId);
+                return StatusCode(500, "An error occurred while assigning the club admin.");
+            }
+        }
+
+        [Authorize]
+        [HttpPut("api/assign-board-member/{userId}")]
+        public async Task<IActionResult> AssignBoardMember([FromRoute] Guid userId, [FromBody] AssignBoardMemberRequest request, CancellationToken cancellationToken)
+        {
+            if (!await _authorizationScopeService.CanAssignBoardMemberAsync(User, request.DepartmentId, cancellationToken).ConfigureAwait(false))
+            {
+                return Forbid();
+            }
+
+            try
+            {
+                await _systemManagementProvider.AssignBoardMemberAsync(userId, request.DepartmentId, request.RoleId, cancellationToken).ConfigureAwait(false);
+                return Ok(new { message = "Board member assigned successfully." });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error assigning board member for UserId: {UserId}, DepartmentId: {DepartmentId}, RoleId: {RoleId}", userId, request.DepartmentId, request.RoleId);
+                return StatusCode(500, "An error occurred while assigning the board member.");
+            }
+        }
+
+        [Authorize]
         [HttpPost("api/create-note/{applicationId}")]
         public async Task<IActionResult> CreateNoteForApplication([FromRoute] Guid applicationId, [FromBody] string noteData, CancellationToken cancellationToken)
         {
-            if (User == null)
-                return Unauthorized();
+            if (!await _authorizationScopeService.CanReviewApplicationAsync(User, applicationId, cancellationToken).ConfigureAwait(false))
+            {
+                return Forbid();
+            }
 
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
             if (userIdClaim == null)
@@ -439,9 +484,15 @@ namespace AppilicationProcesserAPI.Controllers
             }
         }
 
+        [Authorize]
         [HttpGet("api/notes-application/{applicationId}")]
         public async Task<ActionResult<List<NoteDatabaseModel>>> GetAllNotesForApplication([FromRoute] Guid applicationId, CancellationToken cancellationToken)
         {
+            if (!await _authorizationScopeService.CanAccessNoteAsync(User, applicationId, cancellationToken).ConfigureAwait(false))
+            {
+                return Forbid();
+            }
+
             try
             {
                 var notes = await _recruitmentDataProvider.GetAllNotesForApplicationAsync(applicationId, cancellationToken).ConfigureAwait(false);
@@ -454,9 +505,15 @@ namespace AppilicationProcesserAPI.Controllers
             }
         }
 
+        [Authorize]
         [HttpPut("api/update-note/{noteId}")]
         public async Task<IActionResult> UpdateNote([FromRoute] Guid noteId, [FromBody] string noteData, CancellationToken cancellationToken)
         {
+            if (!await _authorizationScopeService.CanEditNoteAsync(User, noteId, cancellationToken).ConfigureAwait(false))
+            {
+                return Forbid();
+            }
+
             try
             {
                 await _systemManagementProvider.UpdateApplicationNoteAsync(noteId, noteData, cancellationToken).ConfigureAwait(false);
@@ -469,6 +526,7 @@ namespace AppilicationProcesserAPI.Controllers
             }
         }
 
+        [Authorize]
         [HttpPut("api/update-user-information")]
         public async Task<IActionResult> UpdateUserInformation([FromBody] UpdateUserInformationRequest updateModel, CancellationToken cancellationToken)
         {
@@ -493,9 +551,15 @@ namespace AppilicationProcesserAPI.Controllers
             }
         }
 
+        [Authorize]
         [HttpGet("api/roles")]
         public async Task<ActionResult<List<RolesDatabaseModel>>> GetAllRoles(CancellationToken cancellationToken)
         {
+            if (!_authorizationScopeService.IsSystemAdmin(User) && !User.IsInRole("ClubAdmin"))
+            {
+                return Forbid();
+            }
+
             try
             {
                 var roles = await _recruitmentDataProvider.GetAllRolesAsync(cancellationToken).ConfigureAwait(false);

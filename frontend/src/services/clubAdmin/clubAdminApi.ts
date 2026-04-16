@@ -61,6 +61,18 @@ type MessageResponse = {
   message: string;
 };
 
+type RoleDto = {
+  roleId: string;
+  roleName: string;
+};
+
+type UserInfoDto = {
+  userId: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+};
+
 function parseJwtPayload(token: string | null): Record<string, unknown> | null {
   if (!token) return null;
 
@@ -221,6 +233,25 @@ export const clubAdminApi = {
       description: department.description,
       numberOfOpenPositions: openPositions,
     });
+  },
+
+  async getAvailableRoles(): Promise<RoleDto[]> {
+    return apiGet<RoleDto[]>("/api/recruitmentInfo/api/roles");
+  },
+
+  async assignBoardMember(
+    userId: string,
+    departmentId: string,
+    roleId: string,
+  ): Promise<MessageResponse> {
+    return apiPut<{ departmentId: string; roleId: string }, MessageResponse>(
+      `/api/recruitmentInfo/api/assign-board-member/${userId}`,
+      { departmentId, roleId },
+    );
+  },
+
+  async getUserInformation(userId: string): Promise<UserInfoDto> {
+    return apiGet<UserInfoDto>(`/api/recruitmentInfo/api/user-information/${userId}`);
   },
 
   async getAvailableInterviewSlots(clubId: string): Promise<InterviewSlotDto[]> {

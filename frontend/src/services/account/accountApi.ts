@@ -20,6 +20,15 @@ export type CurrentUserResponse = {
   adminClubId?: string | null;
 };
 
+export type UserInformationResponse = {
+  userId: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  academicYear?: string | null;
+  studyMajor?: string | null;
+};
+
 export type UpdateProfileRequest = {
   firstName: string;
   lastName: string;
@@ -36,6 +45,15 @@ export async function getCurrentUser() {
   return apiGet<CurrentUserResponse>("/api/auth/me");
 }
 
+export async function getUserInformation(userId: string) {
+  return apiGet<UserInformationResponse>(
+    `/api/recruitmentInfo/api/user-information/${userId}`,
+  );
+}
+
 export async function updateProfile(data: UpdateProfileRequest) {
-  return apiPut<UpdateProfileRequest, void>("/api/auth/me", data);
+  return apiPut<UpdateProfileRequest, void>(
+    "/api/recruitmentInfo/api/update-user-information",
+    data,
+  );
 }

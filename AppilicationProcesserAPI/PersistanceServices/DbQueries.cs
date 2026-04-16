@@ -65,7 +65,13 @@
             WHERE u.[UserId] = @userId
             """;
 
-        internal const string GetAllNotesForApplication = "SELECT [NoteId], [UserId], [Payload] FROM [Notes] WHERE [ApplicationId] = @applicationId";
+        internal const string GetAllNotesForApplication = """
+            SELECT nt.[NoteId], nt.[UserId], nt.[Payload], usr.[FirstName], usr.[LastName]
+            FROM [Notes] AS nt
+            INNER JOIN [Users] AS usr ON usr.[UserId] = nt.[UserId]
+            WHERE nt.[ApplicationId] = @applicationId
+            ORDER BY nt.[Id] ASC
+            """;
 
         internal const string GetAllRoles = "SELECT [RoleId], [Name] FROM [Roles]";
         #endregion
@@ -77,7 +83,7 @@
 
         internal const string InsertBookedInterviewSlot = "INSERT INTO [BookedSlots] ([SlotId], [AggregateId]) VALUES (@slotId, @aggregateId)";
 
-        internal const string InsertClub = "INSERT INTO [Clubs] ([ClubId], [ClubName], [Category]) VALUES (@clubId, @clubName, @category)";
+        internal const string InsertClub = "INSERT INTO [Clubs] ([ClubId], [ClubName], [ApplicationQuestions], [Description], [RequiredApprovals], [Category]) VALUES (@clubId, @clubName, @applicationQuestions, @description, @requiredApprovals, @category)";
 
         internal const string InsertDepartment = "INSERT INTO [Departments] ([DepartmentId], [ClubId], [DepartmentName], [OpenPositions], [Description]) VALUES (@departmentId, @clubId, @departmentName, @openPositions, @description)";
 
@@ -98,6 +104,10 @@
         internal const string UpdateDemoteClubAdminToUser = "UPDATE [Users] SET [AdminClubId] = NULL, [RoleId] = @roleId WHERE [AdminClubId] = @clubId";
 
         internal const string UpdatePromoteUserToClubAdmin = "UPDATE [Users] SET [AdminClubId] = @clubId, [RoleId] = @roleId WHERE [UserId] = @userId";
+
+        internal const string UpdateAssignClubAdmin = "UPDATE [Users] SET [AdminClubId] = @clubId, [DepartmentId] = NULL, [RoleId] = @roleId WHERE [UserId] = @userId";
+
+        internal const string UpdateAssignBoardMember = "UPDATE [Users] SET [DepartmentId] = @departmentId, [AdminClubId] = NULL, [RoleId] = @roleId WHERE [UserId] = @userId";
 
         internal const string UpdateApplicationStatus = "UPDATE [Applications] SET [Status] = @status WHERE [AggregateId] = @aggregateId";
 

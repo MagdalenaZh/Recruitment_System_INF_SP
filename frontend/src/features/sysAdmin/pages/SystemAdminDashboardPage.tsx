@@ -1,9 +1,14 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AddClubModal } from "../components/AddClubModal";
 import { AssignClubAdminModal } from "../components/AssignClubAdminModal";
 import { GlassPanel } from "../components/GlassPanel";
 import { useSysAdmin } from "../context/SysAdminContext";
-import { getUserInformation, promoteUserToClubAdmin } from "../api/sysAdminApi";
+import {
+  getAvailableRoles,
+  getUserInformation,
+  assignClubAdmin,
+} from "../api/sysAdminApi";
+import type { SysAdminRole } from "../types/sysAdminTypes";
 
 const CATEGORY_OPTIONS = [
   "All",
@@ -66,10 +71,13 @@ export function SystemAdminDashboardPage() {
   const [pendingAssignment, setPendingAssignment] =
     useState<PendingClubAdminAssignment>(null);
   const [notice, setNotice] = useState<string | null>(null);
-  const [deleteNoticeClubId, setDeleteNoticeClubId] = useState<string | null>(null);
+  const [deleteNoticeClubId, setDeleteNoticeClubId] = useState<string | null>(
+    null,
+  );
   const [clubAdminAssignments, setClubAdminAssignments] = useState<
     Record<string, CachedClubAdminAssignment>
   >(() => readCachedAssignments());
+  const [roles, setRoles] = useState<SysAdminRole[]>([]);
 
   const filteredClubs = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -87,11 +95,29 @@ export function SystemAdminDashboardPage() {
     });
   }, [clubs, query, categoryFilter]);
 
+  useEffect(() => {
+    void getAvailableRoles()
+      .then(setRoles)
+      .catch(() => setRoles([]));
+  }, []);
+
   async function handleAssignAdmin(userId: string) {
     if (!pendingAssignment) return;
 
     try {
-      await promoteUserToClubAdmin(userId, pendingAssignment.clubId);
+      const clubAdminRole = roles.find(
+        (entry) => entry.roleName === "ClubAdmin",
+      );
+      if (!clubAdminRole) {
+        throw new Error('Role "ClubAdmin" is not available.');
+      }
+
+      await assignClubAdmin(
+        userId,
+        pendingAssignment.clubId,
+        clubAdminRole.roleId,
+      );
+
       const user = await getUserInformation(userId);
       const name = `${user.firstName} ${user.lastName}`.trim() || user.email;
       setClubAdminAssignments((prev) => {
@@ -106,13 +132,15 @@ export function SystemAdminDashboardPage() {
         writeCachedAssignments(next);
         return next;
       });
-      setNotice(`Assigned club admin for "${pendingAssignment.clubName}".`);
+      setNotice(
+        `Assigned ClubAdmin and club ownership to ${name} for "${pendingAssignment.clubName}".`,
+      );
       setPendingAssignment(null);
     } catch (err) {
       setNotice(
         err instanceof Error
-          ? `Failed to assign admin: ${err.message}`
-          : "Failed to assign admin.",
+          ? `Failed to assign role: ${err.message}`
+          : "Failed to assign role.",
       );
       throw err;
     }
@@ -130,7 +158,8 @@ export function SystemAdminDashboardPage() {
               Club management overview
             </h1>
             <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-300">
-              Search clubs, filter by category, create new clubs, and assign club admins from one place.
+              Search clubs, filter by category, create new clubs, and assign
+              club admins from one place.
             </p>
           </div>
 
@@ -173,7 +202,9 @@ export function SystemAdminDashboardPage() {
           <select
             value={categoryFilter}
             onChange={(e) =>
-              setCategoryFilter(e.target.value as (typeof CATEGORY_OPTIONS)[number])
+              setCategoryFilter(
+                e.target.value as (typeof CATEGORY_OPTIONS)[number],
+              )
             }
             className="mt-3 w-full rounded-2xl border border-white/10 bg-slate-950/60 px-4 py-3 text-white outline-none"
           >
@@ -216,7 +247,9 @@ export function SystemAdminDashboardPage() {
           <div className="flex items-center justify-between gap-4">
             <div className="text-sm text-slate-300">
               Showing{" "}
-              <span className="font-semibold text-white">{filteredClubs.length}</span>{" "}
+              <span className="font-semibold text-white">
+                {filteredClubs.length}
+              </span>{" "}
               club{filteredClubs.length === 1 ? "" : "s"}
             </div>
           </div>
@@ -227,8 +260,11 @@ export function SystemAdminDashboardPage() {
               const assignedAdmin = clubAdminAssignments[club.clubId];
 
               return (
-                <GlassPanel key={club.clubId} className="p-5">
-                  <div className="flex flex-col gap-4">
+                <GlassPanel
+                  key={club.clubId}
+                  className="flex min-h-[280px] flex-col p-5 transition hover:border-sky-300/20 hover:bg-white/10"
+                >
+                  <div className="flex h-full flex-col gap-4">
                     <div className="flex items-start justify-between gap-4">
                       <div>
                         <p className="text-xs uppercase tracking-[0.22em] text-sky-200/70">
@@ -244,18 +280,20 @@ export function SystemAdminDashboardPage() {
                       </span>
                     </div>
 
-                    <p className="text-sm leading-6 text-slate-300">
+                    <p className="min-h-[72px] text-sm leading-6 text-slate-300">
                       {club.description || "No description yet."}
                     </p>
 
-                    <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-200">
-                      Club Admin:{" "}
-                      <span className="font-semibold text-white">
+                    <div className="rounded-2xl border border-sky-300/10 bg-gradient-to-br from-white/10 to-sky-400/5 px-4 py-3 text-sm text-slate-200">
+                      <div className="text-xs uppercase tracking-[0.18em] text-slate-400">
+                        Club admin
+                      </div>
+                      <div className="mt-1 font-semibold text-white">
                         {assignedAdmin?.name ?? "Not assigned"}
-                      </span>
+                      </div>
                     </div>
 
-                    <div className="flex flex-wrap gap-3">
+                    <div className="mt-auto flex flex-wrap gap-3 pt-2">
                       <button
                         type="button"
                         onClick={() =>
@@ -284,7 +322,8 @@ export function SystemAdminDashboardPage() {
 
                     {showDeleteNotice ? (
                       <div className="rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-slate-300">
-                        Club deletion is not wired yet because the backend currently does not expose a delete-club endpoint.
+                        Club deletion is not wired yet because the backend
+                        currently does not expose a delete-club endpoint.
                       </div>
                     ) : null}
                   </div>

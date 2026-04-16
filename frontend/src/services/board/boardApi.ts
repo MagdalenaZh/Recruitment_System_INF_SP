@@ -1,7 +1,11 @@
-import { apiGet, API_URL } from "../api";
+import { apiGet, apiPost, apiPut, API_URL } from "../api";
 import { getStoredUser } from "../auth/auth.api";
 import type { UserApplicationDto } from "../../types/account/accountApplications";
-import type { UserInfoDto, BookedInterviewSlotDto } from "../../types/board/boardApiTypes";
+import type {
+  ApplicationNoteDto,
+  UserInfoDto,
+  BookedInterviewSlotDto,
+} from "../../types/board/boardApiTypes";
 import type { BoardVote } from "../../features/board/types/boardTypes";
 
 function parseJwtPayload(token: string | null): Record<string, unknown> | null {
@@ -81,6 +85,24 @@ export const boardApi = {
 
   getBookedInterviewSlots(clubId: string): Promise<BookedInterviewSlotDto[]> {
     return apiGet(`/api/recruitmentInfo/api/booked-interview-slots/${clubId}`);
+  },
+
+  getApplicationNotes(applicationId: string): Promise<ApplicationNoteDto[]> {
+    return apiGet(`/api/recruitmentInfo/api/notes-application/${applicationId}`);
+  },
+
+  createApplicationNote(applicationId: string, content: string): Promise<void> {
+    return apiPost<string, void>(
+      `/api/recruitmentInfo/api/create-note/${applicationId}`,
+      content,
+    );
+  },
+
+  updateApplicationNote(noteId: string, content: string): Promise<void> {
+    return apiPut<string, void>(
+      `/api/recruitmentInfo/api/update-note/${noteId}`,
+      content,
+    );
   },
 
   approveApplication(applicationId: string): Promise<void> {

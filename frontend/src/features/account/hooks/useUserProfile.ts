@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import {
   getCurrentUser,
+  getUserInformation,
   updateProfile as updateProfileRequest,
   type CurrentUserResponse,
   type UpdateProfileRequest,
@@ -54,6 +55,10 @@ export function useUserProfile() {
       setLoading(true);
       const data = await getCurrentUser();
       const storedUser = getStoredUser();
+      const userInformation =
+        data.userId
+          ? await getUserInformation(data.userId).catch(() => null)
+          : null;
       const effectiveRoleSource =
         (data.adminClubId ?? storedUser?.adminClubId) ? "ClubAdmin" : data.role;
       const role = getNormalizedUserRole(effectiveRoleSource);
@@ -89,13 +94,20 @@ export function useUserProfile() {
       }
 
       setProfile(
-        mapCurrentUserToProfile(data, {
-          departmentId,
-          departmentName,
-          clubId,
-          adminClubId,
-          clubName,
-        }),
+        {
+          ...mapCurrentUserToProfile(data, {
+            departmentId,
+            departmentName,
+            clubId,
+            adminClubId,
+            clubName,
+          }),
+          firstName: userInformation?.firstName ?? data.firstName,
+          lastName: userInformation?.lastName ?? data.lastName,
+          email: userInformation?.email ?? data.email,
+          academicYear: userInformation?.academicYear ?? null,
+          studyMajor: userInformation?.studyMajor ?? null,
+        },
       );
     } finally {
       setLoading(false);
