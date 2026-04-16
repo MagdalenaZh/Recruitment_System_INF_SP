@@ -1,17 +1,6 @@
 import { Container } from "../../../../components/layout/Container";
 import type { ClubDepartment } from "../../../../types/clubs/club";
 
-function departmentBadge(name: string) {
-  const initials = name
-    .split(" ")
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase() ?? "")
-    .join("");
-
-  return initials || "DP";
-}
-
 export function DepartmentsSection({
   departments,
 }: {
