@@ -7,7 +7,15 @@ import {
   getApplicationsForCurrentUser,
   getAllClubs,
   getDepartmentsForClub,
+  getLatestApplicationStates,
 } from "../../../services/applications/applicationStatusApi";
+import {
+  isAfterInterviewReviewState,
+  isApprovedApplicationState,
+  isConcludedApplicationState,
+  isHibernatedApplicationState,
+  type LatestApplicationStateResponse,
+} from "../../../services/applications/applicationStateTypes";
 import type {
   ApprovedInterviewApplication,
   InterviewSlot,
@@ -44,6 +52,7 @@ function isApprovedApplication(app: UserApplication): boolean {
   const normalized = normalizeStatus(app.status ?? app.applicationStatus);
 
   return (
+    !!app.interviewSlot ||
     normalized === "interviewscheduled" ||
     normalized === "applicationapproved" ||
     normalized === "approvedstate" ||
@@ -62,7 +71,22 @@ function toApprovedInterviewApplications(
       clubId: app.clubId!,
       clubName: app.clubName || "Club interview",
       departmentName: app.departmentName,
+      interviewSlot: app.interviewSlot,
     }));
+}
+
+function getDerivedInterviewStatus(
+  state: LatestApplicationStateResponse | undefined,
+  fallbackStatus: string | number | null | undefined,
+): string | number | null | undefined {
+  if (!state) return fallbackStatus;
+  if (isConcludedApplicationState(state)) {
+    return state.conclusionResult === 4 ? "rejected" : "accepted";
+  }
+  if (isAfterInterviewReviewState(state)) return "interviewscheduled";
+  if (isApprovedApplicationState(state)) return "approved";
+  if (isHibernatedApplicationState(state)) return "approved";
+  return fallbackStatus;
 }
 
 export function useInterviewBooking(userId?: string) {
@@ -99,6 +123,12 @@ export function useInterviewBooking(userId?: string) {
         getApplicationsForCurrentUser(),
         getAllClubs(),
       ]);
+      const latestStates = await getLatestApplicationStates(
+        data.map((application) => application.applicationId),
+      ).catch(() => []);
+      const latestStateMap = new Map<string, LatestApplicationStateResponse>(
+        latestStates.map((state) => [state.applicationId, state]),
+      );
 
       const departmentLists = await Promise.all(
         clubs.map((club: ClubDto) => getDepartmentsForClub(club.clubId)),
@@ -116,12 +146,26 @@ export function useInterviewBooking(userId?: string) {
           ? departmentMap.get(application.departmentId)
           : undefined;
         const clubId = department?.clubId;
+        const latestState = latestStateMap.get(application.applicationId);
+        const interviewSlot =
+          latestState && "scheduledTime" in latestState && latestState.scheduledTime
+            ? {
+                slotId: latestState.scheduledTime.slotId,
+                startTime: latestState.scheduledTime.startTime,
+                endTime: latestState.scheduledTime.endTime,
+              }
+            : undefined;
 
         return {
           ...application,
           clubId,
           clubName: clubId ? clubNameMap.get(clubId) : undefined,
           departmentName: department?.departmentName,
+          status: getDerivedInterviewStatus(
+            latestState,
+            application.applicationStatus,
+          ),
+          interviewSlot,
         };
       });
 

@@ -124,6 +124,50 @@ export function useBoardApplicationDetail(applicationId?: string) {
   }, [applicationId]);
 
   useEffect(() => {
+    async function hydrateVoterNames() {
+      if (!data?.voterDecisions) return;
+
+      const voterIds = Object.keys(data.voterDecisions).filter(Boolean);
+      if (voterIds.length === 0) return;
+
+      const unresolvedIds = voterIds.filter(
+        (userId) => !data.voterNames || !data.voterNames[userId],
+      );
+      if (unresolvedIds.length === 0) return;
+
+      const results = await Promise.allSettled(
+        unresolvedIds.map((userId) => boardApi.getUserInformation(userId)),
+      );
+
+      const nextNames: Record<string, string> = {};
+      for (let index = 0; index < unresolvedIds.length; index += 1) {
+        const result = results[index];
+        const userId = unresolvedIds[index];
+        if (result.status === "fulfilled") {
+          nextNames[userId] =
+            `${result.value.firstName} ${result.value.lastName}`.trim() ||
+            userId;
+        }
+      }
+
+      if (Object.keys(nextNames).length === 0) return;
+
+      setData((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          voterNames: {
+            ...(prev.voterNames ?? {}),
+            ...nextNames,
+          },
+        };
+      });
+    }
+
+    void hydrateVoterNames();
+  }, [data?.id, data?.voterDecisions, data?.voterNames, setData]);
+
+  useEffect(() => {
     if (!applicationId) return;
 
     const currentUserId = resolveCurrentUserId();

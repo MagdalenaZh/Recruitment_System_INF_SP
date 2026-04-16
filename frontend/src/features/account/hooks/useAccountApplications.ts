@@ -45,7 +45,7 @@ function mapApplicationStatusToStage(status: number): ApplicationStage {
     case 5:
       return "Accepted";
     case 6:
-      return "Waitlisted";
+      return "Interview";
     default:
       return "Submitted";
   }
@@ -59,7 +59,7 @@ function mapLatestStateToStage(
   }
 
   if (isHibernatedApplicationState(state)) {
-    return "Waitlisted";
+    return "Interview";
   }
 
   if (isAfterInterviewReviewState(state)) {
@@ -113,7 +113,9 @@ function applyLatestStateToCard(
 
   const interviewSlot = isAfterInterviewReviewState(state)
     ? { startTime: state.scheduledTime.startTime, endTime: state.scheduledTime.endTime }
-    : undefined;
+    : "scheduledTime" in state && state.scheduledTime
+      ? { startTime: state.scheduledTime.startTime, endTime: state.scheduledTime.endTime }
+      : card.interviewSlot;
 
   return {
     ...card,

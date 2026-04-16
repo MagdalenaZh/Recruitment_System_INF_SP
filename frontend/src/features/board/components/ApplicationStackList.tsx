@@ -8,11 +8,11 @@ export function ApplicationStackList({
 }) {
   if (items.length === 0) {
     return (
-      <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md p-8 text-slate-200 shadow-[0_10px_30px_-12px_rgba(0,0,0,0.65)]">
-        <div className="text-lg font-semibold text-white/90">
+      <div className="rounded-[24px] border border-slate-200 bg-white/80 p-8 text-slate-600 shadow-sm backdrop-blur-sm">
+        <div className="text-lg font-semibold text-slate-900">
           No applications found
         </div>
-        <div className="mt-1 text-sm text-slate-300">
+        <div className="mt-1 text-sm text-slate-500">
           Try a different status filter or search query.
         </div>
       </div>

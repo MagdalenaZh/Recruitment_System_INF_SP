@@ -30,7 +30,7 @@ export function BoardDepartmentApplicationsPage() {
           <div>
             <Link
               to="/board"
-              className="mt-20 inline-flex items-center gap-2 text-sm font-semibold text-slate-300 transition hover:text-white"
+              className="mt-20 inline-flex items-center gap-2 text-sm font-semibold text-slate-600 transition hover:text-slate-900"
             >
               <span className="transition-transform duration-200 hover:-translate-x-0.5">
                 ←
@@ -38,20 +38,22 @@ export function BoardDepartmentApplicationsPage() {
               Back to departments
             </Link>
 
-            <h1 className="mt-6 text-3xl font-semibold text-white/95">{departmentName}</h1>
+            <h1 className="mt-6 text-3xl font-semibold tracking-tight text-slate-900">
+              {departmentName}
+            </h1>
           </div>
         </div>
 
         <BoardSectionNav />
 
-        <div className="mt-8 rounded-2xl border border-white/10 bg-white/5 p-4 shadow-[0_10px_30px_-12px_rgba(0,0,0,0.65)] backdrop-blur-md">
+        <div className="mt-8 rounded-[24px] border border-blue-100/70 bg-white/70 p-4 shadow-sm backdrop-blur-sm">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="relative w-full sm:w-[26rem]">
               <input
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Search by applicant name or email..."
-                className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white/90 outline-none transition placeholder:text-slate-400 focus:border-sky-400/40 focus:ring-2 focus:ring-sky-400/20"
+                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-300 focus:ring-2 focus:ring-blue-200/60"
               />
             </div>
 
@@ -102,11 +104,11 @@ export function BoardDepartmentApplicationsPage() {
 
         <div className="mt-6">
           {loading ? (
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-6 text-slate-200 shadow-[0_10px_30px_-12px_rgba(0,0,0,0.65)] backdrop-blur-md">
+            <div className="rounded-[24px] border border-slate-200 bg-white/80 p-6 text-slate-600 shadow-sm backdrop-blur-sm">
               Loading applications...
             </div>
           ) : error ? (
-            <div className="rounded-2xl border border-rose-400/30 bg-rose-500/10 p-6 text-rose-200">
+            <div className="rounded-[24px] border border-rose-200 bg-rose-50 p-6 text-rose-700">
               <div className="font-semibold">Could not load applications.</div>
               <div className="mt-2 text-sm">{error}</div>
             </div>
@@ -141,8 +143,8 @@ function FilterButton({
       className={[
         "rounded-full border px-4 py-2 text-sm font-semibold transition-all duration-200",
         active
-          ? "border-sky-400/40 bg-sky-400/15 text-white shadow-[0_10px_30px_-18px_rgba(56,189,248,0.35)]"
-          : "border-white/10 bg-white/5 text-slate-200 hover:border-white/20 hover:bg-white/10",
+          ? "border-blue-200 bg-blue-50 text-blue-700 shadow-[0_10px_24px_-18px_rgba(37,99,235,0.22)]"
+          : "border-slate-200 bg-white text-slate-600 hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700",
       ].join(" ")}
     >
       {text}

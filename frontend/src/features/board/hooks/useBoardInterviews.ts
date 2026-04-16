@@ -22,6 +22,46 @@ import type {
   FinalInterviewDecision,
 } from "../types/boardTypes";
 
+type CachedRoundTwoVote = {
+  myVote: FinalInterviewDecision | null;
+  approveVotes: number;
+  rejectVotes: number;
+  requiredApprovals: number;
+};
+
+function getRoundTwoVoteCacheKey(): string {
+  const currentUserId = resolveCurrentUserId() ?? "anonymous";
+  return `board:round-two-votes:${currentUserId}`;
+}
+
+function readRoundTwoVoteCache(): Record<string, CachedRoundTwoVote> {
+  try {
+    const raw = window.localStorage.getItem(getRoundTwoVoteCacheKey());
+    if (!raw) return {};
+    const parsed = JSON.parse(raw) as unknown;
+    if (!parsed || typeof parsed !== "object") return {};
+    return parsed as Record<string, CachedRoundTwoVote>;
+  } catch {
+    return {};
+  }
+}
+
+function writeRoundTwoVoteCache(
+  applicationId: string,
+  value: CachedRoundTwoVote,
+): void {
+  try {
+    const current = readRoundTwoVoteCache();
+    current[applicationId] = value;
+    window.localStorage.setItem(
+      getRoundTwoVoteCacheKey(),
+      JSON.stringify(current),
+    );
+  } catch {
+    // Ignore local cache write failures.
+  }
+}
+
 function formatDate(isoString: string): string {
   const d = new Date(isoString);
   const day = String(d.getDate()).padStart(2, "0");
@@ -86,6 +126,14 @@ export function useBoardInterviews() {
           let roundTwoApproveVotes = entry.roundTwoApproveVotes;
           let roundTwoRejectVotes = entry.roundTwoRejectVotes;
           let requiredApprovals = entry.requiredApprovals;
+          const cachedVote = readRoundTwoVoteCache()[slot.applicationId];
+
+          if (cachedVote) {
+            roundTwoDecision = cachedVote.myVote;
+            roundTwoApproveVotes = cachedVote.approveVotes;
+            roundTwoRejectVotes = cachedVote.rejectVotes;
+            requiredApprovals = cachedVote.requiredApprovals;
+          }
 
           if (isAfterInterviewReviewState(state) && currentUserId) {
             let approveVotes = 0;
@@ -105,13 +153,23 @@ export function useBoardInterviews() {
 
             if (userVote === true) roundTwoDecision = "Approved";
             else if (userVote === false) roundTwoDecision = "Rejected";
+
+            writeRoundTwoVoteCache(slot.applicationId, {
+              myVote: roundTwoDecision,
+              approveVotes,
+              rejectVotes,
+              requiredApprovals,
+            });
           }
 
           // When the aggregate reaches hibernated state, round-two approvals
-          // threshold has already been met and the vote map is no longer present.
-          // Keep this as Approved across refreshes.
+          // threshold has already been met and the vote map may no longer be present.
           if (isHibernatedApplicationState(state)) {
-            roundTwoDecision = "Approved";
+            roundTwoApproveVotes = Math.max(roundTwoApproveVotes, requiredApprovals);
+          }
+
+          if (isConcludedApplicationState(state)) {
+            roundTwoApproveVotes = Math.max(roundTwoApproveVotes, requiredApprovals);
           }
 
           return {
@@ -168,6 +226,7 @@ export function useBoardInterviews() {
 
       const currentClub = allClubs.find((c) => c.clubId === clubId);
       const clubRequiredApprovals = currentClub?.requiredApprovals ?? 0;
+      const roundTwoVoteCache = readRoundTwoVoteCache();
       const notesResults = await Promise.allSettled(
         matchedSlots.map(({ app }) => boardApi.getApplicationNotes(app.applicationId)),
       );
@@ -246,18 +305,20 @@ export function useBoardInterviews() {
               departmentName: deptMap[app.departmentId] ?? "Unknown",
               roundOneStatus: "Approved",
               roundTwoDecision:
-                app.applicationStatus === 5 || app.applicationStatus === 6
-                  ? "Approved"
-                  : null,
+                roundTwoVoteCache[app.applicationId]?.myVote ?? null,
               finalDecision:
                 deriveFinalDecision(app.applicationId, stateMap) ??
                 deriveFinalDecisionFromStatus(app.applicationStatus),
               roundTwoApproveVotes:
-                app.applicationStatus === 5 || app.applicationStatus === 6
+                roundTwoVoteCache[app.applicationId]?.approveVotes ??
+                (app.applicationStatus === 5 || app.applicationStatus === 6
                   ? Math.max(clubRequiredApprovals, 1)
-                  : 0,
-              roundTwoRejectVotes: 0,
-              requiredApprovals: clubRequiredApprovals,
+                  : 0),
+              roundTwoRejectVotes:
+                roundTwoVoteCache[app.applicationId]?.rejectVotes ?? 0,
+              requiredApprovals:
+                roundTwoVoteCache[app.applicationId]?.requiredApprovals ??
+                clubRequiredApprovals,
               targetSpots: deptTargetMap[app.departmentId] ?? 0,
             },
           ],
@@ -392,7 +453,36 @@ export function useBoardInterviews() {
             ...slot,
             decisions: slot.decisions.map((entry) =>
               entry.departmentId === departmentId
-                ? { ...entry, roundTwoDecision: decision }
+                ? (() => {
+                    const nextApproveVotes =
+                      decision === "Approved"
+                        ? Math.max(
+                            entry.roundTwoApproveVotes,
+                            entry.roundTwoApproveVotes + 1,
+                          )
+                        : entry.roundTwoApproveVotes;
+                    const nextRejectVotes =
+                      decision === "Rejected"
+                        ? Math.max(
+                            entry.roundTwoRejectVotes,
+                            entry.roundTwoRejectVotes + 1,
+                          )
+                        : entry.roundTwoRejectVotes;
+
+                    writeRoundTwoVoteCache(applicationId, {
+                      myVote: decision,
+                      approveVotes: nextApproveVotes,
+                      rejectVotes: nextRejectVotes,
+                      requiredApprovals: entry.requiredApprovals,
+                    });
+
+                    return {
+                      ...entry,
+                      roundTwoDecision: decision,
+                      roundTwoApproveVotes: nextApproveVotes,
+                      roundTwoRejectVotes: nextRejectVotes,
+                    };
+                  })()
                 : entry,
             ),
           };

@@ -204,8 +204,13 @@ export function applyUpdateToApplicationDetail(
     voterDecisions = payload.userDecisionsMap as Record<string, boolean>;
   } else if (isProcessingApplicationState(payload)) {
     voterDecisions = payload.userDecisionsMap as Record<string, boolean>;
-  } else if (isApprovedApplicationState(payload) && payload.userDecisionsMap) {
-    voterDecisions = payload.userDecisionsMap as Record<string, boolean>;
+  } else if (isApprovedApplicationState(payload)) {
+    if (payload.userDecisionsMap) {
+      voterDecisions = payload.userDecisionsMap as Record<string, boolean>;
+    }
+    if (payload.scheduledTime) {
+      interviewSlot = payload.scheduledTime;
+    }
   }
 
   return {

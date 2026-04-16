@@ -37,6 +37,7 @@ export type ApprovedApplicationStateRepresentation = {
   currentNumberOfApprovals?: number;
   requiredNumberOfApprovals?: number;
   userDecisionsMap?: Record<string, boolean>;
+  scheduledTime?: LatestInterviewSlot;
 };
 
 export type ConcludedApplicationStateRepresentation = {
@@ -194,6 +195,9 @@ export function parseLatestApplicationState(
     }
     if (approvedUserDecisions !== null) {
       approved.userDecisionsMap = approvedUserDecisions;
+    }
+    if (scheduledTime) {
+      approved.scheduledTime = scheduledTime;
     }
 
     return approved;

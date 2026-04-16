@@ -3,6 +3,7 @@ import { getNormalizedUserRole } from "../../features/auth/utils/routeAuthorizat
 
 const TOKEN_KEY = "auth_token";
 const USER_KEY = "auth_user";
+export const AUTH_USER_UPDATED_EVENT = "auth-user-updated";
 
 function normalizeStoredUser(user: AuthUser | null): AuthUser | null {
   if (!user) return null;
@@ -34,4 +35,33 @@ export function getAuthToken(): string | null {
 
 export function getStoredUserId(): string | null {
   return getStoredUser()?.userId ?? null;
+}
+
+export function setStoredUser(user: AuthUser | null) {
+  if (!user) {
+    localStorage.removeItem(USER_KEY);
+    window.dispatchEvent(new Event(AUTH_USER_UPDATED_EVENT));
+    return;
+  }
+
+  const normalizedUser = normalizeStoredUser(user);
+  localStorage.setItem(USER_KEY, JSON.stringify(normalizedUser));
+  window.dispatchEvent(new Event(AUTH_USER_UPDATED_EVENT));
+}
+
+export function mergeStoredUser(
+  nextUser: Partial<AuthUser> & Pick<AuthUser, "userId">,
+): AuthUser | null {
+  const currentUser = getStoredUser();
+  if (!currentUser || currentUser.userId !== nextUser.userId) {
+    return currentUser;
+  }
+
+  const mergedUser = normalizeStoredUser({
+    ...currentUser,
+    ...nextUser,
+  });
+
+  setStoredUser(mergedUser);
+  return mergedUser;
 }

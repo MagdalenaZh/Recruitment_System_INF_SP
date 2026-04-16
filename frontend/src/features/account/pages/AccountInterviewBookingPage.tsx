@@ -123,6 +123,26 @@ export function AccountInterviewBookingPage() {
                 <p className="mt-4 text-sm leading-6 text-slate-600">
                   Pick a time slot below to reserve your interview.
                 </p>
+
+                {shownSelectedApplication?.interviewSlot ? (
+                  <div className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+                    <div className="font-semibold">Booked slot</div>
+                    <div className="mt-1">
+                      {new Date(
+                        shownSelectedApplication.interviewSlot.startTime,
+                      ).toLocaleString(undefined, {
+                        dateStyle: "medium",
+                        timeStyle: "short",
+                      })}{" "}
+                      &ndash;{" "}
+                      {new Date(
+                        shownSelectedApplication.interviewSlot.endTime,
+                      ).toLocaleTimeString(undefined, {
+                        timeStyle: "short",
+                      })}
+                    </div>
+                  </div>
+                ) : null}
               </div>
             </div>
           </section>

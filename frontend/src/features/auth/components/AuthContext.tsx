@@ -1,4 +1,10 @@
-import React, { createContext, useContext, useMemo, useState } from "react";
+import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
+import {
+  AUTH_USER_UPDATED_EVENT,
+  getStoredUser,
+  setStoredUser,
+} from "../../../services/auth/auth.api";
+import { getCurrentUser } from "../../../services/account/accountApi";
 import type { AuthUser, LoginResponse } from "../types/auth";
 import { getNormalizedUserRole } from "../utils/routeAuthorization";
 
@@ -14,7 +20,6 @@ type AuthState = {
 const AuthContext = createContext<AuthState | undefined>(undefined);
 
 const TOKEN_KEY = "auth_token";
-const USER_KEY = "auth_user";
 
 function normalizeAuthUser(user: AuthUser | null): AuthUser | null {
   if (!user) return null;
@@ -36,15 +41,54 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 
   const [user, setUser] = useState<AuthUser | null>(() => {
-    const raw = localStorage.getItem(USER_KEY);
-    if (!raw) return null;
-
-    try {
-      return normalizeAuthUser(JSON.parse(raw) as AuthUser);
-    } catch {
-      return null;
-    }
+    return getStoredUser();
   });
+
+  useEffect(() => {
+    function syncStoredAuthUser() {
+      setUser(getStoredUser());
+    }
+
+    window.addEventListener("storage", syncStoredAuthUser);
+    window.addEventListener(AUTH_USER_UPDATED_EVENT, syncStoredAuthUser);
+
+    return () => {
+      window.removeEventListener("storage", syncStoredAuthUser);
+      window.removeEventListener(AUTH_USER_UPDATED_EVENT, syncStoredAuthUser);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!token) return;
+
+    let cancelled = false;
+
+    void getCurrentUser()
+      .then((currentUser) => {
+        if (cancelled) return;
+
+        const normalizedUser = normalizeAuthUser({
+          userId: currentUser.userId,
+          email: currentUser.email,
+          firstName: currentUser.firstName,
+          lastName: currentUser.lastName,
+          role: currentUser.role,
+          departmentId: currentUser.departmentId ?? null,
+          clubId: currentUser.clubId ?? null,
+          adminClubId: currentUser.adminClubId ?? null,
+        });
+
+        setStoredUser(normalizedUser);
+        setUser(normalizedUser);
+      })
+      .catch(() => {
+        // Keep the existing session state if the refresh fails.
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [token]);
 
   const value = useMemo<AuthState>(() => {
     return {
@@ -55,13 +99,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       login: (data) => {
         const normalizedUser = normalizeAuthUser(data.user);
         localStorage.setItem(TOKEN_KEY, data.token);
-        localStorage.setItem(USER_KEY, JSON.stringify(normalizedUser));
+        setStoredUser(normalizedUser);
         setToken(data.token);
         setUser(normalizedUser);
       },
       logout: () => {
         localStorage.removeItem(TOKEN_KEY);
-        localStorage.removeItem(USER_KEY);
+        setStoredUser(null);
         setToken(null);
         setUser(null);
       },

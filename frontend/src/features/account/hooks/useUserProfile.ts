@@ -10,7 +10,10 @@ import {
   getAllClubs,
   getDepartmentsForClub,
 } from "../../../services/applications/applicationStatusApi";
-import { getStoredUser } from "../../../services/auth/auth.api";
+import {
+  getStoredUser,
+  mergeStoredUser,
+} from "../../../services/auth/auth.api";
 import { getNormalizedUserRole } from "../../auth/utils/routeAuthorization";
 import type { UserProfile } from "../../../types/account/profile";
 
@@ -55,21 +58,32 @@ export function useUserProfile() {
       setLoading(true);
       const data = await getCurrentUser();
       const storedUser = getStoredUser();
+      const syncedStoredUser =
+        mergeStoredUser({
+          userId: data.userId,
+          email: data.email,
+          firstName: data.firstName,
+          lastName: data.lastName,
+          role: data.role,
+          departmentId: data.departmentId ?? null,
+          clubId: data.clubId ?? null,
+          adminClubId: data.adminClubId ?? null,
+        }) ?? storedUser;
       const userInformation =
         data.userId
           ? await getUserInformation(data.userId).catch(() => null)
           : null;
       const effectiveRoleSource =
-        (data.adminClubId ?? storedUser?.adminClubId) ? "ClubAdmin" : data.role;
+        (data.adminClubId ?? syncedStoredUser?.adminClubId) ? "ClubAdmin" : data.role;
       const role = getNormalizedUserRole(effectiveRoleSource);
       const clubId =
         data.clubId ??
         data.adminClubId ??
-        storedUser?.adminClubId ??
-        storedUser?.clubId ??
+        syncedStoredUser?.adminClubId ??
+        syncedStoredUser?.clubId ??
         null;
-      const adminClubId = data.adminClubId ?? storedUser?.adminClubId ?? null;
-      const departmentId = data.departmentId ?? storedUser?.departmentId ?? null;
+      const adminClubId = data.adminClubId ?? syncedStoredUser?.adminClubId ?? null;
+      const departmentId = data.departmentId ?? null;
 
       let departmentName = data.departmentName ?? null;
       if (!departmentName && role === "BoardMember" && clubId && departmentId) {

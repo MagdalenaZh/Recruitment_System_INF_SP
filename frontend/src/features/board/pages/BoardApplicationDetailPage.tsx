@@ -47,11 +47,11 @@ export function BoardApplicationDetailPage() {
                   ? `/board/departments/${data.departmentId}/applications`
                   : "/board"
               }
-              className="text-sm font-semibold text-slate-300 hover:text-white"
+              className="text-sm font-semibold text-slate-600 hover:text-slate-900"
             >
               ← Back to applications
             </Link>
-            <div className="mt-1 text-sm text-slate-400">
+            <div className="mt-1 text-sm text-slate-500">
               Application ID: {applicationId}
             </div>
           </div>
@@ -59,11 +59,11 @@ export function BoardApplicationDetailPage() {
 
         <div className="mt-4">
           {loading ? (
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-6 text-slate-200 shadow-sm">
+            <div className="rounded-[24px] border border-slate-200 bg-white/80 p-6 text-slate-600 shadow-sm">
               Loading application…
             </div>
           ) : error ? (
-            <div className="rounded-2xl border border-rose-400/30 bg-rose-500/10 p-6 text-rose-200">
+            <div className="rounded-[24px] border border-rose-200 bg-rose-50 p-6 text-rose-700">
               <div className="font-semibold">Could not load application.</div>
               <div className="mt-2 text-sm">{error}</div>
             </div>
@@ -74,7 +74,7 @@ export function BoardApplicationDetailPage() {
               <ApplicationAttachmentsSection attachments={data.attachments} />
             </div>
           ) : (
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-6 text-slate-300">
+            <div className="rounded-[24px] border border-slate-200 bg-white/80 p-6 text-slate-600">
               Application not found.
             </div>
           )}

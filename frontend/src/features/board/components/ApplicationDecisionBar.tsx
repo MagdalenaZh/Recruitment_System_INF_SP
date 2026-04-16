@@ -101,7 +101,9 @@ export function ApplicationDecisionBar({
                         isMe ? "font-semibold text-blue-700" : "text-slate-600"
                       }
                     >
-                      {isMe ? "You" : `${userId.slice(0, 8)}\u2026`}
+                      {isMe
+                        ? "You"
+                        : (app.voterNames?.[userId] ?? `${userId.slice(0, 8)}\u2026`)}
                     </span>
                     <span
                       className={

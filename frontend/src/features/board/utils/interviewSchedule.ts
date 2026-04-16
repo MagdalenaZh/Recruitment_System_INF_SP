@@ -74,7 +74,7 @@ export function getSlotPhase(
   if (!now || !start || !end) return "Scheduled";
   if (getPendingDecisionCount(slot) === 0) return "Decision submitted";
   if (start <= now && now < end) return "Live now";
-  if (now >= end) return "Ready for decision";
+  if (now >= start) return "Ready for decision";
   return "Scheduled";
 }
 
@@ -92,14 +92,14 @@ export function getInterviewVotingHint(slot: BoardInterviewSlot): string {
   }
 
   if (phase === "Ready for decision") {
-    return "The interview has ended. Final voting is available now.";
+    return "Voting is available now.";
   }
 
   if (phase === "Live now") {
-    return "Voting unlocks after the interview slot ends.";
+    return "The interview is live and voting is already available.";
   }
 
-  return "Voting becomes available after the scheduled interview window.";
+  return "Voting becomes available once the scheduled interview starts.";
 }
 
 function emptyStats(decision: BoardInterviewDepartmentDecision): BoardInterviewDepartmentStats {

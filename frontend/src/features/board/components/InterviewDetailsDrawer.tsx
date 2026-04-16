@@ -64,7 +64,7 @@ export function InterviewDetailsDrawer({
   if (!open || !slot) return null;
 
   const phase = getSlotPhase(slot);
-  const canVote = phase === "Ready for decision";
+  const canVote = phase === "Ready for decision" || phase === "Live now";
   const currentUserId = resolveCurrentUserId();
 
   return (
@@ -366,6 +366,10 @@ export function InterviewDetailsDrawer({
                 const alreadyDecided =
                   department.finalDecision !== null ||
                   department.roundTwoDecision !== null;
+                const roundTwoApproved =
+                  department.roundTwoApproveVotes >= department.requiredApprovals;
+                const finalAwaitingDecision =
+                  department.finalDecision === null && roundTwoApproved;
 
                 return (
                   <div
@@ -382,16 +386,14 @@ export function InterviewDetailsDrawer({
                           <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 font-semibold text-slate-200">
                             Round 1: {department.roundOneStatus}
                           </span>
-                          {department.roundTwoDecision ? (
+                          {roundTwoApproved ? (
                             <span
                               className={[
                                 "rounded-full border px-3 py-1 font-semibold",
-                                department.roundTwoDecision === "Approved"
-                                  ? "border-sky-400/30 bg-sky-400/15 text-sky-100"
-                                  : "border-sky-400/30 bg-sky-400/15 text-sky-100",
+                                "border-sky-400/30 bg-sky-400/15 text-sky-100",
                               ].join(" ")}
                             >
-                              Round 2: {department.roundTwoDecision}
+                              Round 2: Approved
                             </span>
                           ) : (
                             <span className="rounded-full border border-sky-400/30 bg-sky-400/15 px-3 py-1 font-semibold text-sky-100">
@@ -410,6 +412,10 @@ export function InterviewDetailsDrawer({
                             >
                               Final: {department.finalDecision}
                             </span>
+                          ) : finalAwaitingDecision ? (
+                            <span className="rounded-full border border-amber-400/30 bg-amber-400/15 px-3 py-1 font-semibold text-amber-100">
+                              Final: awaiting final decision
+                            </span>
                           ) : (
                             <span className="rounded-full border border-amber-400/30 bg-amber-400/15 px-3 py-1 font-semibold text-amber-100">
                               Final: pending
@@ -422,7 +428,7 @@ export function InterviewDetailsDrawer({
                             ? getInterviewVotingHint(slot)
                             : alreadyDecided
                               ? "Your round two vote has been recorded. Final result stays pending until conclusion."
-                              : "The interview slot has ended. You can submit your vote now."}
+                              : "The interview has started. You can submit your vote now."}
                         </p>
 
                         <div className="mt-3 flex flex-wrap gap-2 text-xs">

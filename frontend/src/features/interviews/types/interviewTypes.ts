@@ -10,6 +10,7 @@ export interface UserApplication {
   clubName?: string;
   status?: ApplicationStatusLike;
   applicationStatus?: ApplicationStatusLike;
+  interviewSlot?: InterviewSlot;
 }
 
 export interface InterviewSlot {
@@ -28,4 +29,5 @@ export interface ApprovedInterviewApplication {
   clubId: string;
   clubName: string;
   departmentName?: string;
+  interviewSlot?: InterviewSlot;
 }

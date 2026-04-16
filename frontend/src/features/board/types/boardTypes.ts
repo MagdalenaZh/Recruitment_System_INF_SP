@@ -82,6 +82,7 @@ export type ApplicationDetail = {
   rawApplication?: unknown;
   interviewSlot?: { slotId: string; startTime: string; endTime: string };
   voterDecisions?: Record<string, boolean>;
+  voterNames?: Record<string, string>;
 };
 
 export type FinalInterviewDecision = "Approved" | "Rejected";
