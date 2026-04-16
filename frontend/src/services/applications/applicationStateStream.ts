@@ -43,7 +43,6 @@ export function subscribeToApplicationStates(
     for (const applicationId of applicationIds) {
       url.searchParams.append("applicationIds", applicationId);
     }
-    url.searchParams.append("clientId", options.clientId);
     return url.toString();
   };
 
@@ -125,23 +124,7 @@ export function subscribeToApplicationStates(
       signal,
     });
 
-    if (
-      getResponse.status !== 404 &&
-      getResponse.status !== 405 &&
-      getResponse.status !== 415
-    ) {
       return getResponse;
-    }
-
-    return fetch(`${API_BASE}/api/eventEmmitter/aplicationUpdates`, {
-      method: "POST",
-      headers: {
-        ...baseHeaders,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(applicationIds),
-      signal,
-    });
   };
 
   const connect = async () => {

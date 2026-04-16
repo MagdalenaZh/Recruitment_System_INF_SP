@@ -253,7 +253,7 @@ export function isProcessingApplicationState(
 export function isAfterInterviewReviewState(
   value: LatestApplicationStateResponse,
 ): value is AfterInterviewReviewStateRepresentation {
-  return "scheduledTime" in value && "currentNumberOfPostInterviewApprovals" in value;
+    return "scheduledTime" in value && "currentNumberOfPostInterviewApprovals" in value && "requiredNumberOfApprovals" in value;
 }
 
 export function isHibernatedApplicationState(

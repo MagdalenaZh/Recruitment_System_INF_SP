@@ -21,8 +21,8 @@ namespace AppilicationProcesserAPI.Controllers
         }
 
         [Authorize]
-        [HttpPost("aplicationUpdates")]
-        public ServerSentEventsResult<IStateRepresentation> GetAplicationUpdates([FromBody] HashSet<Guid> applicationIds, [FromHeader(Name = "Last-Event-ID")] string? lastEventId, CancellationToken cancellationToken)
+        [HttpGet("aplicationUpdates")]
+        public ServerSentEventsResult<IStateRepresentation> GetAplicationUpdates([FromQuery] HashSet<Guid> applicationIds, [FromHeader(Name = "Last-Event-ID")] string? lastEventId, CancellationToken cancellationToken)
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
 

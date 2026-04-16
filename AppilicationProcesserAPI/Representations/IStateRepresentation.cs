@@ -18,7 +18,7 @@ namespace AppilicationProcesserAPI.Representations
     {
         public required Guid ApplicationId { get; set; }
 
-        public required int RequiredNumberOfApprovals { get; set; }
+        public required int RequiredNumberOfApprovals { get; set; } 
 
         public required int CurrentNumberOfApprovals { get; set; }
 
