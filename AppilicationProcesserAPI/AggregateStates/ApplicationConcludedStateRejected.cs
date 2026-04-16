@@ -23,7 +23,8 @@ namespace AppilicationProcesserAPI.AggregateStates
 
         public void HandleEvent(ApplicationAggregate applicationAggregate, IDomainEvent domainEvent)
         {
-            throw new ArgumentOutOfRangeException(nameof(domainEvent), "Application has concluded, no more events can be processed");
+            //just ignore events for concluded applications
+            return;
         }
     }
 }
