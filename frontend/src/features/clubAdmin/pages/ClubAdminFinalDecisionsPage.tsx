@@ -3,7 +3,10 @@ import { Link } from "react-router-dom";
 import { ClubAdminPageHeader } from "../components/ClubAdminPageHeader";
 import { ClubAdminSectionNav } from "../components/ClubAdminSectionNav";
 import { ClubAdminShell } from "../components/ClubAdminShell";
-import { clubAdminApi, resolveCurrentClubId } from "../../../services/clubAdmin/clubAdminApi";
+import {
+  clubAdminApi,
+  resolveCurrentClubId,
+} from "../../../services/clubAdmin/clubAdminApi";
 import { boardApi } from "../../../services/board/boardApi";
 import {
   getLatestApplicationStates,
@@ -57,7 +60,11 @@ export function ClubAdminFinalDecisionsPage() {
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [pendingAction, setPendingAction] = useState<PendingFinalAction>(null);
-  const { finalize, loading: finalizing, error: finalizeError } = useFinalizeApplication();
+  const {
+    finalize,
+    loading: finalizing,
+    error: finalizeError,
+  } = useFinalizeApplication();
 
   async function load() {
     try {
@@ -72,7 +79,9 @@ export function ClubAdminFinalDecisionsPage() {
 
       const statusResults = await Promise.all(
         applications.map(async (application) => {
-          const states = await getLatestApplicationStates([application.applicationId]);
+          const states = await getLatestApplicationStates([
+            application.applicationId,
+          ]);
           return [application.applicationId, states[0]] as const;
         }),
       );
@@ -87,7 +96,9 @@ export function ClubAdminFinalDecisionsPage() {
       });
 
       const uniqueUserIds = [
-        ...new Set(relevantApplications.map((application) => application.userId)),
+        ...new Set(
+          relevantApplications.map((application) => application.userId),
+        ),
       ];
       const userInfoResults = await Promise.allSettled(
         uniqueUserIds.map((userId) => boardApi.getUserInformation(userId)),
@@ -193,7 +204,9 @@ export function ClubAdminFinalDecisionsPage() {
             applicantEmail: action.applicantEmail,
             departmentName: action.departmentName,
           },
-        ].sort((left, right) => left.applicantName.localeCompare(right.applicantName)),
+        ].sort((left, right) =>
+          left.applicantName.localeCompare(right.applicantName),
+        ),
       );
       setMessage(`${action.applicantName} was admitted to the club.`);
     } else {
@@ -207,34 +220,19 @@ export function ClubAdminFinalDecisionsPage() {
   return (
     <ClubAdminShell>
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
+        <div className="mb-8">
+          {" "}
+          <ClubAdminSectionNav />
+        </div>
         <ClubAdminPageHeader
           backTo="/club-admin"
           backLabel="Back to admin home"
           title="Final decisions"
-          description="Only applicants who passed round two appear here. Club admins can make the final admit or reject decision."
+          description="Only applicants who passed round two appear here."
           onRefresh={() => void load()}
         />
 
-        <ClubAdminSectionNav />
-
         <div className="mt-8 space-y-5">
-          <div className="rounded-3xl border border-white/10 bg-white/10 p-5 backdrop-blur shadow-lg">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-sky-300">
-                  Final stage
-                </p>
-                <h2 className="mt-2 text-2xl font-semibold text-white">
-                  {pendingCount} applicant{pendingCount === 1 ? "" : "s"} awaiting club-admin decision
-                </h2>
-              </div>
-
-              <div className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-200">
-                Club admin only
-              </div>
-            </div>
-          </div>
-
           {loading ? (
             <div className="rounded-3xl border border-white/10 bg-white/10 p-6 text-slate-200 backdrop-blur">
               Loading final decisions...
@@ -250,11 +248,8 @@ export function ClubAdminFinalDecisionsPage() {
               <section className="rounded-3xl border border-white/10 bg-white/10 p-6 backdrop-blur shadow-lg">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-[0.24em] text-sky-300">
-                    Pending decisions
+                    Pending final decisions
                   </p>
-                  <h3 className="mt-2 text-2xl font-semibold text-white">
-                    Applicants awaiting final approval
-                  </h3>
                 </div>
 
                 {pendingItems.length === 0 ? (
@@ -276,7 +271,9 @@ export function ClubAdminFinalDecisionsPage() {
                             <h3 className="mt-2 text-2xl font-semibold text-white">
                               {item.applicantName}
                             </h3>
-                            <p className="mt-2 text-sm text-slate-300">{item.applicantEmail}</p>
+                            <p className="mt-2 text-sm text-slate-300">
+                              {item.applicantEmail}
+                            </p>
                             <p className="mt-2 text-sm text-slate-300">
                               Department: {item.departmentName}
                             </p>
@@ -332,9 +329,6 @@ export function ClubAdminFinalDecisionsPage() {
                   <p className="text-xs font-semibold uppercase tracking-[0.24em] text-emerald-200">
                     New members
                   </p>
-                  <h3 className="mt-2 text-2xl font-semibold text-white">
-                    Accepted applicants
-                  </h3>
                 </div>
 
                 {acceptedMembers.length === 0 ? (
@@ -365,8 +359,12 @@ export function ClubAdminFinalDecisionsPage() {
             </>
           )}
 
-          {message ? <div className="text-sm text-emerald-300">{message}</div> : null}
-          {finalizeError ? <div className="text-sm text-rose-300">{finalizeError}</div> : null}
+          {message ? (
+            <div className="text-sm text-emerald-300">{message}</div>
+          ) : null}
+          {finalizeError ? (
+            <div className="text-sm text-rose-300">{finalizeError}</div>
+          ) : null}
         </div>
       </div>
 
@@ -404,7 +402,8 @@ function FinalDecisionModal({
   if (!open) return null;
 
   const decisionVerb = decision === "Admit" ? "accept" : "reject";
-  const decisionLabel = decision === "Admit" ? "Accept applicant" : "Reject applicant";
+  const decisionLabel =
+    decision === "Admit" ? "Accept applicant" : "Reject applicant";
 
   return (
     <div className="fixed inset-0 z-[90] flex items-center justify-center bg-slate-950/70 px-4 backdrop-blur-sm">
@@ -416,7 +415,8 @@ function FinalDecisionModal({
           You are about to {decisionVerb} this applicant into the club
         </h2>
         <p className="mt-3 text-sm leading-6 text-slate-300">
-          Are you sure you want to {decisionVerb} <span className="font-semibold text-white">{applicantName}</span>?
+          Are you sure you want to {decisionVerb}{" "}
+          <span className="font-semibold text-white">{applicantName}</span>?
         </p>
 
         <div className="mt-6 flex flex-wrap justify-end gap-3">

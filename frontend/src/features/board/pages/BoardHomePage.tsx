@@ -19,11 +19,6 @@ export function BoardHomePage() {
 
           <div className="">
             <div>
-              {clubName && (
-                <p className="mt-4 mb-8 text-4xl font-bold tracking-tight text-slate-950">
-                  {clubName}
-                </p>
-              )}
               <p className="text-3xl font-semibold uppercase tracking-[0.24em] text-blue-700">
                 Board workspace
               </p>
@@ -35,14 +30,11 @@ export function BoardHomePage() {
           </div>
 
           <div className="mt-10 rounded-[28px] border border-blue-100/70 bg-white/60 p-6 shadow-[0_20px_50px_-35px_rgba(37,99,235,0.18)] backdrop-blur-sm">
-            <div className="mb-10">
+            <div className="mb-6">
               <p className="text-2xl font-medium text-slate-800">
                 {clubName
                   ? `Current Applications for ${clubName}`
                   : "Current Applications"}
-              </p>
-              <p className="mt-2 text-lg text-slate-600">
-                Open a department to view applicants and vote on applications.
               </p>
             </div>
 

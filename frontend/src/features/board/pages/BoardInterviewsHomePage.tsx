@@ -134,11 +134,6 @@ export function BoardInterviewsHomePage() {
 
           <div className="">
             <div>
-              {clubName && (
-                <p className="mt-4 mb-8 text-4xl font-bold tracking-tight text-slate-950">
-                  {clubName}
-                </p>
-              )}
               <p className="text-3xl font-semibold uppercase tracking-[0.24em] text-blue-700">
                 Interviews
               </p>
@@ -202,23 +197,7 @@ export function BoardInterviewsHomePage() {
                   <h2 className="text-xl font-semibold text-slate-900">
                     Department overview
                   </h2>
-                  <p className="mt-1 text-sm text-slate-500">
-                    Track approvals per department while working from the
-                    central timeline.
-                  </p>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setDepartmentFilter("all")}
-                  className={[
-                    "rounded-full border px-4 py-2 text-sm font-semibold transition",
-                    departmentFilter === "all"
-                      ? "border-blue-200 bg-blue-50 text-blue-700"
-                      : "border-slate-200 bg-white text-slate-600 hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700",
-                  ].join(" ")}
-                >
-                  Show all
-                </button>
               </div>
 
               <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -303,7 +282,7 @@ export function BoardInterviewsHomePage() {
 
           {slots.length === 0 ? (
             <div className="mt-10 rounded-[28px] border border-blue-100/70 bg-white/70 p-6 text-slate-600 shadow-sm backdrop-blur-sm">
-              No booked interview slots found for this club.
+              No booked interview slots found.
             </div>
           ) : (
             <div className="mt-10 space-y-6">

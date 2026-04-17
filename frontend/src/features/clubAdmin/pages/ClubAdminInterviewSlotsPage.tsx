@@ -36,7 +36,10 @@ export function ClubAdminInterviewSlotsPage() {
     if (!newSlotStart || !newSlotEnd) return;
 
     try {
-      await createInterviewSlot(toIsoString(newSlotStart), toIsoString(newSlotEnd));
+      await createInterviewSlot(
+        toIsoString(newSlotStart),
+        toIsoString(newSlotEnd),
+      );
       setNewSlotStart("");
       setNewSlotEnd("");
       setMessage("Interview slot created.");
@@ -51,6 +54,9 @@ export function ClubAdminInterviewSlotsPage() {
   return (
     <ClubAdminShell>
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
+        <div className="mb-8">
+          <ClubAdminSectionNav />
+        </div>
         <ClubAdminPageHeader
           backTo="/club-admin"
           backLabel="Back to admin home"
@@ -59,11 +65,11 @@ export function ClubAdminInterviewSlotsPage() {
           onRefresh={refetch}
         />
 
-        <ClubAdminSectionNav />
-
         <div className="mt-8 space-y-5">
           <div className="rounded-3xl border border-white/10 bg-white/10 p-5 backdrop-blur shadow-lg">
-            <h3 className="text-xl font-semibold text-white">Create interview slot</h3>
+            <h3 className="text-xl font-semibold text-white">
+              Create interview slot
+            </h3>
 
             <div className="mt-4 grid gap-3 md:grid-cols-3">
               <input
@@ -98,7 +104,9 @@ export function ClubAdminInterviewSlotsPage() {
             </div>
           ) : (
             <div className="rounded-3xl border border-white/10 bg-white/10 p-5 backdrop-blur shadow-lg">
-              <h3 className="text-xl font-semibold text-white">Available slots</h3>
+              <h3 className="text-xl font-semibold text-white">
+                Available slots
+              </h3>
 
               <div className="mt-5 space-y-3">
                 {interviewSlots.length === 0 ? (
@@ -120,8 +128,12 @@ export function ClubAdminInterviewSlotsPage() {
             </div>
           )}
 
-          {message ? <div className="text-sm text-emerald-300">{message}</div> : null}
-          {saveError ? <div className="text-sm text-rose-300">{saveError}</div> : null}
+          {message ? (
+            <div className="text-sm text-emerald-300">{message}</div>
+          ) : null}
+          {saveError ? (
+            <div className="text-sm text-rose-300">{saveError}</div>
+          ) : null}
         </div>
       </div>
     </ClubAdminShell>
