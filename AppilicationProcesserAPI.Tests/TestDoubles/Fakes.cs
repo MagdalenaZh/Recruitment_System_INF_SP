@@ -4,6 +4,8 @@ using AppilicationProcesserAPI.MessageQueue;
 using AppilicationProcesserAPI.Models;
 using AppilicationProcesserAPI.PersistanceServices;
 using AppilicationProcesserAPI.Representations;
+using AppilicationProcesserAPI.Security;
+using System.Security.Claims;
 
 namespace AppilicationProcesserAPI.Tests.TestDoubles;
 
@@ -14,7 +16,10 @@ public class FakeRecruitmentDataProvider : IRecruitmentDataProvider
     public List<ApplicationDatabaseModel> ApplicationsForClub { get; } = [];
     public List<ClubDatabaseModel> Clubs { get; } = [];
     public List<DepartmentDatabaseModel> Departments { get; } = [];
-    public UserDatabaseModel UserInfo { get; set; } = new(Guid.NewGuid(), "Test", "User", "test@example.com", "Junior", "CS");
+    public List<NoteDatabaseModel> Notes { get; } = [];
+    public List<RolesDatabaseModel> Roles { get; } = [];
+    public UserDatabaseModel? UserInfo { get; set; } = new(Guid.NewGuid(), "Test", "User", "test@example.com", "Junior", "CS");
+    public UserRightsDatabaseModel UserRights { get; set; } = new(Guid.NewGuid(), null, "User", null);
     public int RequiredApprovals { get; set; } = 2;
 
     public Task<List<ApplicationDatabaseModel>> GetAllApplicationsForUserAsync(Guid userId, CancellationToken cancellationToken) => Task.FromResult(ApplicationsForUser);
@@ -23,7 +28,10 @@ public class FakeRecruitmentDataProvider : IRecruitmentDataProvider
     public Task<int> GetRequiredNumberOfApprovalsForDepartmentAsync(Guid departmentId, CancellationToken cancellationToken) => Task.FromResult(RequiredApprovals);
     public Task<List<ClubDatabaseModel>> GetAllClubsInformationAsync(CancellationToken cancellationToken) => Task.FromResult(Clubs);
     public Task<List<DepartmentDatabaseModel>> GetDepartmentsForClubAsync(Guid clubId, CancellationToken cancellationToken) => Task.FromResult(Departments);
-    public Task<UserDatabaseModel> GetApplicantUserInformationAsync(Guid userId, CancellationToken cancellationToken) => Task.FromResult(UserInfo);
+    public Task<UserDatabaseModel?> GetApplicantUserInformationAsync(Guid userId, CancellationToken cancellationToken) => Task.FromResult(UserInfo);
+    public Task<UserRightsDatabaseModel> GetUserRightsAsync(Guid userId, CancellationToken cancellationToken) => Task.FromResult(UserRights);
+    public Task<List<NoteDatabaseModel>> GetAllNotesForApplicationAsync(Guid applicationId, CancellationToken cancellationToken) => Task.FromResult(Notes);
+    public Task<List<RolesDatabaseModel>> GetAllRolesAsync(CancellationToken cancellationToken) => Task.FromResult(Roles);
 }
 
 public class FakeSystemManagementProvider : ISystemManagementProvider
@@ -31,11 +39,16 @@ public class FakeSystemManagementProvider : ISystemManagementProvider
     public Task CreateClubAsync(string clubName, ClubCategories category, CancellationToken cancellationToken) => Task.CompletedTask;
     public Task CreateDepartmentAsync(Guid clubId, string departmentName, int numberOfOpenPositions, string description, CancellationToken cancellationToken) => Task.CompletedTask;
     public Task CreateInterviewSlotAsync(Guid clubId, DateTimeOffset startTime, DateTimeOffset endTime, CancellationToken cancellationToken) => Task.CompletedTask;
+    public Task CreateApplicationNoteAsync(Guid applicationId, Guid userId, string payload, CancellationToken cancellationToken) => Task.CompletedTask;
     public Task UpdateClubInformationAsync(Guid clubId, string clubName, List<string> applicationQuestions, int requiredApprovals, string description, ClubCategories category, CancellationToken cancellationToken) => Task.CompletedTask;
     public Task UpdateDepartmentInformationAsync(Guid departmentId, string departmentName, int numberOfOpenPositions, string description, CancellationToken cancellationToken) => Task.CompletedTask;
     public Task UpdateInterviewSlotAsync(Guid slotId, DateTimeOffset newStartTime, DateTimeOffset newEndTime, CancellationToken cancellationToken) => Task.CompletedTask;
+    public Task UpdateApplicationNoteAsync(Guid noteId, string payload, CancellationToken cancellationToken) => Task.CompletedTask;
     public Task UpdateUserRoleAsync(Guid userId, Guid roleId, CancellationToken cancellationToken) => Task.CompletedTask;
     public Task UpdateUserPromoteToClubAdminAsync(Guid userId, Guid clubId, CancellationToken cancellationToken) => Task.CompletedTask;
+    public Task AssignClubAdminAsync(Guid userId, Guid clubId, Guid roleId, CancellationToken cancellationToken) => Task.CompletedTask;
+    public Task AssignBoardMemberAsync(Guid userId, Guid departmentId, Guid roleId, CancellationToken cancellationToken) => Task.CompletedTask;
+    public Task UpdateUserInformationAsync(Guid userId, string firstName, string lastName, string academicYear, string studyMajor, CancellationToken cancellationToken) => Task.CompletedTask;
 }
 
 public class FakeCalendarProvider : ICalendarProvider
@@ -63,6 +76,7 @@ public class FakeEventStore : IEventStore
 {
     public List<IDomainEvent> AppendedEvents { get; } = [];
     public List<(Guid UserId, Guid ApplicationId, ApplicationSubmissionData Data)> CreatedApplications { get; } = [];
+    public Dictionary<Guid, List<IDomainEvent>> EventsByAggregate { get; } = new();
 
     public Task AppendEventAsync(IDomainEvent domainEvent, CancellationToken cancellationToken)
     {
@@ -76,7 +90,12 @@ public class FakeEventStore : IEventStore
         return Task.CompletedTask;
     }
 
-    public Task<List<IDomainEvent>> GetEventsAsync(Guid aggregateId, CancellationToken cancellationToken) => Task.FromResult(new List<IDomainEvent>());
+    public Task<List<IDomainEvent>> GetEventsAsync(Guid aggregateId, CancellationToken cancellationToken)
+    {
+        if (EventsByAggregate.TryGetValue(aggregateId, out var events))
+            return Task.FromResult(events);
+        return Task.FromResult(new List<IDomainEvent>());
+    }
 }
 
 public class FakeEventBroker : IEventBroker
@@ -90,4 +109,32 @@ public class FakeEventBroker : IEventBroker
         PublishedMessages.Add(message);
         return ValueTask.CompletedTask;
     }
+}
+
+public class FakeAuthorizationScopeService : IAuthorizationScopeService
+{
+    public bool AllowAll { get; set; } = true;
+    public Guid? FakeCurrentUserId { get; set; } = Guid.Parse("11111111-1111-1111-1111-111111111111");
+    public bool FakeIsSystemAdmin { get; set; } = false;
+
+    public Guid? GetCurrentUserId(ClaimsPrincipal user) => FakeCurrentUserId;
+    public bool IsSystemAdmin(ClaimsPrincipal user) => FakeIsSystemAdmin;
+    public Task<bool> CanAccessUserAsync(ClaimsPrincipal user, Guid targetUserId, CancellationToken cancellationToken) => Task.FromResult(AllowAll);
+    public Task<bool> CanAccessApplicationAsync(ClaimsPrincipal user, Guid applicationId, CancellationToken cancellationToken) => Task.FromResult(AllowAll);
+    public Task<bool> CanAccessLatestApplicationStatesAsync(ClaimsPrincipal user, IEnumerable<Guid> applicationIds, CancellationToken cancellationToken) => Task.FromResult(AllowAll);
+    public Task<bool> CanAccessApplicationsForUserAsync(ClaimsPrincipal user, Guid targetUserId, CancellationToken cancellationToken) => Task.FromResult(AllowAll);
+    public Task<bool> CanAccessApplicationsForDepartmentAsync(ClaimsPrincipal user, Guid departmentId, CancellationToken cancellationToken) => Task.FromResult(AllowAll);
+    public Task<bool> CanAccessApplicationsForClubAsync(ClaimsPrincipal user, Guid clubId, CancellationToken cancellationToken) => Task.FromResult(AllowAll);
+    public Task<bool> CanManageClubAsync(ClaimsPrincipal user, Guid clubId, CancellationToken cancellationToken) => Task.FromResult(AllowAll);
+    public Task<bool> CanManageDepartmentAsync(ClaimsPrincipal user, Guid departmentId, CancellationToken cancellationToken) => Task.FromResult(AllowAll);
+    public Task<bool> CanManageInterviewSlotAsync(ClaimsPrincipal user, Guid slotId, CancellationToken cancellationToken) => Task.FromResult(AllowAll);
+    public Task<bool> CanCreateDepartmentAsync(ClaimsPrincipal user, Guid clubId, CancellationToken cancellationToken) => Task.FromResult(AllowAll);
+    public Task<bool> CanCreateInterviewSlotAsync(ClaimsPrincipal user, Guid clubId, CancellationToken cancellationToken) => Task.FromResult(AllowAll);
+    public Task<bool> CanAssignBoardMemberAsync(ClaimsPrincipal user, Guid departmentId, CancellationToken cancellationToken) => Task.FromResult(AllowAll);
+    public Task<bool> CanSubmitApplicationAsync(ClaimsPrincipal user, Guid departmentId, CancellationToken cancellationToken) => Task.FromResult(AllowAll);
+    public Task<bool> CanBookInterviewSlotAsync(ClaimsPrincipal user, Guid applicationId, CancellationToken cancellationToken) => Task.FromResult(AllowAll);
+    public Task<bool> CanReviewApplicationAsync(ClaimsPrincipal user, Guid applicationId, CancellationToken cancellationToken) => Task.FromResult(AllowAll);
+    public Task<bool> CanConcludeApplicationAsync(ClaimsPrincipal user, Guid applicationId, CancellationToken cancellationToken) => Task.FromResult(AllowAll);
+    public Task<bool> CanAccessNoteAsync(ClaimsPrincipal user, Guid applicationId, CancellationToken cancellationToken) => Task.FromResult(AllowAll);
+    public Task<bool> CanEditNoteAsync(ClaimsPrincipal user, Guid noteId, CancellationToken cancellationToken) => Task.FromResult(AllowAll);
 }

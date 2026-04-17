@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<RunSettings>
+  <DataCollectionRunSettings>
+    <DataCollectors>
+      <DataCollector friendlyName="XPlat Code Coverage">
+        <Configuration>
+          <ExcludeByFile>
+            **/Migrations/*.cs,
+            **/obj/**/*.cs,
+            **/Data/AppDbContext.cs,
+            **/Program.cs,
+            **/PersistanceServices/DbQueries.cs,
+            **/PersistanceServices/EventStore.cs,
+            **/PersistanceServices/RecruitmentDataProvider.cs,
+            **/PersistanceServices/SystemManagementProvider.cs,
+            **/PersistanceServices/CalendarProvider.cs,
+            **/PersistanceServices/ApplicationFinalizer.cs,
+            **/Security/AuthorizationScopeService.cs
+          </ExcludeByFile>
+          <ExcludeByAttribute>GeneratedCode,CompilerGenerated,ExcludeFromCodeCoverage</ExcludeByAttribute>
+        </Configuration>
+      </DataCollector>
+    </DataCollectors>
+  </DataCollectionRunSettings>
+</RunSettings>

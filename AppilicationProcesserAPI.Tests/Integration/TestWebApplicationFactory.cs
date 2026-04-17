@@ -1,6 +1,7 @@
 using AppilicationProcesserAPI.AggregateStates;
 using AppilicationProcesserAPI.MessageQueue;
 using AppilicationProcesserAPI.PersistanceServices;
+using AppilicationProcesserAPI.Security;
 using AppilicationProcesserAPI.Tests.TestDoubles;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Hosting;
@@ -19,6 +20,7 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>
     public FakeAggregateReconstructor AggregateReconstructor { get; } = new();
     public FakeEventStore EventStore { get; } = new();
     public FakeEventBroker EventBroker { get; } = new();
+    public FakeAuthorizationScopeService AuthorizationScopeService { get; } = new();
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
@@ -43,6 +45,7 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>
             services.RemoveAll<IAggregateReconstructor>();
             services.RemoveAll<IEventStore>();
             services.RemoveAll<IEventBroker>();
+            services.RemoveAll<IAuthorizationScopeService>();
 
             services.AddSingleton<IRecruitmentDataProvider>(RecruitmentDataProvider);
             services.AddSingleton<ISystemManagementProvider>(SystemManagementProvider);
@@ -50,6 +53,7 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>
             services.AddSingleton<IAggregateReconstructor>(AggregateReconstructor);
             services.AddSingleton<IEventStore>(EventStore);
             services.AddSingleton<IEventBroker>(EventBroker);
+            services.AddSingleton<IAuthorizationScopeService>(AuthorizationScopeService);
 
             services.AddAuthentication(options =>
             {

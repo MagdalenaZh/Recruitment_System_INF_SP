@@ -78,4 +78,66 @@ public class ApplicationStatusManagerTests
         using var cts = new CancellationTokenSource(TimeSpan.FromMilliseconds(50));
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() => manager.GetApplicationStatus(cts.Token).AsTask());
     }
+
+    [Fact]
+    public async Task UpdateApplicationStatus_ApprovedStateRepresentation_QueuesInterviewScheduledStatus()
+    {
+        var manager = new ApplicationStatusManager(NullLogger<ApplicationStatusManager>.Instance);
+        var applicationId = Guid.NewGuid();
+
+        await manager.UpdateApplicationStatus(new ApprovedStateRepresentation
+        {
+            ApplicationId = applicationId,
+            ApplicationApproved = true
+        }, CancellationToken.None);
+
+        var message = await manager.GetApplicationStatus(CancellationToken.None);
+
+        Assert.Equal(applicationId, message.MessageData.ApplicationId);
+        Assert.Equal(ApplicationStatus.InterviewScheduled, message.MessageData.ApplicationStatus);
+    }
+
+    [Fact]
+    public async Task UpdateApplicationStatus_ProcessingStateRepresentation_DoesNotQueue()
+    {
+        var manager = new ApplicationStatusManager(NullLogger<ApplicationStatusManager>.Instance);
+
+        await manager.UpdateApplicationStatus(new ProcessingStateRepresentation
+        {
+            ApplicationId = Guid.NewGuid(),
+            CurrentNumberOfApprovals = 1,
+            RequiredNumberOfApprovals = 2,
+            UserDecisionsMap = new Dictionary<Guid, bool>()
+        }, CancellationToken.None);
+
+        using var cts = new CancellationTokenSource(TimeSpan.FromMilliseconds(50));
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => manager.GetApplicationStatus(cts.Token).AsTask());
+    }
+
+    [Fact]
+    public async Task UpdateApplicationStatus_NullRepresentation_ThrowsArgumentNullException()
+    {
+        var manager = new ApplicationStatusManager(NullLogger<ApplicationStatusManager>.Instance);
+
+        await Assert.ThrowsAsync<ArgumentNullException>(() =>
+            manager.UpdateApplicationStatus(null!, CancellationToken.None).AsTask());
+    }
+
+    [Fact]
+    public async Task UpdateApplicationStatus_ConcludedRejected_QueuesRejectedStatus()
+    {
+        var manager = new ApplicationStatusManager(NullLogger<ApplicationStatusManager>.Instance);
+        var applicationId = Guid.NewGuid();
+
+        await manager.UpdateApplicationStatus(new ConcludedStateRepresentation
+        {
+            ApplicationId = applicationId,
+            ConclusionResult = ApplicationStatus.Rejected
+        }, CancellationToken.None);
+
+        var message = await manager.GetApplicationStatus(CancellationToken.None);
+
+        Assert.Equal(applicationId, message.MessageData.ApplicationId);
+        Assert.Equal(ApplicationStatus.Rejected, message.MessageData.ApplicationStatus);
+    }
 }
