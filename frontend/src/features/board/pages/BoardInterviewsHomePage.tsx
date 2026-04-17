@@ -3,7 +3,6 @@ import { BoardSectionNav } from "../components/BoardSectionNav";
 import { InterviewDetailsDrawer } from "../components/InterviewDetailsDrawer";
 import { InterviewDecisionConfirmModal } from "../components/InterviewDecisionConfirmModal";
 import { InterviewPhaseBadge } from "../components/InterviewPhaseBadge";
-import { useBoardDepartments } from "../hooks/useBoardDepartments";
 import { useBoardInterviews } from "../hooks/useBoardInterviews";
 import type {
   BoardInterviewSlot,
@@ -12,7 +11,6 @@ import type {
 import {
   filterSlotsByDepartment,
   getCurrentInterview,
-  getDecisionProgressLabel,
   getNextInterview,
   getSlotPhase,
   groupSlotsByDate,
@@ -30,6 +28,7 @@ type PendingDecisionRequest = {
 export function BoardInterviewsHomePage() {
   const {
     slots,
+    departmentStats,
     clubName,
     loading,
     error,
@@ -39,7 +38,6 @@ export function BoardInterviewsHomePage() {
     updateNote,
     submitDecision,
   } = useBoardInterviews();
-  const { data: departmentStats } = useBoardDepartments();
   const [departmentFilter, setDepartmentFilter] = useState("all");
   const [selectedSlotId, setSelectedSlotId] = useState<string | null>(null);
   const [pendingDecision, setPendingDecision] =
@@ -130,25 +128,22 @@ export function BoardInterviewsHomePage() {
     <BoardShell>
       <div className="pt-28">
         <div className="mx-auto max-w-7xl p-4 sm:p-6">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div className="mb-10">
+            <BoardSectionNav />
+          </div>
+
+          <div className="">
             <div>
-              <h1 className="text-3xl font-semibold tracking-tight text-slate-900">
-                Interview day schedule
-              </h1>
-              {clubName ? (
-                <p className="mt-2 text-base font-medium text-blue-700">
+              {clubName && (
+                <p className="mt-4 mb-8 text-4xl font-bold tracking-tight text-slate-950">
                   {clubName}
                 </p>
-              ) : null}
-              <p className="mt-2 max-w-3xl text-sm text-slate-600 sm:text-base">
-                One centralized page for the board. Open any slot to see the
-                applicant&apos;s full application, notes, and final voting
-                controls.
+              )}
+              <p className="text-3xl font-semibold uppercase tracking-[0.24em] text-blue-700">
+                Interviews
               </p>
             </div>
           </div>
-
-          <BoardSectionNav />
 
           <div className="mt-8 grid gap-4 md:grid-cols-3 xl:grid-cols-4">
             <SummaryCard
@@ -358,9 +353,6 @@ export function BoardInterviewsHomePage() {
                               <div className="mt-1 text-sm text-slate-600">
                                 {slot.candidateEmail}
                               </div>
-                              <div className="mt-1 text-sm text-slate-500">
-                                {slot.clubName} • {slot.departmentName}
-                              </div>
                               <div className="mt-4 flex flex-wrap gap-2">
                                 {slot.decisions.map((decision) => (
                                   <span
@@ -370,9 +362,6 @@ export function BoardInterviewsHomePage() {
                                     {decision.departmentName}
                                   </span>
                                 ))}
-                              </div>
-                              <div className="mt-4 text-sm text-slate-600">
-                                {getDecisionProgressLabel(slot)}
                               </div>
                             </div>
                             <div className="flex shrink-0 items-center gap-3">

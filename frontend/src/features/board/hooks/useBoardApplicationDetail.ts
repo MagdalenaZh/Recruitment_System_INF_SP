@@ -1,11 +1,15 @@
 import { useEffect, useMemo, useState } from "react";
 import { boardApi, resolveCurrentBoardClubId, resolveCurrentUserId } from "../../../services/board/boardApi";
-import { getAllClubs, getDepartmentsForClub, getLatestApplicationStates } from "../../../services/applications/applicationStatusApi";
+import {
+  getAllClubs,
+  getCachedLatestApplicationStates,
+  getDepartmentsForClub,
+  getLatestApplicationStates,
+} from "../../../services/applications/applicationStatusApi";
 import {
   createRealtimeClientId,
   subscribeToApplicationStates,
 } from "../../../services/applications/applicationStateStream";
-import type { LatestApplicationStateResponse } from "../../../services/applications/applicationStateTypes";
 import type { ApplicationDetail } from "../types/boardTypes";
 import { applyUpdateToApplicationDetail, normalizeBaseStatus } from "../utils/applicationLiveState";
 
@@ -60,10 +64,7 @@ export function useBoardApplicationDetail(applicationId?: string) {
       if (!application) throw new Error("Application not found.");
 
       const latestStates = shouldHydrateLatestState(application.applicationStatus)
-        ? await getLatestApplicationStates([applicationId]).catch((hydrateError) => {
-            console.error("[useBoardApplicationDetail] latest-state hydration failed", hydrateError);
-            return [] as LatestApplicationStateResponse[];
-          })
+        ? getCachedLatestApplicationStates([applicationId])
         : [];
 
       // Fetch real name and email for the applicant. If lookup fails, keep page usable.
@@ -171,11 +172,13 @@ export function useBoardApplicationDetail(applicationId?: string) {
     if (!applicationId) return;
 
     const currentUserId = resolveCurrentUserId();
+    let recoveredFromError = false;
 
     return subscribeToApplicationStates({
       clientId,
       applicationIds: [applicationId],
       onMessage: (payload) => {
+        recoveredFromError = false;
         setData((prev) => {
           if (!prev) return prev;
           return applyUpdateToApplicationDetail(prev, payload, currentUserId);
@@ -183,6 +186,27 @@ export function useBoardApplicationDetail(applicationId?: string) {
       },
       onError: (err) => {
         console.error("[useBoardApplicationDetail] SSE error", err);
+        if (recoveredFromError) {
+          return;
+        }
+
+        recoveredFromError = true;
+        void getLatestApplicationStates([applicationId])
+          .then((states) => {
+            const latestState = states[0];
+            if (!latestState) return;
+
+            setData((prev) => {
+              if (!prev) return prev;
+              return applyUpdateToApplicationDetail(prev, latestState, currentUserId);
+            });
+          })
+          .catch((hydrateError) => {
+            console.error(
+              "[useBoardApplicationDetail] snapshot recovery failed",
+              hydrateError,
+            );
+          });
       },
     });
   }, [applicationId, clientId]);

@@ -48,5 +48,5 @@ export function getDefaultRouteForRole(role: string | null | undefined): string 
   if (normalizedRole === "ClubAdmin") return "/club-admin";
   if (normalizedRole === "BoardMember") return "/board";
   if (normalizedRole === "SystemAdmin") return "/sys-admin";
-  return "/account";
+  return "/home";
 }

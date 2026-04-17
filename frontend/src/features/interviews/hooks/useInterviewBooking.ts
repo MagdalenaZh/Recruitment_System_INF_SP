@@ -6,9 +6,14 @@ import {
 import {
   getApplicationsForCurrentUser,
   getAllClubs,
+  getCachedLatestApplicationStates,
   getDepartmentsForClub,
   getLatestApplicationStates,
 } from "../../../services/applications/applicationStatusApi";
+import {
+  createRealtimeClientId,
+  subscribeToApplicationStates,
+} from "../../../services/applications/applicationStateStream";
 import {
   isAfterInterviewReviewState,
   isApprovedApplicationState,
@@ -65,6 +70,7 @@ function toApprovedInterviewApplications(
 ): ApprovedInterviewApplication[] {
   return apps
     .filter(isApprovedApplication)
+    .filter((app) => !app.interviewSlot)
     .filter((app) => !!app.applicationId && !!app.clubId)
     .map((app) => ({
       applicationId: app.applicationId,
@@ -91,6 +97,7 @@ function getDerivedInterviewStatus(
 
 export function useInterviewBooking(userId?: string) {
   const [applications, setApplications] = useState<UserApplication[]>([]);
+  const [latestStates, setLatestStates] = useState<Record<string, LatestApplicationStateResponse>>({});
   const [slots, setSlots] = useState<InterviewSlot[]>([]);
   const [selectedApplicationId, setSelectedApplicationId] = useState("");
   const [loadingApplications, setLoadingApplications] = useState(false);
@@ -98,10 +105,22 @@ export function useInterviewBooking(userId?: string) {
   const [booking, setBooking] = useState(false);
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const clientId = useMemo(() => createRealtimeClientId(), []);
+
+  const hydratedApplications = useMemo(
+    () =>
+      applications.map((application) =>
+        applyLatestStateToUserApplication(
+          application,
+          latestStates[application.applicationId],
+        ),
+      ),
+    [applications, latestStates],
+  );
 
   const approvedApplications = useMemo(
-    () => toApprovedInterviewApplications(applications),
-    [applications]
+    () => toApprovedInterviewApplications(hydratedApplications),
+    [hydratedApplications]
   );
 
   const selectedApplication = useMemo(
@@ -123,11 +142,11 @@ export function useInterviewBooking(userId?: string) {
         getApplicationsForCurrentUser(),
         getAllClubs(),
       ]);
-      const latestStates = await getLatestApplicationStates(
+      const initialStates = getCachedLatestApplicationStates(
         data.map((application) => application.applicationId),
-      ).catch(() => []);
+      );
       const latestStateMap = new Map<string, LatestApplicationStateResponse>(
-        latestStates.map((state) => [state.applicationId, state]),
+        initialStates.map((state) => [state.applicationId, state]),
       );
 
       const departmentLists = await Promise.all(
@@ -170,8 +189,22 @@ export function useInterviewBooking(userId?: string) {
       });
 
       setApplications(enrichedData);
+      setLatestStates(() => {
+        const next: Record<string, LatestApplicationStateResponse> = {};
+        for (const state of initialStates) {
+          next[state.applicationId] = state;
+        }
+        return next;
+      });
 
-      const approved = toApprovedInterviewApplications(enrichedData);
+      const approved = toApprovedInterviewApplications(
+        enrichedData.map((application) =>
+          applyLatestStateToUserApplication(
+            application,
+            latestStateMap.get(application.applicationId),
+          ),
+        ),
+      );
       if (approved.length > 0) {
         setSelectedApplicationId((current) =>
           current || approved[0].applicationId
@@ -226,7 +259,8 @@ export function useInterviewBooking(userId?: string) {
         });
 
         setSuccessMessage(result.message || "Interview slot booked successfully.");
-        await loadSlots();
+        await loadApplications();
+        setSlots([]);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to book interview slot");
         throw err;
@@ -241,6 +275,51 @@ export function useInterviewBooking(userId?: string) {
     loadApplications();
   }, [loadApplications]);
 
+  const applicationIds = useMemo(
+    () => hydratedApplications.map((application) => application.applicationId),
+    [hydratedApplications],
+  );
+
+  useEffect(() => {
+    if (applicationIds.length === 0) return;
+    let recoveredFromError = false;
+
+    return subscribeToApplicationStates({
+      clientId,
+      applicationIds,
+      onMessage: (state) => {
+        recoveredFromError = false;
+        setLatestStates((prev) => ({
+          ...prev,
+          [state.applicationId]: state,
+        }));
+      },
+      onError: (streamError) => {
+        console.error("[useInterviewBooking] SSE error", streamError);
+        if (recoveredFromError) {
+          return;
+        }
+
+        recoveredFromError = true;
+        void getLatestApplicationStates(applicationIds)
+          .then((states) => {
+            if (states.length === 0) return;
+
+            setLatestStates((prev) => {
+              const next = { ...prev };
+              for (const state of states) {
+                next[state.applicationId] = state;
+              }
+              return next;
+            });
+          })
+          .catch(() => {
+            return;
+          });
+      },
+    });
+  }, [applicationIds, clientId]);
+
   useEffect(() => {
     if (selectedApplication?.clubId) {
       loadSlots();
@@ -250,7 +329,7 @@ export function useInterviewBooking(userId?: string) {
   }, [selectedApplication?.clubId, loadSlots]);
 
   return {
-    applications,
+    applications: hydratedApplications,
     approvedApplications,
     selectedApplication,
     selectedApplicationId,
@@ -266,5 +345,25 @@ export function useInterviewBooking(userId?: string) {
       await loadSlots();
     },
     submitBooking,
+  };
+}
+
+function applyLatestStateToUserApplication(
+  application: UserApplication,
+  latestState: LatestApplicationStateResponse | undefined,
+): UserApplication {
+  const interviewSlot =
+    latestState && "scheduledTime" in latestState && latestState.scheduledTime
+      ? {
+          slotId: latestState.scheduledTime.slotId,
+          startTime: latestState.scheduledTime.startTime,
+          endTime: latestState.scheduledTime.endTime,
+        }
+      : application.interviewSlot;
+
+  return {
+    ...application,
+    status: getDerivedInterviewStatus(latestState, application.applicationStatus),
+    interviewSlot,
   };
 }

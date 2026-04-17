@@ -1,13 +1,18 @@
 import { useEffect, useMemo, useState } from "react";
 import { boardApi, resolveCurrentBoardClubId, resolveCurrentUserId } from "../../../services/board/boardApi";
-import { getAllClubs, getDepartmentsForClub, getLatestApplicationStates } from "../../../services/applications/applicationStatusApi";
+import {
+  getAllClubs,
+  getCachedLatestApplicationStates,
+  getDepartmentsForClub,
+  getLatestApplicationStates,
+} from "../../../services/applications/applicationStatusApi";
 import {
   createRealtimeClientId,
   subscribeToApplicationStates,
 } from "../../../services/applications/applicationStateStream";
+import type { LatestApplicationStateResponse } from "../../../services/applications/applicationStateTypes";
 import type { UserApplicationDto } from "../../../types/account/accountApplications";
 import type { UserInfoDto } from "../../../types/board/boardApiTypes";
-import type { LatestApplicationStateResponse } from "../../../services/applications/applicationStateTypes";
 import type { ApplicationListItem, ApplicationStatus } from "../types/boardTypes";
 import { applyUpdateToApplicationListItem, normalizeBaseStatus } from "../utils/applicationLiveState";
 
@@ -90,14 +95,10 @@ export function useDepartmentApplications(departmentId?: string) {
       }
       setUserInfoMap(infoMap);
 
-      const stateSnapshots = await getLatestApplicationStates(
-        applicationsResponse
-          .filter((application) => shouldHydrateLatestState(application.applicationStatus))
-          .map((application) => application.applicationId),
-      ).catch((hydrateError) => {
-        console.error("[useDepartmentApplications] latest-state hydration failed", hydrateError);
-        return [] as LatestApplicationStateResponse[];
-      });
+      const hydratableApplicationIds = applicationsResponse
+        .filter((application) => shouldHydrateLatestState(application.applicationStatus))
+        .map((application) => application.applicationId);
+      const stateSnapshots = getCachedLatestApplicationStates(hydratableApplicationIds);
 
       setLiveUpdates(() => {
         const next: Record<string, LatestApplicationStateResponse> = {};
@@ -126,15 +127,40 @@ export function useDepartmentApplications(departmentId?: string) {
 
   useEffect(() => {
     if (applicationIds.length === 0) return;
+    let recoveredFromError = false;
 
     return subscribeToApplicationStates({
       clientId,
       applicationIds,
       onMessage: (payload) => {
+        recoveredFromError = false;
         setLiveUpdates((prev) => ({ ...prev, [payload.applicationId]: payload }));
       },
       onError: (err) => {
         console.error("[useDepartmentApplications] SSE error", err);
+        if (recoveredFromError) {
+          return;
+        }
+
+        recoveredFromError = true;
+        void getLatestApplicationStates(applicationIds)
+          .then((states) => {
+            if (states.length === 0) return;
+
+            setLiveUpdates((prev) => {
+              const next = { ...prev };
+              for (const state of states) {
+                next[state.applicationId] = state;
+              }
+              return next;
+            });
+          })
+          .catch((hydrateError) => {
+            console.error(
+              "[useDepartmentApplications] snapshot recovery failed",
+              hydrateError,
+            );
+          });
       },
     });
   }, [applicationIds, clientId]);

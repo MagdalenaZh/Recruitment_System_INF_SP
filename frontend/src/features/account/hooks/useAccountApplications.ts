@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   getApplicationsForCurrentUser,
   getAllClubs,
+  getCachedLatestApplicationStates,
   getDepartmentsForClub,
   getLatestApplicationStates,
 } from "../../../services/applications/applicationStatusApi";
@@ -170,10 +171,11 @@ export function useAccountApplications() {
 
         setApplications(mapped);
 
-        const stateSnapshots = await getLatestApplicationStates(
-          userApplications
-            .filter((application) => shouldHydrateLatestState(application.applicationStatus))
-            .map((application) => application.applicationId),
+        const hydratableApplicationIds = userApplications
+          .filter((application) => shouldHydrateLatestState(application.applicationStatus))
+          .map((application) => application.applicationId);
+        const stateSnapshots = getCachedLatestApplicationStates(
+          hydratableApplicationIds,
         );
 
         setLatestStates(() => {
@@ -204,11 +206,13 @@ export function useAccountApplications() {
     if (applicationIds.length === 0) {
       return;
     }
+    let recoveredFromError = false;
 
     return subscribeToApplicationStates({
       clientId,
       applicationIds,
       onMessage: (state) => {
+        recoveredFromError = false;
         setLatestStates((prev) => ({
           ...prev,
           [state.applicationId]: state,
@@ -216,6 +220,29 @@ export function useAccountApplications() {
       },
       onError: (streamError) => {
         console.error("[useAccountApplications] application stream error", streamError);
+        if (recoveredFromError) {
+          return;
+        }
+
+        recoveredFromError = true;
+        void getLatestApplicationStates(applicationIds)
+          .then((states) => {
+            if (states.length === 0) return;
+
+            setLatestStates((prev) => {
+              const next = { ...prev };
+              for (const state of states) {
+                next[state.applicationId] = state;
+              }
+              return next;
+            });
+          })
+          .catch((snapshotError) => {
+            console.error(
+              "[useAccountApplications] snapshot recovery failed",
+              snapshotError,
+            );
+          });
       },
     });
   }, [applicationIds, clientId]);

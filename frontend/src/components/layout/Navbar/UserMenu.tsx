@@ -36,7 +36,7 @@ function getMenuItems(
     return [
       { label: "My Profile", to: "/account" },
       { label: "Club Applications", to: "/board" },
-      { label: "Interview Stage", to: "/board/interviews" },
+      { label: "Interview Stage", to: "/board" },
       { label: "Manage Club", to: "/club-admin" },
     ];
   }

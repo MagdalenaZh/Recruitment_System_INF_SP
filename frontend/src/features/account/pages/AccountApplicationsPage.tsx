@@ -85,35 +85,26 @@ export function AccountApplicationsPage() {
               <div className="mt-5 flex items-center gap-2 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
                 <span className="font-semibold">Interview:</span>
                 <span>
-                  {new Date(a.interviewSlot.startTime).toLocaleString(undefined, {
-                    dateStyle: "medium",
-                    timeStyle: "short",
-                  })}{" "}
+                  {new Date(a.interviewSlot.startTime).toLocaleString(
+                    undefined,
+                    {
+                      dateStyle: "medium",
+                      timeStyle: "short",
+                    },
+                  )}{" "}
                   &ndash;{" "}
-                  {new Date(a.interviewSlot.endTime).toLocaleTimeString(undefined, {
-                    timeStyle: "short",
-                  })}
+                  {new Date(a.interviewSlot.endTime).toLocaleTimeString(
+                    undefined,
+                    {
+                      timeStyle: "short",
+                    },
+                  )}
                 </span>
               </div>
             ) : null}
 
             <div className="mt-5">
               <StageStepper stage={a.stage} />
-            </div>
-
-            <div className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-              <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
-                Final decision
-              </div>
-              <div className="mt-2 text-sm font-medium text-slate-700">
-                {a.stage === "Accepted"
-                  ? "Accepted"
-                  : a.stage === "Rejected"
-                    ? "Rejected"
-                    : a.stage === "Waitlisted"
-                      ? "Waitlisted"
-                      : "Pending"}
-              </div>
             </div>
           </div>
         ))}

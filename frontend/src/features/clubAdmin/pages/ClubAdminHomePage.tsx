@@ -50,7 +50,7 @@ export function ClubAdminHomePage() {
           <ClubAdminHomeCard
             title="Applications & Interviews"
             description="Jump into the shared applications and interview workspaces."
-            to="/board/interviews"
+            to="/board"
           />
         </div>
       </div>

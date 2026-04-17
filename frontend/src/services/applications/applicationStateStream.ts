@@ -18,6 +18,12 @@ export type ApplicationStateStreamOptions = {
   onError?: (error: unknown) => void;
 };
 
+type StreamSubscription = {
+  applicationIds: Set<string>;
+  onMessage: (message: LatestApplicationStateResponse) => void;
+  onError?: (error: unknown) => void;
+};
+
 export function createRealtimeClientId(): string {
   return crypto.randomUUID();
 }
@@ -25,28 +31,122 @@ export function createRealtimeClientId(): string {
 export function subscribeToApplicationStates(
   options: ApplicationStateStreamOptions,
 ): () => void {
-  const applicationIds = Array.from(
-    new Set(options.applicationIds.map((id) => id.trim()).filter(Boolean)),
-  );
+  return applicationStateStreamManager.subscribe(options);
+}
 
-  if (applicationIds.length === 0) {
-    return () => undefined;
+class ApplicationStateStreamManager {
+  private readonly subscriptions = new Map<string, StreamSubscription>();
+  private controller: AbortController | null = null;
+  private reconnectTimer: number | null = null;
+  private idleDisconnectTimer: number | null = null;
+  private lastEventId: string | null = readStoredLastEventId();
+  private activeKey = "";
+  private connectionGeneration = 0;
+
+  subscribe(options: ApplicationStateStreamOptions): () => void {
+    const applicationIds = normalizeApplicationIds(options.applicationIds);
+
+    if (applicationIds.length === 0) {
+      return () => undefined;
+    }
+
+    const key = `${options.clientId}:${crypto.randomUUID()}`;
+    this.subscriptions.set(key, {
+      applicationIds: new Set(applicationIds),
+      onMessage: options.onMessage,
+      onError: options.onError,
+    });
+
+    this.clearIdleDisconnectTimer();
+    this.refreshConnection();
+
+    return () => {
+      this.subscriptions.delete(key);
+      this.refreshConnection();
+    };
   }
 
-  let disposed = false;
-  let controller: AbortController | null = null;
-  let reconnectTimer: number | null = null;
-  let lastEventId: string | null = readStoredLastEventId();
+  private refreshConnection(): void {
+    const nextApplicationIds = this.getTrackedApplicationIds();
+    const nextKey = nextApplicationIds.join(",");
 
-  const buildStreamUrl = () => {
-    const url = new URL(`${API_BASE}/api/eventEmmitter/aplicationUpdates`);
-    for (const applicationId of applicationIds) {
-      url.searchParams.append("applicationIds", applicationId);
+    if (nextApplicationIds.length === 0) {
+      this.scheduleIdleDisconnect();
+      return;
     }
-    return url.toString();
-  };
 
-  const streamWithResponse = async (response: Response) => {
+    this.clearIdleDisconnectTimer();
+
+    if (this.activeKey === nextKey && this.controller) {
+      return;
+    }
+
+    this.activeKey = nextKey;
+    this.abortCurrentConnection();
+    void this.connect(nextApplicationIds);
+  }
+
+  private async connect(applicationIds: string[]): Promise<void> {
+    if (applicationIds.length === 0) {
+      return;
+    }
+
+    const generation = ++this.connectionGeneration;
+    const controller = new AbortController();
+    this.controller = controller;
+
+    try {
+      const response = await this.openStream(applicationIds, controller.signal);
+      await this.streamWithResponse(response, generation);
+    } catch (error) {
+      if (
+        controller.signal.aborted ||
+        (error instanceof DOMException && error.name === "AbortError")
+      ) {
+        return;
+      }
+
+      this.notifyError(error);
+    } finally {
+      if (this.controller === controller) {
+        this.controller = null;
+      }
+    }
+
+    const currentApplicationIds = this.getTrackedApplicationIds();
+    const currentKey = currentApplicationIds.join(",");
+
+    if (
+      this.subscriptions.size > 0 &&
+      currentApplicationIds.length > 0 &&
+      this.activeKey === currentKey &&
+      generation === this.connectionGeneration
+    ) {
+      this.reconnectTimer = window.setTimeout(() => {
+        this.reconnectTimer = null;
+        void this.connect(currentApplicationIds);
+      }, 1500);
+    }
+  }
+
+  private async openStream(
+    applicationIds: string[],
+    signal: AbortSignal,
+  ): Promise<Response> {
+    const token = getAuthToken();
+    const headers: HeadersInit = {
+      Accept: "text/event-stream",
+      "Cache-Control": "no-cache",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(this.lastEventId ? { "Last-Event-ID": this.lastEventId } : {}),
+    };
+
+    const response = await fetch(buildStreamUrl(applicationIds), {
+      method: "GET",
+      headers,
+      signal,
+    });
+
     if (!response.ok) {
       const message = await response.text();
       throw new Error(message || `SSE request failed with status ${response.status}`);
@@ -56,14 +156,25 @@ export function subscribeToApplicationStates(
       throw new Error("SSE response body is empty.");
     }
 
+    return response;
+  }
+
+  private async streamWithResponse(
+    response: Response,
+    generation: number,
+  ): Promise<void> {
+    if (!response.body) {
+      throw new Error("SSE response body is empty.");
+    }
+
     const reader = response.body.getReader();
     const decoder = new TextDecoder();
     let buffer = "";
 
-    while (!disposed) {
+    while (true) {
       const { value, done } = await reader.read();
 
-      if (done) {
+      if (done || generation !== this.connectionGeneration) {
         break;
       }
 
@@ -76,7 +187,7 @@ export function subscribeToApplicationStates(
         if (!parsed) continue;
 
         if (parsed.id) {
-          lastEventId = parsed.id;
+          this.lastEventId = parsed.id;
           writeStoredLastEventId(parsed.id);
         }
 
@@ -104,64 +215,69 @@ export function subscribeToApplicationStates(
         }
 
         cacheLatestSnapshot(payload);
-        options.onMessage(payload);
+        this.notifyMessage(payload);
       }
     }
-  };
+  }
 
-  const openStream = async (signal: AbortSignal) => {
-    const token = getAuthToken();
-    const baseHeaders: HeadersInit = {
-      Accept: "text/event-stream",
-      "Cache-Control": "no-cache",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...(lastEventId ? { "Last-Event-ID": lastEventId } : {}),
-    };
-
-    const getResponse = await fetch(buildStreamUrl(), {
-      method: "GET",
-      headers: baseHeaders,
-      signal,
-    });
-
-      return getResponse;
-  };
-
-  const connect = async () => {
-    if (disposed) return;
-
-    controller = new AbortController();
-
-    try {
-      const response = await openStream(controller.signal);
-      await streamWithResponse(response);
-    } catch (error) {
-      if (disposed || (error instanceof DOMException && error.name === "AbortError")) {
-        return;
+  private notifyMessage(payload: LatestApplicationStateResponse): void {
+    for (const subscription of this.subscriptions.values()) {
+      if (subscription.applicationIds.has(payload.applicationId)) {
+        subscription.onMessage(payload);
       }
+    }
+  }
 
-      options.onError?.(error);
+  private notifyError(error: unknown): void {
+    for (const subscription of this.subscriptions.values()) {
+      subscription.onError?.(error);
+    }
+  }
+
+  private getTrackedApplicationIds(): string[] {
+    const ids = new Set<string>();
+    for (const subscription of this.subscriptions.values()) {
+      for (const applicationId of subscription.applicationIds) {
+        ids.add(applicationId);
+      }
     }
 
-    if (!disposed) {
-      reconnectTimer = window.setTimeout(() => {
-        void connect();
-      }, 1500);
-    }
-  };
+    return Array.from(ids).sort();
+  }
 
-  void connect();
-
-  return () => {
-    disposed = true;
-
-    if (reconnectTimer !== null) {
-      window.clearTimeout(reconnectTimer);
+  private abortCurrentConnection(): void {
+    if (this.reconnectTimer !== null) {
+      window.clearTimeout(this.reconnectTimer);
+      this.reconnectTimer = null;
     }
 
-    controller?.abort();
-  };
+    this.controller?.abort();
+    this.controller = null;
+  }
+
+  private scheduleIdleDisconnect(): void {
+    if (this.idleDisconnectTimer !== null) {
+      return;
+    }
+
+    this.idleDisconnectTimer = window.setTimeout(() => {
+      this.idleDisconnectTimer = null;
+      if (this.subscriptions.size === 0) {
+        this.activeKey = "";
+        this.abortCurrentConnection();
+      }
+    }, 15000);
+  }
+
+  private clearIdleDisconnectTimer(): void {
+    if (this.idleDisconnectTimer !== null) {
+      window.clearTimeout(this.idleDisconnectTimer);
+      this.idleDisconnectTimer = null;
+    }
+  }
 }
+
+const applicationStateStreamManager = new ApplicationStateStreamManager();
 
 function readStoredLastEventId(): string | null {
   try {
@@ -193,6 +309,18 @@ function cacheLatestSnapshot(state: LatestApplicationStateResponse): void {
   } catch {
     // Ignore cache write errors.
   }
+}
+
+function normalizeApplicationIds(applicationIds: string[]): string[] {
+  return Array.from(new Set(applicationIds.map((id) => id.trim()).filter(Boolean))).sort();
+}
+
+function buildStreamUrl(applicationIds: string[]): string {
+  const url = new URL(`${API_BASE}/api/eventEmmitter/aplicationUpdates`);
+  for (const applicationId of applicationIds) {
+    url.searchParams.append("applicationIds", applicationId);
+  }
+  return url.toString();
 }
 
 function getLastEventIdStorageKey(): string {

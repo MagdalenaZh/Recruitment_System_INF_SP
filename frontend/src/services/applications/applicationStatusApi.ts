@@ -1,4 +1,4 @@
-import { apiGet, apiPost } from "../api";
+import { apiGet } from "../api";
 import { getStoredUserId } from "../auth/auth.api";
 import type { UserApplicationDto, ClubDto, DepartmentDto } from "../../types/account/accountApplications";
 import { parseLatestApplicationStates, type LatestApplicationStateResponse } from "./applicationStateTypes";
@@ -17,9 +17,8 @@ export async function getLatestApplicationStates(
     if (applicationIds.length === 0) return [];
 
     try {
-        const response = await apiPost(
-            `/api/recruitmentInfo/api/latest-application-states`,
-            applicationIds,
+        const response = await apiGet(
+            buildLatestApplicationStatesPath(applicationIds),
         );
         const parsed = parseLatestApplicationStates(response);
 
@@ -31,6 +30,13 @@ export async function getLatestApplicationStates(
         // Fall through to cache fallback below.
     }
 
+    return getCachedLatestStates(applicationIds);
+}
+
+export function getCachedLatestApplicationStates(
+    applicationIds: string[],
+): LatestApplicationStateResponse[] {
+    if (applicationIds.length === 0) return [];
     return getCachedLatestStates(applicationIds);
 }
 
@@ -68,6 +74,21 @@ function getCachedLatestStates(applicationIds: string[]): LatestApplicationState
     return applicationIds
         .map((applicationId) => cache[applicationId])
         .filter((value): value is LatestApplicationStateResponse => value !== undefined);
+}
+
+function buildLatestApplicationStatesPath(applicationIds: string[]): string {
+    const params = new URLSearchParams();
+    for (const applicationId of applicationIds) {
+        const normalizedId = applicationId.trim();
+        if (normalizedId) {
+            params.append("applicationIds", normalizedId);
+        }
+    }
+
+    const query = params.toString();
+    return query.length > 0
+        ? `/api/recruitmentInfo/api/latest-application-states?${query}`
+        : `/api/recruitmentInfo/api/latest-application-states`;
 }
 
 function readSnapshotCache(): Record<string, LatestApplicationStateResponse> {

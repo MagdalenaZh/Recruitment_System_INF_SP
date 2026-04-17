@@ -1,6 +1,11 @@
 import { useState, useCallback, useEffect, useMemo } from "react";
 import { boardApi, resolveCurrentBoardClubId, resolveCurrentUserId } from "../../../services/board/boardApi";
-import { getAllClubs, getDepartmentsForClub, getLatestApplicationStates } from "../../../services/applications/applicationStatusApi";
+import {
+  getAllClubs,
+  getCachedLatestApplicationStates,
+  getDepartmentsForClub,
+  getLatestApplicationStates,
+} from "../../../services/applications/applicationStatusApi";
 import {
   createRealtimeClientId,
   subscribeToApplicationStates,
@@ -11,8 +16,6 @@ import {
   isAfterInterviewReviewState,
   isConcludedApplicationState,
   isHibernatedApplicationState,
-  isApprovedApplicationState,
-  isProcessingApplicationState,
   type LatestApplicationStateResponse,
 } from "../../../services/applications/applicationStateTypes";
 import type {
@@ -98,7 +101,9 @@ function shouldHydrateLatestState(applicationStatus: number): boolean {
 
 export function useBoardInterviews() {
   const [slots, setSlots] = useState<BoardInterviewSlot[]>([]);
-  const [departmentStats, setDepartmentStats] = useState<BoardInterviewDepartmentStats[]>([]);
+  const [interviewDepartments, setInterviewDepartments] = useState<
+    Array<{ departmentId: string; departmentName: string; targetSpots: number }>
+  >([]);
   const [clubName, setClubName] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -153,6 +158,7 @@ export function useBoardInterviews() {
 
             if (userVote === true) roundTwoDecision = "Approved";
             else if (userVote === false) roundTwoDecision = "Rejected";
+            else roundTwoDecision = null;
 
             writeRoundTwoVoteCache(slot.applicationId, {
               myVote: roundTwoDecision,
@@ -226,7 +232,6 @@ export function useBoardInterviews() {
 
       const currentClub = allClubs.find((c) => c.clubId === clubId);
       const clubRequiredApprovals = currentClub?.requiredApprovals ?? 0;
-      const roundTwoVoteCache = readRoundTwoVoteCache();
       const notesResults = await Promise.allSettled(
         matchedSlots.map(({ app }) => boardApi.getApplicationNotes(app.applicationId)),
       );
@@ -253,12 +258,7 @@ export function useBoardInterviews() {
         .filter((app) => shouldHydrateLatestState(app.applicationStatus))
         .map((app) => app.applicationId);
 
-      const latestStates = hydratableBookedAppIds.length > 0
-        ? await getLatestApplicationStates(hydratableBookedAppIds).catch((hydrateError) => {
-            console.error("[useBoardInterviews] latest-state hydration failed", hydrateError);
-            return [] as LatestApplicationStateResponse[];
-          })
-        : [];
+      const latestStates = getCachedLatestApplicationStates(hydratableBookedAppIds);
 
       const stateMap: Record<string, (typeof latestStates)[number]> = {};
       for (const state of latestStates) stateMap[state.applicationId] = state;
@@ -269,8 +269,13 @@ export function useBoardInterviews() {
         deptMap[department.departmentId] = department.departmentName;
         deptTargetMap[department.departmentId] = department.numberOfOpenPositions;
       }
-
-      const bookedApplicationIds = new Set(bookedSlots.map((slot) => slot.applicationId));
+      setInterviewDepartments(
+        departments.map((department) => ({
+          departmentId: department.departmentId,
+          departmentName: department.departmentName,
+          targetSpots: department.numberOfOpenPositions,
+        })),
+      );
 
       const builtSlots: BoardInterviewSlot[] = matchedSlots.map(({ slot, app }) => {
         const user = userInfoMap[app.userId];
@@ -304,21 +309,13 @@ export function useBoardInterviews() {
               departmentId: app.departmentId,
               departmentName: deptMap[app.departmentId] ?? "Unknown",
               roundOneStatus: "Approved",
-              roundTwoDecision:
-                roundTwoVoteCache[app.applicationId]?.myVote ?? null,
+              roundTwoDecision: null,
               finalDecision:
                 deriveFinalDecision(app.applicationId, stateMap) ??
                 deriveFinalDecisionFromStatus(app.applicationStatus),
-              roundTwoApproveVotes:
-                roundTwoVoteCache[app.applicationId]?.approveVotes ??
-                (app.applicationStatus === 5 || app.applicationStatus === 6
-                  ? Math.max(clubRequiredApprovals, 1)
-                  : 0),
-              roundTwoRejectVotes:
-                roundTwoVoteCache[app.applicationId]?.rejectVotes ?? 0,
-              requiredApprovals:
-                roundTwoVoteCache[app.applicationId]?.requiredApprovals ??
-                clubRequiredApprovals,
+              roundTwoApproveVotes: 0,
+              roundTwoRejectVotes: 0,
+              requiredApprovals: clubRequiredApprovals,
               targetSpots: deptTargetMap[app.departmentId] ?? 0,
             },
           ],
@@ -331,81 +328,10 @@ export function useBoardInterviews() {
       });
 
       setSlots(hydratedSlots);
-      setDepartmentStats(
-        departments
-          .map((department) => {
-            const departmentApplications = allApplications.filter(
-              (application) => application.departmentId === department.departmentId,
-            );
-
-            let approvedCount = 0;
-            let rejectedCount = 0;
-            let pendingCount = 0;
-
-            for (const application of departmentApplications) {
-              const live = stateMap[application.applicationId];
-
-              if (live && isConcludedApplicationState(live)) {
-                if (live.conclusionResult === 4) rejectedCount += 1;
-                else approvedCount += 1;
-                continue;
-              }
-
-              if (live && isAfterInterviewReviewState(live)) {
-                if (
-                  live.currentNumberOfPostInterviewApprovals >=
-                  live.requiredNumberOfApprovals
-                ) {
-                  approvedCount += 1;
-                } else {
-                  pendingCount += 1;
-                }
-                continue;
-              }
-
-              if (live && isHibernatedApplicationState(live)) {
-                approvedCount += 1;
-                continue;
-              }
-
-              if (bookedApplicationIds.has(application.applicationId)) {
-                pendingCount += 1;
-                continue;
-              }
-
-              if (live && isApprovedApplicationState(live)) {
-                approvedCount += 1;
-                continue;
-              }
-
-              if (live && isProcessingApplicationState(live)) {
-                pendingCount += 1;
-                continue;
-              }
-
-              if (application.applicationStatus === 4) rejectedCount += 1;
-              else if (application.applicationStatus === 3) approvedCount += 1;
-              else pendingCount += 1;
-            }
-
-            return {
-              departmentId: department.departmentId,
-              departmentName: department.departmentName,
-              totalApplicants: departmentApplications.length,
-              approvedCount,
-              rejectedCount,
-              pendingCount,
-              targetSpots: department.numberOfOpenPositions,
-            };
-          })
-          .sort((left, right) =>
-            left.departmentName.localeCompare(right.departmentName),
-          ),
-      );
     } catch (e) {
       setError(e instanceof Error ? e.message : "Unknown error");
       setSlots([]);
-      setDepartmentStats([]);
+      setInterviewDepartments([]);
       setClubName("");
     } finally {
       setLoading(false);
@@ -505,15 +431,40 @@ export function useBoardInterviews() {
       .filter(Boolean);
 
     if (applicationIds.length === 0) return;
+    let recoveredFromError = false;
 
     return subscribeToApplicationStates({
       clientId,
       applicationIds,
       onMessage: (payload) => {
+        recoveredFromError = false;
         setSlots((prev) => prev.map((slot) => applyLiveStateToSlot(slot, payload)));
       },
       onError: (streamError) => {
         console.error("[useBoardInterviews] SSE error", streamError);
+        if (recoveredFromError) {
+          return;
+        }
+
+        recoveredFromError = true;
+        void getLatestApplicationStates(applicationIds)
+          .then((states) => {
+            if (states.length === 0) return;
+
+            setSlots((prev) => {
+              let nextSlots = prev;
+              for (const state of states) {
+                nextSlots = nextSlots.map((slot) => applyLiveStateToSlot(slot, state));
+              }
+              return nextSlots;
+            });
+          })
+          .catch((hydrateError) => {
+            console.error(
+              "[useBoardInterviews] snapshot recovery failed",
+              hydrateError,
+            );
+          });
       },
     });
   }, [applicationIdsKey, clientId, applyLiveStateToSlot]);
@@ -548,6 +499,45 @@ export function useBoardInterviews() {
     await boardApi.updateApplicationNote(noteId, trimmed);
     await refreshNotes(slotId);
   }, [refreshNotes, slots]);
+
+  const departmentStats = useMemo<BoardInterviewDepartmentStats[]>(() => {
+    return interviewDepartments
+      .map((department) => {
+        let approvedCount = 0;
+        let rejectedCount = 0;
+        let pendingCount = 0;
+        let totalApplicants = 0;
+
+        for (const slot of slots) {
+          for (const decision of slot.decisions) {
+            if (decision.departmentId !== department.departmentId) {
+              continue;
+            }
+
+            totalApplicants += 1;
+
+            if (decision.roundTwoApproveVotes >= decision.requiredApprovals) {
+              approvedCount += 1;
+            } else if (decision.finalDecision === "Rejected") {
+              rejectedCount += 1;
+            } else {
+              pendingCount += 1;
+            }
+          }
+        }
+
+        return {
+          departmentId: department.departmentId,
+          departmentName: department.departmentName,
+          totalApplicants,
+          approvedCount,
+          rejectedCount,
+          pendingCount,
+          targetSpots: department.targetSpots,
+        };
+      })
+      .sort((left, right) => left.departmentName.localeCompare(right.departmentName));
+  }, [interviewDepartments, slots]);
 
   return {
     slots,

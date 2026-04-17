@@ -7,6 +7,7 @@ export function AccountInterviewBookingPage() {
   const { user } = useAuth();
 
   const {
+    applications,
     approvedApplications,
     selectedApplication,
     selectedApplicationId,
@@ -66,11 +67,14 @@ export function AccountInterviewBookingPage() {
       ) : shownApplications.length === 0 ? (
         <div className="rounded-[28px] border border-slate-200 bg-white p-8 shadow-sm">
           <h2 className="text-xl font-semibold text-slate-900">
-            No interview booking available yet
+            {applications.some((application) => application.interviewSlot)
+              ? "Interview already booked"
+              : "No interview booking available yet"}
           </h2>
           <p className="mt-2 text-sm text-slate-600">
-            This page will become available once one of your applications is
-            approved for the interview stage.
+            {applications.some((application) => application.interviewSlot)
+              ? "Applications with an existing booked slot are no longer available for booking again."
+              : "This page will become available once one of your applications is approved for the interview stage."}
           </p>
         </div>
       ) : (

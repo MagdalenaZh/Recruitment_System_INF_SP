@@ -15,7 +15,7 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const nav = useNavigate();
-  const { login, isAuthenticated } = useAuth();
+  const { login, isAuthenticated, role } = useAuth();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -23,9 +23,9 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (isAuthenticated) {
-      nav("/home", { replace: true });
+      nav(getDefaultRouteForRole(role), { replace: true });
     }
-  }, [isAuthenticated, nav]);
+  }, [isAuthenticated, nav, role]);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();

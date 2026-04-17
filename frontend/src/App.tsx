@@ -122,7 +122,7 @@ export default function App() {
         path="/club-admin/applications"
         element={
           <ProtectedRoute section="clubAdmin">
-            <BoardDepartmentApplicationsPage />
+            <Navigate to="/board" replace />
           </ProtectedRoute>
         }
       />

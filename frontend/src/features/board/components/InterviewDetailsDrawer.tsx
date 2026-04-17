@@ -111,32 +111,147 @@ export function InterviewDetailsDrawer({
         <div className="space-y-6 px-4 py-6 sm:px-6">
           <section className="rounded-2xl border border-white/10 bg-white/5 p-5">
             <h3 className="text-lg font-semibold text-white">
-              Applied departments
+              Round two voting
             </h3>
 
-            <div className="mt-3 flex flex-wrap gap-2">
-              {slot.decisions.map((department) => (
-                <span
-                  key={department.departmentId}
-                  className="rounded-full border border-sky-400/20 bg-sky-400/10 px-3 py-1 text-xs font-semibold text-sky-100"
-                >
-                  {department.departmentName}
-                </span>
-              ))}
-            </div>
+            <div className="mt-4 space-y-4">
+              {slot.decisions.map((department) => {
+                const alreadyDecided =
+                  department.finalDecision !== null ||
+                  department.roundTwoDecision !== null;
+                const roundTwoApproved =
+                  department.roundTwoApproveVotes >=
+                  department.requiredApprovals;
+                const finalAwaitingDecision =
+                  department.finalDecision === null && roundTwoApproved;
 
-            <p className="mt-4 text-sm text-slate-300">
-              {getDecisionProgressLabel(slot)}
-            </p>
-            <p className="mt-2 text-sm text-slate-400">
-              {getInterviewVotingHint(slot)}
-            </p>
-            <Link
-              to={`/board/applications/${slot.applicationId}`}
-              className="mt-4 inline-flex rounded-xl border border-white/10 bg-white/10 px-4 py-2 text-sm font-semibold text-white hover:bg-white/15"
-            >
-              Open application details
-            </Link>
+                return (
+                  <div
+                    key={department.departmentId}
+                    className="rounded-2xl border border-white/10 bg-slate-950/40 p-4"
+                  >
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                      <div>
+                        <h4 className="text-base font-semibold text-white">
+                          {department.departmentName}
+                        </h4>
+
+                        <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
+                          <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 font-semibold text-slate-200">
+                            Round 1: {department.roundOneStatus}
+                          </span>
+                          {roundTwoApproved ? (
+                            <span
+                              className={[
+                                "rounded-full border px-3 py-1 font-semibold",
+                                "border-sky-400/30 bg-sky-400/15 text-sky-100",
+                              ].join(" ")}
+                            >
+                              Round 2: Approved
+                            </span>
+                          ) : (
+                            <span className="rounded-full border border-sky-400/30 bg-sky-400/15 px-3 py-1 font-semibold text-sky-100">
+                              Round 2: pending
+                            </span>
+                          )}
+
+                          {department.finalDecision ? (
+                            <span
+                              className={[
+                                "rounded-full border px-3 py-1 font-semibold",
+                                department.finalDecision === "Approved"
+                                  ? "border-emerald-400/30 bg-emerald-400/15 text-emerald-100"
+                                  : "border-rose-400/30 bg-rose-400/15 text-rose-100",
+                              ].join(" ")}
+                            >
+                              Final: {department.finalDecision}
+                            </span>
+                          ) : finalAwaitingDecision ? (
+                            <span className="rounded-full border border-amber-400/30 bg-amber-400/15 px-3 py-1 font-semibold text-amber-100">
+                              Final: awaiting final decision
+                            </span>
+                          ) : (
+                            <span className="rounded-full border border-amber-400/30 bg-amber-400/15 px-3 py-1 font-semibold text-amber-100">
+                              Final: pending
+                            </span>
+                          )}
+                        </div>
+
+                        <p className="mt-3 text-sm text-slate-400">
+                          {!canVote && !alreadyDecided
+                            ? getInterviewVotingHint(slot)
+                            : alreadyDecided
+                              ? "Your round two vote has been recorded. Final result stays pending until conclusion."
+                              : "The interview has started. You can submit your vote now."}
+                        </p>
+
+                        <div className="mt-3 flex flex-wrap gap-2 text-xs">
+                          <span className="rounded-full border border-sky-400/30 bg-sky-400/15 px-3 py-1 font-semibold text-sky-100">
+                            Your vote:{" "}
+                            {department.roundTwoDecision ?? "pending"}
+                          </span>
+                          <span className="rounded-full border border-emerald-400/30 bg-emerald-400/15 px-3 py-1 font-semibold text-emerald-100">
+                            Approvals: {department.roundTwoApproveVotes}
+                          </span>
+                          <span className="rounded-full border border-rose-400/30 bg-rose-400/15 px-3 py-1 font-semibold text-rose-100">
+                            Rejections: {department.roundTwoRejectVotes}
+                          </span>
+                          <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 font-semibold text-slate-200">
+                            Required: {department.requiredApprovals}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex shrink-0 items-center gap-2">
+                        <button
+                          type="button"
+                          disabled={!canVote || alreadyDecided}
+                          onClick={() =>
+                            onRequestDecision({
+                              slotId: slot.id,
+                              candidateName: slot.candidateName,
+                              departmentId: department.departmentId,
+                              departmentName: department.departmentName,
+                              decision: "Approved",
+                            })
+                          }
+                          className={[
+                            "rounded-xl px-4 py-2 text-sm font-semibold text-white transition",
+                            !canVote || alreadyDecided
+                              ? "cursor-not-allowed bg-emerald-700/40 opacity-50"
+                              : "bg-emerald-600 hover:bg-emerald-500",
+                          ].join(" ")}
+                        >
+                          Approve
+                        </button>
+
+                        <button
+                          type="button"
+                          disabled={!canVote || alreadyDecided}
+                          onClick={() =>
+                            onRequestDecision({
+                              slotId: slot.id,
+                              candidateName: slot.candidateName,
+                              departmentId: department.departmentId,
+                              departmentName: department.departmentName,
+                              decision: "Rejected",
+                            })
+                          }
+                          className={[
+                            "rounded-xl px-4 py-2 text-sm font-semibold text-white transition",
+                            !canVote || alreadyDecided
+                              ? "cursor-not-allowed bg-rose-700/40 opacity-50"
+                              : "bg-rose-600 hover:bg-rose-500",
+                          ].join(" ")}
+                        >
+                          Reject
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </section>
 
           <section className="rounded-2xl border border-white/10 bg-white/5 p-5">
@@ -353,150 +468,6 @@ export function InterviewDetailsDrawer({
               >
                 {savingNote ? "Saving..." : "Save note"}
               </button>
-            </div>
-          </section>
-
-          <section className="rounded-2xl border border-white/10 bg-white/5 p-5">
-            <h3 className="text-lg font-semibold text-white">
-              Round two voting
-            </h3>
-
-            <div className="mt-4 space-y-4">
-              {slot.decisions.map((department) => {
-                const alreadyDecided =
-                  department.finalDecision !== null ||
-                  department.roundTwoDecision !== null;
-                const roundTwoApproved =
-                  department.roundTwoApproveVotes >= department.requiredApprovals;
-                const finalAwaitingDecision =
-                  department.finalDecision === null && roundTwoApproved;
-
-                return (
-                  <div
-                    key={department.departmentId}
-                    className="rounded-2xl border border-white/10 bg-slate-950/40 p-4"
-                  >
-                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                      <div>
-                        <h4 className="text-base font-semibold text-white">
-                          {department.departmentName}
-                        </h4>
-
-                        <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
-                          <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 font-semibold text-slate-200">
-                            Round 1: {department.roundOneStatus}
-                          </span>
-                          {roundTwoApproved ? (
-                            <span
-                              className={[
-                                "rounded-full border px-3 py-1 font-semibold",
-                                "border-sky-400/30 bg-sky-400/15 text-sky-100",
-                              ].join(" ")}
-                            >
-                              Round 2: Approved
-                            </span>
-                          ) : (
-                            <span className="rounded-full border border-sky-400/30 bg-sky-400/15 px-3 py-1 font-semibold text-sky-100">
-                              Round 2: pending
-                            </span>
-                          )}
-
-                          {department.finalDecision ? (
-                            <span
-                              className={[
-                                "rounded-full border px-3 py-1 font-semibold",
-                                department.finalDecision === "Approved"
-                                  ? "border-emerald-400/30 bg-emerald-400/15 text-emerald-100"
-                                  : "border-rose-400/30 bg-rose-400/15 text-rose-100",
-                              ].join(" ")}
-                            >
-                              Final: {department.finalDecision}
-                            </span>
-                          ) : finalAwaitingDecision ? (
-                            <span className="rounded-full border border-amber-400/30 bg-amber-400/15 px-3 py-1 font-semibold text-amber-100">
-                              Final: awaiting final decision
-                            </span>
-                          ) : (
-                            <span className="rounded-full border border-amber-400/30 bg-amber-400/15 px-3 py-1 font-semibold text-amber-100">
-                              Final: pending
-                            </span>
-                          )}
-                        </div>
-
-                        <p className="mt-3 text-sm text-slate-400">
-                          {!canVote && !alreadyDecided
-                            ? getInterviewVotingHint(slot)
-                            : alreadyDecided
-                              ? "Your round two vote has been recorded. Final result stays pending until conclusion."
-                              : "The interview has started. You can submit your vote now."}
-                        </p>
-
-                        <div className="mt-3 flex flex-wrap gap-2 text-xs">
-                          <span className="rounded-full border border-sky-400/30 bg-sky-400/15 px-3 py-1 font-semibold text-sky-100">
-                            Your vote:{" "}
-                            {department.roundTwoDecision ?? "pending"}
-                          </span>
-                          <span className="rounded-full border border-emerald-400/30 bg-emerald-400/15 px-3 py-1 font-semibold text-emerald-100">
-                            Approvals: {department.roundTwoApproveVotes}
-                          </span>
-                          <span className="rounded-full border border-rose-400/30 bg-rose-400/15 px-3 py-1 font-semibold text-rose-100">
-                            Rejections: {department.roundTwoRejectVotes}
-                          </span>
-                          <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 font-semibold text-slate-200">
-                            Required: {department.requiredApprovals}
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="flex shrink-0 items-center gap-2">
-                        <button
-                          type="button"
-                          disabled={!canVote || alreadyDecided}
-                          onClick={() =>
-                            onRequestDecision({
-                              slotId: slot.id,
-                              candidateName: slot.candidateName,
-                              departmentId: department.departmentId,
-                              departmentName: department.departmentName,
-                              decision: "Approved",
-                            })
-                          }
-                          className={[
-                            "rounded-xl px-4 py-2 text-sm font-semibold text-white transition",
-                            !canVote || alreadyDecided
-                              ? "cursor-not-allowed bg-emerald-700/40 opacity-50"
-                              : "bg-emerald-600 hover:bg-emerald-500",
-                          ].join(" ")}
-                        >
-                          Approve
-                        </button>
-
-                        <button
-                          type="button"
-                          disabled={!canVote || alreadyDecided}
-                          onClick={() =>
-                            onRequestDecision({
-                              slotId: slot.id,
-                              candidateName: slot.candidateName,
-                              departmentId: department.departmentId,
-                              departmentName: department.departmentName,
-                              decision: "Rejected",
-                            })
-                          }
-                          className={[
-                            "rounded-xl px-4 py-2 text-sm font-semibold text-white transition",
-                            !canVote || alreadyDecided
-                              ? "cursor-not-allowed bg-rose-700/40 opacity-50"
-                              : "bg-rose-600 hover:bg-rose-500",
-                          ].join(" ")}
-                        >
-                          Reject
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
             </div>
           </section>
         </div>
