@@ -19,10 +19,6 @@ export function ClubCard({ club, actions }: ClubCardProps) {
         </h3>
       </div>
 
-      <p className="mt-4 text-sm leading-6 text-slate-300">
-        {club.description}
-      </p>
-
       {actions ? <div className="mt-5">{actions}</div> : null}
     </GlassPanel>
   );

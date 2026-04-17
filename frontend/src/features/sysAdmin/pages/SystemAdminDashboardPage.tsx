@@ -88,8 +88,7 @@ export function SystemAdminDashboardPage() {
       const matchesQuery =
         normalizedQuery.length === 0 ||
         club.clubName.toLowerCase().includes(normalizedQuery) ||
-        club.category.toLowerCase().includes(normalizedQuery) ||
-        club.description.toLowerCase().includes(normalizedQuery);
+        club.category.toLowerCase().includes(normalizedQuery);
 
       return matchesCategory && matchesQuery;
     });
@@ -151,30 +150,16 @@ export function SystemAdminDashboardPage() {
       <GlassPanel className="p-6">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <p className="text-xs uppercase tracking-[0.22em] text-sky-200/70">
-              System admin
-            </p>
-            <h1 className="mt-2 text-3xl font-semibold text-white">
-              Club management overview
+            <h1 className=" text-3xl font-semibold text-white">
+              Current Clubs in the System
             </h1>
-            <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-300">
-              Search clubs, filter by category, create new clubs, and assign
-              club admins from one place.
-            </p>
           </div>
 
           <div className="flex flex-wrap gap-3">
             <button
               type="button"
-              onClick={() => void refresh()}
-              className="rounded-2xl border border-white/10 px-4 py-3 text-sm font-medium text-white transition hover:bg-white/5"
-            >
-              Refresh
-            </button>
-            <button
-              type="button"
               onClick={() => setOpenAddClub(true)}
-              className="rounded-2xl bg-sky-500/20 px-4 py-3 text-sm font-medium text-sky-100 transition hover:bg-sky-500/30"
+              className="rounded-2xl bg-sky-500/20 px-4 py-3 text-base font-medium text-sky-100 transition hover:bg-sky-500/30"
             >
               + Add club
             </button>
@@ -190,7 +175,7 @@ export function SystemAdminDashboardPage() {
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search by club name, category, or description..."
+            placeholder="Search by club name or category..."
             className="mt-3 w-full rounded-2xl border border-white/10 bg-slate-950/40 px-4 py-3 text-white outline-none placeholder:text-slate-500"
           />
         </GlassPanel>
@@ -262,7 +247,7 @@ export function SystemAdminDashboardPage() {
               return (
                 <GlassPanel
                   key={club.clubId}
-                  className="flex min-h-[280px] flex-col p-5 transition hover:border-sky-300/20 hover:bg-white/10"
+                  className="flex min-h-[190px] flex-col p-5 transition hover:border-sky-300/20 hover:bg-white/10"
                 >
                   <div className="flex h-full flex-col gap-4">
                     <div className="flex items-start justify-between gap-4">
@@ -274,15 +259,7 @@ export function SystemAdminDashboardPage() {
                           {club.clubName}
                         </h3>
                       </div>
-
-                      <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-slate-300">
-                        Club
-                      </span>
                     </div>
-
-                    <p className="min-h-[72px] text-sm leading-6 text-slate-300">
-                      {club.description || "No description yet."}
-                    </p>
 
                     <div className="rounded-2xl border border-sky-300/10 bg-gradient-to-br from-white/10 to-sky-400/5 px-4 py-3 text-sm text-slate-200">
                       <div className="text-xs uppercase tracking-[0.18em] text-slate-400">
@@ -334,7 +311,7 @@ export function SystemAdminDashboardPage() {
 
           {filteredClubs.length === 0 ? (
             <div className="rounded-3xl border border-dashed border-white/10 bg-white/5 p-10 text-center text-slate-400">
-              No clubs match the current search or category filter.
+              No clubs match the current search or category.
             </div>
           ) : null}
         </>

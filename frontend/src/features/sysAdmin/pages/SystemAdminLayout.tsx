@@ -17,19 +17,9 @@ export function SystemAdminLayout() {
 
         <div className="relative mx-auto max-w-7xl px-4 pb-12 pt-28 sm:px-6 lg:px-8">
           <div className="mb-8">
-            <p className="text-sm uppercase tracking-[0.28em] text-sky-200/70">
+            <p className="text-3xl uppercase tracking-[0.28em] text-sky-200/70">
               System Administration
             </p>
-            <h1 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">
-              System admin panel
-            </h1>
-            <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-300 sm:text-base">
-              Manage clubs and review the current system setup.
-            </p>
-          </div>
-
-          <div className="mb-8">
-            <SystemAdminSectionNav />
           </div>
 
           <Outlet />

@@ -51,7 +51,7 @@ export function AddClubModal({ open, onClose, onSubmit }: AddClubModalProps) {
     try {
       await onSubmit({
         clubName: form.clubName.trim(),
-        description: form.description.trim(),
+        description: "",
         category: form.category?.trim() ?? "",
       });
 
@@ -72,10 +72,6 @@ export function AddClubModal({ open, onClose, onSubmit }: AddClubModalProps) {
           <h2 className="mt-2 text-2xl font-semibold text-white">
             Create club
           </h2>
-          <p className="mt-2 text-sm text-slate-400">
-            Add the basic club information. Club admins can manage the rest
-            later.
-          </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -98,14 +94,6 @@ export function AddClubModal({ open, onClose, onSubmit }: AddClubModalProps) {
               </option>
             ))}
           </select>
-
-          <textarea
-            value={form.description}
-            onChange={(e) => handleChange("description", e.target.value)}
-            placeholder="Description (optional)"
-            rows={5}
-            className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none placeholder:text-slate-500"
-          />
 
           <div className="flex justify-end gap-3 pt-2">
             <button
