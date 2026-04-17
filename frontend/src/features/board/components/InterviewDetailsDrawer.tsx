@@ -1,12 +1,10 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
 import type {
   BoardInterviewSlot,
   FinalInterviewDecision,
 } from "../types/boardTypes";
 import { resolveCurrentUserId } from "../../../services/board/boardApi";
 import {
-  getDecisionProgressLabel,
   getInterviewVotingHint,
   getSlotPhase,
 } from "../utils/interviewSchedule";

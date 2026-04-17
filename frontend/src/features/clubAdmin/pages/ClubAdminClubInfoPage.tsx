@@ -25,8 +25,6 @@ export function ClubAdminClubInfoPage() {
     data,
     loading,
     error,
-    refetch,
-    updateOpenPositions,
     updateDepartment,
     createDepartment,
     updateClubInfo,
@@ -44,7 +42,7 @@ export function ClubAdminClubInfoPage() {
   const [newDepartmentName, setNewDepartmentName] = useState("");
   const [newDepartmentDescription, setNewDepartmentDescription] = useState("");
   const [newDepartmentOpenPositions, setNewDepartmentOpenPositions] =
-    useState(0);
+    useState("");
   const [savingClub, setSavingClub] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -121,12 +119,12 @@ export function ClubAdminClubInfoPage() {
     try {
       await createDepartment(
         newDepartmentName.trim(),
-        Math.max(0, newDepartmentOpenPositions),
+        Math.max(0, Number(newDepartmentOpenPositions) || 0),
         newDepartmentDescription.trim(),
       );
       setNewDepartmentName("");
       setNewDepartmentDescription("");
-      setNewDepartmentOpenPositions(0);
+      setNewDepartmentOpenPositions("");
       setMessage("Department created.");
       setSaveError(null);
     } catch (err) {
@@ -162,15 +160,15 @@ export function ClubAdminClubInfoPage() {
   return (
     <ClubAdminShell>
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
+        <div className="mb-8">
+          <ClubAdminSectionNav />
+        </div>
         <ClubAdminPageHeader
           backTo="/club-admin"
           backLabel="Back to admin home"
           title="Club settings"
-          description="Edit your club information, required approvals, departments, and application questions without leaving the page."
-          onRefresh={refetch}
+          description="Edit your club information, departments, and application questions."
         />
-
-        <ClubAdminSectionNav />
 
         <div className="mt-8">
           {loading ? (
@@ -184,37 +182,32 @@ export function ClubAdminClubInfoPage() {
           ) : data ? (
             <div className="space-y-5">
               <section className="rounded-3xl border border-white/10 bg-white/10 p-6 backdrop-blur shadow-lg">
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.24em] text-sky-300">
-                      Club profile
-                    </p>
-                    <h2 className="mt-2 text-2xl font-semibold text-white">
-                      Edit core club information
-                    </h2>
-                  </div>
+                <div>
+                  <h2 className=" text-sky-300 mt-2 text-3xl font-semibold ">
+                    Club profile
+                  </h2>
                 </div>
 
-                <div className="mt-5 grid gap-4 md:grid-cols-2">
+                <div className="mt-6 grid gap-4 md:grid-cols-2">
                   <div>
-                    <label className="text-xs font-medium text-slate-300">
+                    <label className="text-xs font-medium uppercase tracking-[0.18em] text-slate-300">
                       Club name
                     </label>
                     <input
                       value={clubName}
                       onChange={(e) => setClubName(e.target.value)}
-                      className="mt-1 w-full rounded-xl border border-white/10 bg-white/10 px-3 py-2 text-sm text-white outline-none"
+                      className="mt-2 w-full rounded-2xl border border-white/10 bg-white/10 px-4 py-3 text-sm text-white outline-none"
                     />
                   </div>
 
                   <div>
-                    <label className="text-xs font-medium text-slate-300">
+                    <label className="text-xs font-medium uppercase tracking-[0.18em] text-slate-300">
                       Category
                     </label>
                     <select
                       value={category}
                       onChange={(e) => setCategory(e.target.value)}
-                      className="mt-1 w-full rounded-xl border border-white/10 bg-slate-950/60 px-3 py-2 text-sm text-white outline-none"
+                      className="mt-2 w-full rounded-2xl border border-white/10 bg-slate-950/60 px-4 py-3 text-sm text-white outline-none"
                     >
                       {CATEGORY_OPTIONS.map((option) => (
                         <option key={option} value={option}>
@@ -225,21 +218,21 @@ export function ClubAdminClubInfoPage() {
                   </div>
                 </div>
 
-                <div className="mt-4 grid gap-4 md:grid-cols-[1fr_220px]">
+                <div className="mt-4 grid gap-4 md:grid-cols-[1fr_240px]">
                   <div>
-                    <label className="text-xs font-medium text-slate-300">
+                    <label className="text-xs font-medium uppercase tracking-[0.18em] text-slate-300">
                       Description
                     </label>
                     <textarea
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
-                      rows={5}
-                      className="mt-1 w-full rounded-xl border border-white/10 bg-white/10 px-3 py-3 text-sm text-white outline-none"
+                      rows={6}
+                      className="mt-2 w-full rounded-2xl border border-white/10 bg-white/10 px-4 py-3 text-sm text-white outline-none"
                     />
                   </div>
 
                   <div>
-                    <label className="text-xs font-medium text-slate-300">
+                    <label className="text-xs font-medium uppercase tracking-[0.18em] text-slate-300">
                       Required approvals
                     </label>
                     <input
@@ -249,18 +242,14 @@ export function ClubAdminClubInfoPage() {
                       onChange={(e) =>
                         setRequiredApprovals(Number(e.target.value))
                       }
-                      className="mt-1 w-full rounded-xl border border-white/10 bg-white/10 px-3 py-2 text-sm text-white outline-none"
+                      className="mt-2 w-full rounded-2xl border border-white/10 bg-white/10 px-4 py-3 text-sm text-white outline-none"
                     />
-                    <p className="mt-2 text-xs text-slate-400">
-                      Used across the recruitment flow when approvals are
-                      evaluated.
-                    </p>
                   </div>
                 </div>
 
-                <div className="mt-5 flex flex-wrap justify-end gap-3">
+                <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-white/10 pt-5">
                   <div
-                    className="mr-auto flex min-h-10 items-center"
+                    className="flex min-h-10 items-center"
                     aria-live="polite"
                   >
                     {message ? (
@@ -274,88 +263,166 @@ export function ClubAdminClubInfoPage() {
                       </div>
                     ) : null}
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setClubName(data.clubName);
-                      setDescription(data.description);
-                      setCategory(data.category || "Other");
-                      setRequiredApprovals(
-                        Math.max(1, data.requiredApprovals || 1),
-                      );
-                      setMessage(null);
-                      setSaveError(null);
-                    }}
-                    className="rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-sm font-semibold text-slate-200 hover:bg-white/10"
-                  >
-                    Reset
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => void handleSaveClubInfo()}
-                    disabled={savingClub}
-                    className="rounded-xl border border-sky-300/20 bg-sky-500/10 px-4 py-2 text-sm font-semibold text-sky-100 hover:bg-sky-500/20 disabled:opacity-60"
-                  >
-                    {savingClub ? "Saving..." : "Save club info"}
-                  </button>
+
+                  <div className="flex flex-wrap gap-3">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setClubName(data.clubName);
+                        setDescription(data.description);
+                        setCategory(data.category || "Other");
+                        setRequiredApprovals(
+                          Math.max(1, data.requiredApprovals || 1),
+                        );
+                        setMessage(null);
+                        setSaveError(null);
+                      }}
+                      className="rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-sm font-semibold text-slate-200 hover:bg-white/10"
+                    >
+                      Reset
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => void handleSaveClubInfo()}
+                      disabled={savingClub}
+                      className="rounded-xl border border-sky-300/20 bg-sky-500/10 px-4 py-2 text-sm font-semibold text-sky-100 hover:bg-sky-500/20 disabled:opacity-60"
+                    >
+                      {savingClub ? "Saving..." : "Save club info"}
+                    </button>
+                  </div>
                 </div>
               </section>
 
-              <ApplicationQuestionsManager
-                initialQuestions={data.admissionQuestions ?? []}
-                onSave={handleSaveQuestions}
-              />
+              <section className="rounded-3xl border border-white/10 bg-white/10 p-6 backdrop-blur shadow-lg">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                  <div>
+                    <h2 className="mt-2 text-3xl font-semibold text-emerald-200">
+                      Departments
+                    </h2>
+                    <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-300">
+                      Create new departments and manage the ones that already
+                      exist.
+                    </p>
+                  </div>
 
-              <section className="rounded-3xl border border-white/10 bg-white/10 p-5 backdrop-blur shadow-lg">
-                <h3 className="text-xl font-semibold text-white">
-                  Create department
-                </h3>
-                <div className="mt-4 grid gap-3 md:grid-cols-3">
-                  <input
-                    value={newDepartmentName}
-                    onChange={(e) => setNewDepartmentName(e.target.value)}
-                    placeholder="Department name"
-                    className="rounded-xl border border-white/10 bg-white/10 px-3 py-2 text-sm text-white outline-none"
-                  />
-                  <input
-                    type="number"
-                    min={0}
-                    value={newDepartmentOpenPositions}
-                    onChange={(e) =>
-                      setNewDepartmentOpenPositions(Number(e.target.value))
-                    }
-                    placeholder="Open positions"
-                    className="rounded-xl border border-white/10 bg-white/10 px-3 py-2 text-sm text-white outline-none"
-                  />
-                  <input
-                    value={newDepartmentDescription}
-                    onChange={(e) =>
-                      setNewDepartmentDescription(e.target.value)
-                    }
-                    placeholder="Description"
-                    className="rounded-xl border border-white/10 bg-white/10 px-3 py-2 text-sm text-white outline-none"
-                  />
+                  <div className="rounded-2xl border border-white/10 bg-slate-950/35 px-4 py-3 text-sm text-slate-300">
+                    <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                      Total departments
+                    </div>
+                    <div className="mt-2 text-3xl font-semibold text-white">
+                      {data.departments.length}
+                    </div>
+                  </div>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => void handleCreateDepartment()}
-                  className="mt-4 rounded-xl border border-emerald-300/20 bg-emerald-500/10 px-4 py-2 text-sm font-semibold text-emerald-100 hover:bg-emerald-500/20"
-                >
-                  Create department
-                </button>
+
+                <div className="mt-6 rounded-3xl border border-white/10 bg-slate-950/30 p-5">
+                  <p className="text-xs font-semibold uppercase tracking-[0.22em] text-emerald-200">
+                    Create department
+                  </p>
+                  <div className="mt-5 grid gap-4 lg:grid-cols-[1.2fr_220px_1.4fr]">
+                    <div>
+                      <label className="text-xs font-medium uppercase tracking-[0.18em] text-slate-300">
+                        Department name
+                      </label>
+                      <input
+                        value={newDepartmentName}
+                        onChange={(e) => setNewDepartmentName(e.target.value)}
+                        placeholder="Marketing, Events, Logistics..."
+                        className="mt-2 w-full rounded-2xl border border-white/10 bg-white/10 px-4 py-3 text-sm text-white outline-none placeholder:text-slate-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-xs font-medium uppercase tracking-[0.18em] text-slate-300">
+                        Available spots
+                      </label>
+                      <input
+                        type="number"
+                        placeholder="8"
+                        min={0}
+                        value={newDepartmentOpenPositions}
+                        onChange={(e) =>
+                          setNewDepartmentOpenPositions(e.target.value)
+                        }
+                        className="mt-2 w-full rounded-2xl border border-white/10 bg-white/10 px-4 py-3 text-sm text-white outline-none placeholder:text-slate-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-xs font-medium uppercase tracking-[0.18em] text-slate-300">
+                        Short description
+                      </label>
+                      <input
+                        value={newDepartmentDescription}
+                        onChange={(e) =>
+                          setNewDepartmentDescription(e.target.value)
+                        }
+                        placeholder="What applicants will work on in this department"
+                        className="mt-2 w-full rounded-2xl border border-white/10 bg-white/10 px-4 py-3 text-sm text-white outline-none placeholder:text-slate-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-white/10 pt-5">
+                    <button
+                      type="button"
+                      onClick={() => void handleCreateDepartment()}
+                      className="rounded-2xl border border-emerald-300/20 bg-emerald-500/10 px-5 py-2.5 text-sm font-semibold text-emerald-100 hover:bg-emerald-500/20"
+                    >
+                      Create department
+                    </button>
+                  </div>
+                </div>
+
+                <div className="mt-6 border-t border-white/10 pt-6">
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                    <div>
+                      <h3 className="mt-2 text-3xl font-semibold text-emerald-200">
+                        Current departments
+                      </h3>
+                    </div>
+                  </div>
+
+                  {data.departments.length === 0 ? (
+                    <div className="mt-6 rounded-2xl border border-dashed border-white/10 bg-slate-950/30 p-5 text-sm text-slate-300">
+                      No departments yet. Create your first one above to start
+                      organizing applicants.
+                    </div>
+                  ) : (
+                    <div className="mt-6 space-y-4">
+                      {data.departments.map((department) => (
+                        <ClubAdminDepartmentManagementCard
+                          key={department.departmentId}
+                          department={department}
+                          onSaveDepartment={updateDepartment}
+                          onAssignBoardMember={
+                            setPendingBoardAssignmentDepartmentId
+                          }
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
               </section>
 
-              <div className="space-y-4">
-                {data.departments.map((department) => (
-                  <ClubAdminDepartmentManagementCard
-                    key={department.departmentId}
-                    department={department}
-                    onSaveOpenPositions={updateOpenPositions}
-                    onSaveDepartment={updateDepartment}
-                    onAssignBoardMember={setPendingBoardAssignmentDepartmentId}
+              <section className="rounded-3xl border border-white/10 bg-white/10 p-6 backdrop-blur shadow-lg">
+                <div>
+                  <h2 className="mt-2 text-3xl font-semibold text-yellow-200">
+                    Application
+                  </h2>
+                  <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-300">
+                    Maintain the questions applicants answer when applying to
+                    your club.
+                  </p>
+                </div>
+
+                <div className="mt-6 rounded-3xl border border-white/10 bg-slate-950/30 p-5">
+                  <ApplicationQuestionsManager
+                    initialQuestions={data.admissionQuestions ?? []}
+                    onSave={handleSaveQuestions}
                   />
-                ))}
-              </div>
+                </div>
+              </section>
             </div>
           ) : null}
         </div>

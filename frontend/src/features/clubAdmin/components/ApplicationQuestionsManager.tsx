@@ -67,17 +67,8 @@ export function ApplicationQuestionsManager({
   }
 
   return (
-    <div className="rounded-3xl border border-white/10 bg-white/10 p-5 backdrop-blur shadow-lg">
+    <div className="">
       <div className="flex flex-col gap-4">
-        <div>
-          <h2 className="text-xl font-semibold text-white">
-            Text-based application questions
-          </h2>
-          <p className="mt-2 text-sm text-slate-300">
-            Add, remove, and edit the questions shown to applicants.
-          </p>
-        </div>
-
         <div className="rounded-2xl border border-white/10 bg-slate-950/40 p-4">
           <label className="block text-sm font-medium text-slate-200">
             Add new question
@@ -111,23 +102,23 @@ export function ApplicationQuestionsManager({
                 key={`${question}-${index}`}
                 className="rounded-2xl border border-white/10 bg-slate-950/40 p-4"
               >
-                <div className="flex flex-col gap-3 lg:flex-row lg:items-start">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/10 text-sm font-semibold text-white">
-                    {index + 1}
+                <div className="flex flex-col gap-3 ">
+                  <div className="flex flex-row justify-between">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/10 text-sm font-semibold text-white">
+                      {index + 1}
+                    </div>
+                    <button
+                      onClick={() => removeQuestion(index)}
+                      className="rounded-xl border border-rose-300/30 bg-rose-500/15 px-4 py-2 text-sm font-semibold text-rose-200 hover:bg-rose-500/25"
+                    >
+                      Remove
+                    </button>
                   </div>
-
                   <input
                     value={question}
                     onChange={(e) => updateQuestion(index, e.target.value)}
                     className="w-full rounded-xl border border-white/10 bg-white/10 px-3 py-2 text-sm text-white outline-none"
                   />
-
-                  <button
-                    onClick={() => removeQuestion(index)}
-                    className="rounded-xl border border-rose-300/30 bg-rose-500/15 px-4 py-2 text-sm font-semibold text-rose-200 hover:bg-rose-500/25"
-                  >
-                    Remove
-                  </button>
                 </div>
               </div>
             ))
