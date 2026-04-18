@@ -139,6 +139,21 @@ namespace AppilicationProcesserAPI.Models
         }
     }
 
+    public class BoardMemberDatabaseModel
+    {
+        public Guid UserId { get; }
+        public Guid DepartmentId { get; }
+        public string FirstName { get; }
+        public string LastName { get; }
+        public BoardMemberDatabaseModel(Guid userId, Guid departmentId, string firstName, string lastName)
+        {
+            UserId = userId;
+            DepartmentId = departmentId;
+            FirstName = firstName;
+            LastName = lastName;
+        }
+    }
+
     public class NoteDatabaseModel
     {
         public Guid NoteId { get; }

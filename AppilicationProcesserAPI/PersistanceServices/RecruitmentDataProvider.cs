@@ -26,6 +26,8 @@ namespace AppilicationProcesserAPI.PersistanceServices
         Task<List<NoteDatabaseModel>> GetAllNotesForApplicationAsync(Guid applicationId, CancellationToken cancellationToken);
 
         Task<List<RolesDatabaseModel>> GetAllRolesAsync(CancellationToken cancellationToken);
+
+        Task<List<BoardMemberDatabaseModel>> GetClubBoardMembersAsync(Guid clubId, CancellationToken cancellationToken);
     }
 
     public class RecruitmentDataProvider : IRecruitmentDataProvider
@@ -235,6 +237,29 @@ namespace AppilicationProcesserAPI.PersistanceServices
                 return new UserDatabaseModel(id, firstName, lastName, email, academicYear, studyMajor, cv);
             }
             return null;
+        }
+
+        public async Task<List<BoardMemberDatabaseModel>> GetClubBoardMembersAsync(Guid clubId, CancellationToken cancellationToken)
+        {
+            var clubBoardMembers = new List<BoardMemberDatabaseModel>();
+            using var sqlConnection = new SqlConnection(_connectionString);
+            await sqlConnection.OpenAsync(cancellationToken).ConfigureAwait(false);
+
+            using var command = new SqlCommand(DbQueries.GetBoardMembersForClub, sqlConnection);
+            command.Parameters.AddWithValue("@clubId", clubId);
+            using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+
+            while (reader.Read())
+            {
+                var userId = reader.GetGuid(0); 
+                var firstName = reader.GetString(1);
+                var lastName = reader.GetString(2);
+                var departmentId = reader.GetGuid(3);
+               
+                clubBoardMembers.Add(new BoardMemberDatabaseModel(userId, departmentId, firstName, lastName));
+            }
+
+            return clubBoardMembers;
         }
 
         public async Task<List<DepartmentDatabaseModel>> GetDepartmentsForClubAsync(Guid clubId, CancellationToken cancellationToken)
