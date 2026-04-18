@@ -571,5 +571,26 @@ namespace AppilicationProcesserAPI.Controllers
                 return StatusCode(500, "An error occurred while retrieving roles.");
             }
         }
+
+        [Authorize]
+        [HttpGet("api/club-boardmembers/{clubId}")]
+        public async Task<ActionResult<List<BoardMemberDatabaseModel>>> GetClubBoardMembers([FromRoute] Guid clubId, CancellationToken cancellationToken)
+        {
+            if (!await _authorizationScopeService.CanManageClubAsync(User, clubId, cancellationToken).ConfigureAwait(false))
+            {
+                return Forbid();
+            }
+
+            try
+            {
+                var boardMembers = await _recruitmentDataProvider.GetClubBoardMembersAsync(clubId, cancellationToken).ConfigureAwait(false);
+                return Ok(boardMembers);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving board members for ClubId: {ClubId}", clubId);
+                return StatusCode(500, "An error occurred while retrieving board members for the club.");
+            }
+        }
     }
 }

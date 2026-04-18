@@ -65,6 +65,14 @@
             WHERE u.[UserId] = @userId
             """;
 
+        internal const string GetBoardMembersForClub = """
+            SELECT u.[UserId], u.[FirstName], u.[LastName], u.[DepartmentId]
+            FROM [Users] AS u 
+            INNER JOIN [Roles] AS r ON u.[RoleId] = r.[RoleId] 
+            WHERE u.[DepartmentId] IN (SELECT [DepartmentId] FROM [Departments] WHERE [ClubId] = @clubId) 
+              AND r.[Name] = 'BoardMember'
+            """;
+
         internal const string GetAllNotesForApplication = """
             SELECT nt.[NoteId], nt.[UserId], nt.[Payload], usr.[FirstName], usr.[LastName]
             FROM [Notes] AS nt
