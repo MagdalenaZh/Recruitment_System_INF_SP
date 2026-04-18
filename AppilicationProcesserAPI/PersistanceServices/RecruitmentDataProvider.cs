@@ -63,7 +63,7 @@ namespace AppilicationProcesserAPI.PersistanceServices
                 var seriaizedQuestionaire = JsonSerializer.Deserialize<Dictionary<string, string>>(questionaire, _serializerOptions);
                 var cvContent = reader.IsDBNull(5) ? Array.Empty<byte>() : (byte[])reader[5];
 
-                var cv = new CVFile($"{userId}_CV.pdf", "application/pdf", cvContent);
+                var cv = new CVFile($"applicant_CV.pdf", "application/pdf", cvContent);
 
                 if (seriaizedQuestionaire is null)
                 {
@@ -95,7 +95,7 @@ namespace AppilicationProcesserAPI.PersistanceServices
                 var seriaizedQuestionaire = JsonSerializer.Deserialize<Dictionary<string, string>>(questionaire, _serializerOptions);
 
                 var cvContent = reader.IsDBNull(4) ? Array.Empty<byte>() : (byte[])reader[4];
-                var cv = new CVFile($"{userId}_CV.pdf", "application/pdf", cvContent);
+                var cv = new CVFile($"applicant_CV.pdf", "application/pdf", cvContent);
 
                 if (seriaizedQuestionaire is null)
                 {
@@ -126,7 +126,7 @@ namespace AppilicationProcesserAPI.PersistanceServices
                 var status = (ApplicationStatus)reader.GetInt32(3);
                 var seriaizedQuestionaire = JsonSerializer.Deserialize<Dictionary<string, string>>(questionaire, _serializerOptions);
                 var cvContent = reader.IsDBNull(4) ? Array.Empty<byte>() : (byte[])reader[4];
-                var cv = new CVFile($"{userId}_CV.pdf", "application/pdf", cvContent);
+                var cv = new CVFile($"applicant_CV.pdf", "application/pdf", cvContent);
 
                 if (seriaizedQuestionaire is null)
                 {
