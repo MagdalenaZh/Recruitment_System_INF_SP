@@ -10,7 +10,10 @@ import {
   createRealtimeClientId,
   subscribeToApplicationStates,
 } from "../../../services/applications/applicationStateStream";
-import type { BookedInterviewSlotDto } from "../../../types/board/boardApiTypes";
+import type {
+  BookedInterviewSlotDto,
+  UserInfoDto,
+} from "../../../types/board/boardApiTypes";
 import type { UserApplicationDto } from "../../../types/account/accountApplications";
 import {
   isAfterInterviewReviewState,
@@ -24,6 +27,7 @@ import type {
   BoardInterviewNote,
   FinalInterviewDecision,
 } from "../types/boardTypes";
+import { mapCvFileToAttachment } from "../utils/boardMappers";
 
 type CachedRoundTwoVote = {
   myVote: FinalInterviewDecision | null;
@@ -223,7 +227,7 @@ export function useBoardInterviews() {
       const userInfoResults = await Promise.allSettled(
         uniqueUserIds.map((id) => boardApi.getUserInformation(id)),
       );
-      const userInfoMap: Record<string, { firstName: string; lastName: string; email: string }> = {};
+      const userInfoMap: Record<string, UserInfoDto> = {};
       for (const result of userInfoResults) {
         if (result.status === "fulfilled") {
           userInfoMap[result.value.userId] = result.value;
@@ -282,6 +286,10 @@ export function useBoardInterviews() {
         const candidateName = user
           ? `${user.firstName} ${user.lastName}`.trim()
           : app.userId;
+        const attachments = mapCvFileToAttachment(
+          app.cv,
+          `${app.applicationId}-cv`,
+        );
 
         return {
           id: app.applicationId,
@@ -302,7 +310,11 @@ export function useBoardInterviews() {
             question,
             answer: String(answer ?? ""),
           })),
-          attachments: [],
+          attachments: attachments.map((attachment) => ({
+            id: attachment.id,
+            name: attachment.fileName,
+            url: attachment.url,
+          })),
           notes: notesMap[app.applicationId] ?? [],
           decisions: [
             {

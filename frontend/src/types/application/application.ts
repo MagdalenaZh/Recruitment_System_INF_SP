@@ -14,6 +14,8 @@ export type PersonalInfo = {
   lastName: string;
   email: string;
   phone?: string;
+  cvFileName?: string;
+  cvFileContent?: number[];
 };
 
 export type ApplicationDraft = {
@@ -24,7 +26,7 @@ export type ApplicationDraft = {
 };
 
 export type SubmitApplicationRequest = {
-  userId: string;
   departmentId: string;
   questionnaire: Record<string, string>;
+  cvFile: number[];
 };

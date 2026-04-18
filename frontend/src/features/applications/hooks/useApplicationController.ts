@@ -9,7 +9,11 @@ import {
 
 import { submitApplication } from "../../../services/applications/applications.api";
 import { getStoredUserId } from "../../../services/auth/auth.api";
-import { getCurrentUser } from "../../../services/account/accountApi";
+import {
+  getCurrentUser,
+  getUserInformation,
+} from "../../../services/account/accountApi";
+import { decodeBase64ToBytes } from "../../../utils/binaryFile";
 
 import type {
   ApplicationQuestion,
@@ -55,12 +59,18 @@ export function useApplicationController(args: {
   // Auto-fill personal info from logged-in user on mount
   useEffect(() => {
     getCurrentUser()
-      .then((user) => {
+      .then(async (user) => {
+        const userInfo = user.userId
+          ? await getUserInformation(user.userId).catch(() => null)
+          : null;
+
         setPersonal({
-          firstName: user.firstName,
-          lastName: user.lastName,
-          email: user.email,
+          firstName: userInfo?.firstName ?? user.firstName,
+          lastName: userInfo?.lastName ?? user.lastName,
+          email: userInfo?.email ?? user.email,
           phone: "",
+          cvFileName: userInfo?.cv?.fileName ?? "",
+          cvFileContent: decodeBase64ToBytes(userInfo?.cv?.content),
         });
       })
       .catch(() => {
@@ -132,7 +142,11 @@ export function useApplicationController(args: {
 
     setIsSubmitting(true);
     try {
-      await submitApplication({ userId, departmentId, questionnaire });
+      await submitApplication({
+        departmentId,
+        questionnaire,
+        cvFile: personal.cvFileContent ?? [],
+      });
       setIsSubmitted(true);
     } catch (err) {
       alert(err instanceof Error ? err.message : "Submission failed.");

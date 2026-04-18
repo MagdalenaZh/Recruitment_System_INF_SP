@@ -12,7 +12,7 @@ const ACADEMIC_YEAR_OPTIONS = [
 ] as const;
 
 export function AccountProfilePage() {
-  const { profile, loading, updateProfile, uploadCv } = useUserProfile();
+  const { profile, loading, updateProfile } = useUserProfile();
 
   const cvFileRef = useRef<HTMLInputElement | null>(null);
 
@@ -22,10 +22,9 @@ export function AccountProfilePage() {
   const [studyMajor, setStudyMajor] = useState("");
 
   const [selectedCvName, setSelectedCvName] = useState<string | null>(null);
-  const [selectedCvFile, setSelectedCvFile] = useState<File | null>(null);
+  const [selectedCvBytes, setSelectedCvBytes] = useState<number[] | null>(null);
 
   const [saving, setSaving] = useState(false);
-  const [uploadingCv, setUploadingCv] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
 
@@ -37,13 +36,14 @@ export function AccountProfilePage() {
     setAcademicYear(profile.academicYear ?? "");
     setStudyMajor(profile.studyMajor ?? "");
     setSelectedCvName(profile.cvFileName ?? null);
+    setSelectedCvBytes(null);
   }, [profile]);
 
   function onPickCv() {
     cvFileRef.current?.click();
   }
 
-  function onCvChange(e: React.ChangeEvent<HTMLInputElement>) {
+  async function onCvChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -51,21 +51,20 @@ export function AccountProfilePage() {
       file.type === "application/pdf" ||
       file.name.toLowerCase().endsWith(".pdf");
 
-    if (!isPdf) return;
-
-    setSelectedCvFile(file);
-    setSelectedCvName(file.name);
-    e.target.value = "";
-  }
-
-  async function onUploadCv() {
-    if (!selectedCvFile || !uploadCv) return;
-
-    setUploadingCv(true);
     try {
-      await uploadCv(selectedCvFile);
+      if (!isPdf) {
+        setSaveError("Only PDF CV files are supported.");
+        return;
+      }
+
+      const bytes = Array.from(new Uint8Array(await file.arrayBuffer()));
+      setSelectedCvBytes(bytes);
+      setSelectedCvName(file.name);
+      setSaveError(null);
+    } catch {
+      setSaveError("Failed to read the selected CV file.");
     } finally {
-      setUploadingCv(false);
+      e.target.value = "";
     }
   }
 
@@ -95,8 +94,7 @@ export function AccountProfilePage() {
         lastName,
         academicYear: normalizedAcademicYear || null,
         studyMajor: normalizedStudyMajor || null,
-        cvUrl: profile.cvUrl ?? null,
-        cvFileName: selectedCvName ?? profile.cvFileName ?? null,
+        cvContent: selectedCvBytes ?? profile.cv?.content ?? null,
         avatarUrl: profile.avatarUrl ?? null,
       });
       setSaveSuccess("Profile updated successfully.");
@@ -281,16 +279,6 @@ export function AccountProfilePage() {
               Choose CV
             </Button>
 
-            <Button
-              type="button"
-              size="sm"
-              variant="secondary"
-              onClick={onUploadCv}
-              disabled={!selectedCvFile || uploadingCv}
-            >
-              {uploadingCv ? "Uploading..." : "Upload CV"}
-            </Button>
-
             <input
               ref={cvFileRef}
               type="file"
@@ -299,6 +287,10 @@ export function AccountProfilePage() {
               onChange={onCvChange}
             />
           </div>
+
+          <p className="mt-3 text-xs text-slate-500">
+            The selected PDF will be uploaded when you save your profile changes.
+          </p>
 
           {profile.cvUrl && (
             <div className="mt-4">

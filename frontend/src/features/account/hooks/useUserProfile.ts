@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   getCurrentUser,
   getUserInformation,
@@ -16,6 +16,10 @@ import {
 } from "../../../services/auth/auth.api";
 import { getNormalizedUserRole } from "../../auth/utils/routeAuthorization";
 import type { UserProfile } from "../../../types/account/profile";
+import {
+  createObjectUrlFromBytes,
+  decodeBase64ToBytes,
+} from "../../../utils/binaryFile";
 
 function mapCurrentUserToProfile(
   user: CurrentUserResponse,
@@ -52,6 +56,16 @@ function mapCurrentUserToProfile(
 export function useUserProfile() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const cvObjectUrlRef = useRef<string | null>(null);
+
+  const revokeCvObjectUrl = useCallback(() => {
+    if (!cvObjectUrlRef.current) {
+      return;
+    }
+
+    URL.revokeObjectURL(cvObjectUrlRef.current);
+    cvObjectUrlRef.current = null;
+  }, []);
 
   const loadProfile = useCallback(async () => {
     try {
@@ -107,6 +121,14 @@ export function useUserProfile() {
         }
       }
 
+      revokeCvObjectUrl();
+      const cvBytes = decodeBase64ToBytes(userInformation?.cv?.content);
+      const generatedCvUrl = createObjectUrlFromBytes(
+        cvBytes,
+        userInformation?.cv?.contentType,
+      );
+      cvObjectUrlRef.current = generatedCvUrl;
+
       setProfile(
         {
           ...mapCurrentUserToProfile(data, {
@@ -121,16 +143,26 @@ export function useUserProfile() {
           email: userInformation?.email ?? data.email,
           academicYear: userInformation?.academicYear ?? null,
           studyMajor: userInformation?.studyMajor ?? null,
+          cv: userInformation?.cv
+            ? {
+                ...userInformation.cv,
+                content: cvBytes,
+              }
+            : null,
+          cvUrl: generatedCvUrl ?? data.cvUrl ?? null,
+          cvFileName: userInformation?.cv?.fileName ?? data.cvFileName ?? null,
         },
       );
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [revokeCvObjectUrl]);
 
   useEffect(() => {
     loadProfile();
   }, [loadProfile]);
+
+  useEffect(() => revokeCvObjectUrl, [revokeCvObjectUrl]);
 
   const updateProfile = useCallback(
     async (data: UpdateProfileRequest) => {
@@ -139,18 +171,10 @@ export function useUserProfile() {
     },
     [loadProfile]
   );
-  
-  const uploadCv = useCallback(
-    async (_file: File) => {
-      // Implementation for uploading CV
-    },
-    []
-  );
 
   return {
     profile,
     loading,
     updateProfile,
-    uploadCv
   };
 }

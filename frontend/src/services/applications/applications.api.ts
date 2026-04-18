@@ -1,5 +1,6 @@
 import type { SubmitApplicationRequest } from "../../types/application/application";
 import { getAuthToken } from "../auth/auth.api";
+import { encodeBytesToBase64 } from "../../utils/binaryFile";
 
 const API_BASE =
   import.meta.env.VITE_API_URL?.replace(/\/$/, "") ?? "https://localhost:7113";
@@ -16,7 +17,11 @@ export async function submitApplication(
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify(payload),
+    body: JSON.stringify({
+      departmentId: payload.departmentId,
+      questionnaire: payload.questionnaire,
+      cvFile: encodeBytesToBase64(payload.cvFile),
+    }),
   });
 
   if (!response.ok) {

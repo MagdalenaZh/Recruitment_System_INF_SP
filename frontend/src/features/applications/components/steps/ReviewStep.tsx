@@ -25,6 +25,12 @@ export function ReviewStep(props: {
         <div className="text-sm text-slate-700">{departmentName || "—"}</div>
       </SummaryCard>
 
+      <SummaryCard title="CV">
+        <div className="text-sm text-slate-700">
+          {personal.cvFileName?.trim() || "â€”"}
+        </div>
+      </SummaryCard>
+
       <SummaryCard title="Your answers">
         {questions.length === 0 ? (
           <div className="text-sm text-slate-600">No extra answers.</div>

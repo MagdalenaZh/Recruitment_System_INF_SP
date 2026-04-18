@@ -12,6 +12,7 @@ const validPersonal = {
   firstName: "Jane",
   lastName: "Doe",
   email: "jane@example.com",
+  cvFileContent: [37, 80, 68, 70], // minimal %PDF bytes
 };
 
 const requiredQuestion: ApplicationQuestion = {
@@ -67,7 +68,21 @@ describe("validatePersonal", () => {
 
   it("reports all fields missing at once", () => {
     const errors = validatePersonal({ firstName: "", lastName: "", email: "" });
-    expect(Object.keys(errors)).toHaveLength(3);
+    expect(Object.keys(errors)).toHaveLength(4); // firstName, lastName, email, cvFileName
+  });
+
+  it("requires a non-empty cvFileContent", () => {
+    const errors = validatePersonal({ ...validPersonal, cvFileContent: [] });
+    expect(errors.cvFileName).toBeDefined();
+  });
+
+  it("requires cvFileContent to be present", () => {
+    const errors = validatePersonal({ ...validPersonal, cvFileContent: undefined });
+    expect(errors.cvFileName).toBeDefined();
+  });
+
+  it("accepts valid personal info with CV bytes", () => {
+    expect(validatePersonal(validPersonal)).toEqual({});
   });
 });
 

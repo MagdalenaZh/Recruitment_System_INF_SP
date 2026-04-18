@@ -15,10 +15,21 @@ vi.mock("../../services/auth/auth.api", () => ({
 
 vi.mock("../../services/account/accountApi", () => ({
   getCurrentUser: vi.fn().mockResolvedValue({
+    userId: "user-123",
     firstName: "Jane",
     lastName: "Doe",
     email: "jane@example.com",
-    phone: "",
+  }),
+  getUserInformation: vi.fn().mockResolvedValue({
+    userId: "user-123",
+    firstName: "Jane",
+    lastName: "Doe",
+    email: "jane@example.com",
+    cv: {
+      fileName: "jane_cv.pdf",
+      contentType: "application/pdf",
+      content: "aGVsbG8=", // "hello" base64
+    },
   }),
 }));
 
@@ -31,6 +42,7 @@ const validPersonal = {
   firstName: "Jane",
   lastName: "Doe",
   email: "jane@example.com",
+  cvFileContent: [37, 80, 68, 70], // minimal %PDF bytes — required by validatePersonal
 };
 
 const requiredQuestion: ApplicationQuestion = {
@@ -170,9 +182,9 @@ describe("submit", () => {
     });
 
     expect(submitApplication).toHaveBeenCalledWith({
-      userId: "user-123",
       departmentId: "dept-1",
       questionnaire: { "Why join?": "Because I love it." },
+      cvFile: [37, 80, 68, 70],
     });
     expect(result.current.isSubmitted).toBe(true);
   });
@@ -268,19 +280,22 @@ describe("canSubmit", () => {
 //  auto-fill on mount 
 
 describe("auto-fill personal info on mount", () => {
-  it("calls setPersonal with the current user's data", async () => {
+  it("calls setPersonal with user data and decoded CV from getUserInformation", async () => {
     const setPersonal = vi.fn();
     renderHook(() =>
       useApplicationController(buildArgs({ setPersonal })),
     );
 
     await waitFor(() => {
-      expect(setPersonal).toHaveBeenCalledWith({
-        firstName: "Jane",
-        lastName: "Doe",
-        email: "jane@example.com",
-        phone: "",
-      });
+      expect(setPersonal).toHaveBeenCalledWith(
+        expect.objectContaining({
+          firstName: "Jane",
+          lastName: "Doe",
+          email: "jane@example.com",
+          cvFileName: "jane_cv.pdf",
+          cvFileContent: [104, 101, 108, 108, 111], // decoded "hello" base64
+        }),
+      );
     });
   });
 });

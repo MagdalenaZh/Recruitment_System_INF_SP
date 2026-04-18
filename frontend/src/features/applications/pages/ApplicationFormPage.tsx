@@ -210,6 +210,7 @@ export default function ApplicationFormPage() {
               <PersonalInfoStep
                 personal={state.personal}
                 setField={state.setPersonalField}
+                setPersonal={state.setPersonal}
                 errors={controller.errors.personal}
                 clearError={controller.clearPersonalError}
               />

@@ -19,6 +19,9 @@ export function validatePersonal(personal: PersonalInfo): Errors["personal"] {
   if (!email) e.email = "Email is required";
   else if (!email.includes("@")) e.email = "Email looks invalid";
 
+  if (!personal.cvFileContent || personal.cvFileContent.length === 0) {
+    e.cvFileName = "A PDF CV is required";
+  }
 
   return e;
 }

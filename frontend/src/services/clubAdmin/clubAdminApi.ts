@@ -1,6 +1,11 @@
 import { apiGet, apiPost, apiPut } from "../api";
 import { getStoredUser } from "../auth/auth.api";
 import { mapClubCategory, toClubCategoryApiValue } from "../../features/public/utils/clubCategory";
+import {
+  createObjectUrlFromBytes,
+  decodeBase64ToBytes,
+  type ApiCvFile,
+} from "../../utils/binaryFile";
 import type {
   AdminDecision,
   AdminApplicationStatus,
@@ -71,6 +76,10 @@ type UserInfoDto = {
   firstName: string;
   lastName: string;
   email: string;
+};
+
+type ApplicationDto = UserApplicationDto & {
+  cv?: ApiCvFile | null;
 };
 
 function parseJwtPayload(token: string | null): Record<string, unknown> | null {
@@ -292,7 +301,7 @@ export const clubAdminApi = {
   async getApplicationDetail(applicationId: string) {
     const clubId = resolveCurrentClubId();
     const [applications, departments] = await Promise.all([
-      apiGet<UserApplicationDto[]>(`/api/recruitmentInfo/api/applications-club/${clubId}`),
+      apiGet<ApplicationDto[]>(`/api/recruitmentInfo/api/applications-club/${clubId}`),
       apiGet<DepartmentDto[]>(`/api/recruitmentInfo/api/departments-club/${clubId}`),
     ]);
 
@@ -301,12 +310,9 @@ export const clubAdminApi = {
       throw new Error("Application not found.");
     }
 
-    const user = await apiGet<{
-      userId: string;
-      firstName: string;
-      lastName: string;
-      email: string;
-    }>(`/api/recruitmentInfo/api/user-information/${application.userId}`);
+    const user = await apiGet<UserInfoDto>(
+      `/api/recruitmentInfo/api/user-information/${application.userId}`,
+    );
 
     const department = departments.find(
       (d) => d.departmentId === application.departmentId,
@@ -327,7 +333,28 @@ export const clubAdminApi = {
           answer: String(answer ?? ""),
         }),
       ),
-      attachments: [],
+      attachments: application.cv?.content
+        ? (() => {
+            const content = decodeBase64ToBytes(application.cv?.content);
+            const url = createObjectUrlFromBytes(
+              content,
+              application.cv?.contentType,
+            );
+
+            if (!url) {
+              return [];
+            }
+
+            return [
+              {
+                id: `${application.applicationId}-cv`,
+                fileName: application.cv.fileName || "Application CV.pdf",
+                fileSizeLabel: "PDF CV",
+                url,
+              },
+            ];
+          })()
+        : [],
       assignedBoardMembers: [],
       notes: department?.departmentName ?? "",
     };

@@ -11,6 +11,8 @@ export function useApplicationState(initial?: Partial<PersonalInfo>) {
     lastName: initial?.lastName ?? "",
     email: initial?.email ?? "",
     phone: initial?.phone ?? "",
+    cvFileName: initial?.cvFileName ?? "",
+    cvFileContent: initial?.cvFileContent ?? [],
   });
 
   const [answers, setAnswers] = useState<Record<string, string>>({});

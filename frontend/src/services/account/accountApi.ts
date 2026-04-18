@@ -1,4 +1,8 @@
 import { apiGet, apiPut } from "../../services/api";
+import {
+  encodeBytesToBase64,
+  type ApiCvFile,
+} from "../../utils/binaryFile";
 
 export type CurrentUserResponse = {
   userId: string;
@@ -27,6 +31,7 @@ export type UserInformationResponse = {
   email: string;
   academicYear?: string | null;
   studyMajor?: string | null;
+  cv?: ApiCvFile | null;
 };
 
 export type UpdateProfileRequest = {
@@ -37,8 +42,7 @@ export type UpdateProfileRequest = {
 
   academicYear?: string | null;
   studyMajor?: string | null;
-  cvUrl?: string | null;
-  cvFileName?: string | null;
+  cvContent?: number[] | null;
 };
 
 export async function getCurrentUser() {
@@ -52,8 +56,13 @@ export async function getUserInformation(userId: string) {
 }
 
 export async function updateProfile(data: UpdateProfileRequest) {
-  return apiPut<UpdateProfileRequest, void>(
+  const payload = {
+    ...data,
+    cvContent: encodeBytesToBase64(data.cvContent),
+  };
+
+  return apiPut<typeof payload, void>(
     "/api/recruitmentInfo/api/update-user-information",
-    data,
+    payload,
   );
 }

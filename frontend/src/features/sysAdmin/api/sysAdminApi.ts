@@ -1,4 +1,5 @@
 import { apiGet, apiPost, apiPut } from "../../../services/api";
+import type { CvFile } from "../../../types/account/profile";
 import {
   mapClubCategory,
   toClubCategoryApiValue,
@@ -64,6 +65,7 @@ type UserInfoDto = {
   firstName: string;
   lastName: string;
   email: string;
+  cv?: CvFile | null;
 };
 
 type RoleDto = {

@@ -102,6 +102,7 @@ export type BoardInterviewAnswer = {
 export type BoardInterviewAttachment = {
   id: string;
   name: string;
+  url?: string;
 };
 
 export type BoardInterviewNote = {

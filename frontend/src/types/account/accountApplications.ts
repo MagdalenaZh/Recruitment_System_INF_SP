@@ -1,4 +1,5 @@
 import type { ApplicationStage } from "./applicationStage";
+import type { ApiCvFile } from "../../utils/binaryFile";
 
 export type UserApplicationDto = {
   applicationId: string;
@@ -6,6 +7,7 @@ export type UserApplicationDto = {
   departmentId: string;
   questionnaire: Record<string, string>;
   applicationStatus: number;
+  cv?: ApiCvFile | null;
 };
 
 export type ClubDto = {

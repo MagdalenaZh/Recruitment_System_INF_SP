@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { ClubAdminPageHeader } from "../components/ClubAdminPageHeader";
 import { ClubAdminSectionNav } from "../components/ClubAdminSectionNav";
@@ -174,8 +174,6 @@ export function ClubAdminFinalDecisionsPage() {
   useEffect(() => {
     void load();
   }, []);
-
-  const pendingCount = useMemo(() => pendingItems.length, [pendingItems]);
 
   async function handleConfirmDecision() {
     if (!pendingAction) return;

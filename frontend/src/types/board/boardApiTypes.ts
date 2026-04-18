@@ -1,3 +1,5 @@
+import type { ApiCvFile } from "../../utils/binaryFile";
+
 export type UserInfoDto = {
   userId: string;
   firstName: string;
@@ -5,6 +7,7 @@ export type UserInfoDto = {
   email: string;
   academicYear: string;
   studyMajor: string;
+  cv?: ApiCvFile | null;
 };
 
 export type BookedInterviewSlotDto = {

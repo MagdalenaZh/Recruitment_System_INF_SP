@@ -45,7 +45,7 @@ namespace AppilicationProcesserAPI.Models
         public Guid DepartmentId { get; }
         public Dictionary<string, string> Questionnaire { get; }
         public ApplicationStatus ApplicationStatus { get; }
-        CVFile CV { get; }
+        public CVFile Cv { get; }
 
         public ApplicationDatabaseModel(Guid applicationId, Guid userId, Guid departmentId, Dictionary<string, string> questionnaire, ApplicationStatus applicationStatus, CVFile cvFile)
         {
@@ -54,7 +54,7 @@ namespace AppilicationProcesserAPI.Models
             DepartmentId = departmentId;
             Questionnaire = questionnaire;
             ApplicationStatus = applicationStatus;
-            CV = cvFile;
+            Cv = cvFile;
         }
     }
 
@@ -94,7 +94,7 @@ namespace AppilicationProcesserAPI.Models
         public string Email { get; }
         public string AcademicYear { get; }
         public string StudyMajor { get; }
-        public CVFile CV { get; }
+        public CVFile Cv { get; }
 
         public UserDatabaseModel(Guid userId, string firstName, string lastName, string email, string academicYear, string studyMajor, CVFile cv)
         {
@@ -104,7 +104,7 @@ namespace AppilicationProcesserAPI.Models
             Email = email;
             AcademicYear = academicYear;
             StudyMajor = studyMajor;
-            CV = cv;
+            Cv = cv;
         }
     }
 

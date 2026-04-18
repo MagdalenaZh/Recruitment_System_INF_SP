@@ -1,5 +1,6 @@
 import type {
   ApplicationAnswer,
+  ApplicationAttachment,
   ApplicationDetail,
   ApplicationListItem,
   ApplicationStatus,
@@ -9,6 +10,11 @@ import type {
   UserApplicationDto as RecruitmentApplicationDto,
   DepartmentDto as RecruitmentDepartmentDto,
 } from "../../../types/account/accountApplications";
+import {
+  createObjectUrlFromBytes,
+  decodeBase64ToBytes,
+  type ApiCvFile,
+} from "../../../utils/binaryFile";
 
 export function normalizeApplicationStatus(rawStatus: number): ApplicationStatus {
   switch (rawStatus) {
@@ -42,6 +48,43 @@ export function mapQuestionnaireToAnswers(
     question,
     answer: String(answer ?? ""),
   }));
+}
+
+export function mapCvFileToAttachment(
+  cv: ApiCvFile | null | undefined,
+  attachmentId: string,
+): ApplicationAttachment[] {
+  if (!cv?.content) {
+    return [];
+  }
+
+  const content = decodeBase64ToBytes(cv.content);
+  if (content.length === 0) {
+    return [];
+  }
+
+  const url = createObjectUrlFromBytes(content, cv.contentType);
+  if (!url) {
+    return [];
+  }
+
+  return [
+    {
+      id: attachmentId,
+      fileName: cv.fileName || "Application CV.pdf",
+      fileSizeLabel: "PDF CV",
+      url,
+    },
+  ];
+}
+
+export function mapApplicationCvToAttachments(
+  application: RecruitmentApplicationDto,
+): ApplicationAttachment[] {
+  return mapCvFileToAttachment(
+    application.cv,
+    `${application.applicationId}-cv`,
+  );
 }
 
 export function mapDepartmentDtoToBoardDepartment(
@@ -129,7 +172,7 @@ export function mapApplicationDtoToDetail(
     clubId,
     userId: application.userId,
     answers: mapQuestionnaireToAnswers(application.questionnaire),
-    attachments: [],
+    attachments: mapApplicationCvToAttachments(application),
     rawApplication: application,
   };
 }

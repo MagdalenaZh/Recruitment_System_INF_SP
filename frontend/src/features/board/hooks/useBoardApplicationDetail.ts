@@ -12,6 +12,7 @@ import {
 } from "../../../services/applications/applicationStateStream";
 import type { ApplicationDetail } from "../types/boardTypes";
 import { applyUpdateToApplicationDetail, normalizeBaseStatus } from "../utils/applicationLiveState";
+import { mapApplicationCvToAttachments } from "../utils/boardMappers";
 
 function shouldHydrateLatestState(applicationStatus: number): boolean {
   return applicationStatus !== 4 && applicationStatus !== 5;
@@ -102,7 +103,7 @@ export function useBoardApplicationDetail(applicationId?: string) {
           question,
           answer: String(answer ?? ""),
         })),
-        attachments: [],
+        attachments: mapApplicationCvToAttachments(application),
         rawApplication: application,
       };
 

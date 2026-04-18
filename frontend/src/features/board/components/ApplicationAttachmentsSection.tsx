@@ -19,6 +19,8 @@ export function ApplicationAttachmentsSection({
             <a
               key={f.id}
               href={f.url}
+              target="_blank"
+              rel="noreferrer"
               className="flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50 p-3 transition hover:bg-slate-100"
             >
               <div className="min-w-0">

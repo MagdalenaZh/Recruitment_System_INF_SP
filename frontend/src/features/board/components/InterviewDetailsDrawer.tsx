@@ -284,14 +284,17 @@ export function InterviewDetailsDrawer({
                 </div>
               ) : (
                 slot.attachments.map((attachment) => (
-                  <div
+                  <a
                     key={attachment.id}
+                    href={attachment.url}
+                    target="_blank"
+                    rel="noreferrer"
                     className="rounded-2xl border border-white/10 bg-slate-950/40 p-4"
                   >
                     <div className="text-sm font-semibold text-slate-200">
                       {attachment.name}
                     </div>
-                  </div>
+                  </a>
                 ))
               )}
             </div>
