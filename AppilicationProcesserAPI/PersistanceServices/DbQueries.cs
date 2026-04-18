@@ -52,7 +52,7 @@
         internal const string GetDepartmentIdForApplication = "SELECT [DepartmentId], [UserId] FROM [Applications] WHERE [AggregateId] = @aggregateId";
 
         internal const string GetUserInformation = """
-            SELECT u.[UserId], u.[FirstName], u.[LastName], uc.[Email], u.[AcademicYear], u.[StudyMajor]
+            SELECT u.[UserId], u.[FirstName], u.[LastName], uc.[Email], u.[AcademicYear], u.[StudyMajor], u.[CVContent]
             FROM [Users] AS u
             INNER JOIN [UserCredentials] AS uc ON uc.[UserId] = u.[UserId]
             WHERE u.[UserId] = @userId
@@ -115,7 +115,7 @@
 
         internal const string UpdateNote = "UPDATE [Notes] SET [Payload] = @payload WHERE [NoteId] = @noteId";
 
-        internal const string UpdateUserInformation = "UPDATE [Users] SET [FirstName] = @firstName, [LastName] = @lastName, [AcademicYear] = @academicYear, [StudyMajor] = @studyMajor WHERE [UserId] = @userId";
+        internal const string UpdateUserInformation = "UPDATE [Users] SET [FirstName] = @firstName, [LastName] = @lastName, [AcademicYear] = @academicYear, [StudyMajor] = @studyMajor, [CVContent] = @cvContent WHERE [UserId] = @userId";
         #endregion
     }
 }

@@ -91,7 +91,9 @@ namespace AppilicationProcesserAPI.Models
         public string Email { get; }
         public string AcademicYear { get; }
         public string StudyMajor { get; }
-        public UserDatabaseModel(Guid userId, string firstName, string lastName, string email, string academicYear, string studyMajor)
+        public CVFile CV { get; }
+
+        public UserDatabaseModel(Guid userId, string firstName, string lastName, string email, string academicYear, string studyMajor, CVFile cv)
         {
             UserId = userId;
             FirstName = firstName;
@@ -99,6 +101,21 @@ namespace AppilicationProcesserAPI.Models
             Email = email;
             AcademicYear = academicYear;
             StudyMajor = studyMajor;
+            CV = cv;
+        }
+    }
+
+    public class CVFile
+    {
+        public string FileName { get; }
+        public string ContentType { get; }
+        public byte[] Content { get; }
+
+        public CVFile(string fileName, string contentType, byte[] content)
+        {
+            FileName = fileName;
+            ContentType = contentType;
+            Content = content;
         }
     }
 
@@ -136,7 +153,7 @@ namespace AppilicationProcesserAPI.Models
         }
     }
 
-    public class RolesDatabaseModel 
+    public class RolesDatabaseModel
     {
         public Guid RoleId { get; }
         public string RoleName { get; }

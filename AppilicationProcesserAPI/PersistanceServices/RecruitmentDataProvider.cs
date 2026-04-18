@@ -222,7 +222,9 @@ namespace AppilicationProcesserAPI.PersistanceServices
                 var email = reader.IsDBNull(3) ? string.Empty : reader.GetString(3);
                 var academicYear = reader.IsDBNull(4) ? string.Empty : reader.GetString(4);
                 var studyMajor = reader.IsDBNull(5) ? string.Empty : reader.GetString(5);
-                return new UserDatabaseModel(id, firstName, lastName, email, academicYear, studyMajor);
+                var cvContent = reader.IsDBNull(6) ? Array.Empty<byte>() : (byte[])reader[6];
+                var cv = new CVFile($"{firstName}_{lastName}_CV.pdf", "application/pdf", cvContent);
+                return new UserDatabaseModel(id, firstName, lastName, email, academicYear, studyMajor, cv);
             }
             return null;
         }

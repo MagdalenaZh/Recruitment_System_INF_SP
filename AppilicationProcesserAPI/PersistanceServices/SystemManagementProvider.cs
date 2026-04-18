@@ -19,7 +19,7 @@ namespace AppilicationProcesserAPI.PersistanceServices
         Task UpdateUserPromoteToClubAdminAsync(Guid userId, Guid clubId, CancellationToken cancellationToken);
         Task AssignClubAdminAsync(Guid userId, Guid clubId, Guid roleId, CancellationToken cancellationToken);
         Task AssignBoardMemberAsync(Guid userId, Guid departmentId, Guid roleId, CancellationToken cancellationToken);
-        Task UpdateUserInformationAsync(Guid userId, string firstName, string lastName, string academicYear, string studyMajor, CancellationToken cancellationToken);
+        Task UpdateUserInformationAsync(Guid userId, string firstName, string lastName, string academicYear, string studyMajor, byte[] cvContent, CancellationToken cancellationToken);
     }
 
     public class SystemManagementProvider : ISystemManagementProvider
@@ -366,7 +366,7 @@ namespace AppilicationProcesserAPI.PersistanceServices
             throw new Exception($"Role '{roleName}' not found.");
         }
 
-        public async Task UpdateUserInformationAsync(Guid userId, string firstName, string lastName, string academicYear, string major, CancellationToken cancellationToken)
+        public async Task UpdateUserInformationAsync(Guid userId, string firstName, string lastName, string academicYear, string major, byte[] cvContent, CancellationToken cancellationToken)
         {
             using var sqlConnection = new SqlConnection(_connectionString);
             await sqlConnection.OpenAsync(cancellationToken).ConfigureAwait(false);
@@ -377,6 +377,7 @@ namespace AppilicationProcesserAPI.PersistanceServices
             command.Parameters.AddWithValue("@lastName", lastName);
             command.Parameters.AddWithValue("@academicYear", academicYear);
             command.Parameters.AddWithValue("@studyMajor", major);
+            command.Parameters.AddWithValue("@cvContent", cvContent);
 
             try
             {

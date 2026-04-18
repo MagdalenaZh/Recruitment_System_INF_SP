@@ -541,7 +541,7 @@ namespace AppilicationProcesserAPI.Controllers
 
             try
             {
-                await _systemManagementProvider.UpdateUserInformationAsync(userId, updateModel.FirstName, updateModel.LastName, updateModel.AcademicYear, updateModel.StudyMajor, cancellationToken).ConfigureAwait(false);
+                await _systemManagementProvider.UpdateUserInformationAsync(userId, updateModel.FirstName, updateModel.LastName, updateModel.AcademicYear, updateModel.StudyMajor, updateModel.CVContent, cancellationToken).ConfigureAwait(false);
                 return Ok(new { message = "User information updated successfully." });
             }
             catch (Exception ex)

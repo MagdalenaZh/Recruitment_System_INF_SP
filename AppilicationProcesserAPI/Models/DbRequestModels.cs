@@ -93,12 +93,15 @@ namespace AppilicationProcesserAPI.Models
         public string LastName { get; }
         public string AcademicYear { get; }
         public string StudyMajor { get; }
-        public UpdateUserInformationRequest(string firstName, string lastName, string academicYear, string studyMajor)
+        public byte[] CVContent { get; }
+
+        public UpdateUserInformationRequest(string firstName, string lastName, string academicYear, string studyMajor, byte[] cvContent)
         {
             FirstName = firstName;
             LastName = lastName;
             AcademicYear = academicYear;
             StudyMajor = studyMajor;
+            CVContent = cvContent;
         }
     }
 
