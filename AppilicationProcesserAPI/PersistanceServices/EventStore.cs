@@ -92,6 +92,7 @@ namespace AppilicationProcesserAPI.PersistanceServices
             command.Parameters.AddWithValue("@departmentId", applicationData.DepartmentId);
             command.Parameters.AddWithValue("@questionnaire", serializedQuestionaire);
             command.Parameters.AddWithValue("@status", ApplicationStatus.ApplicationSubmited);
+            command.Parameters.AddWithValue("@cvFile", applicationData.CVFile);
 
             try
             {

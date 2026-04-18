@@ -1,16 +1,17 @@
-﻿using AppilicationProcesserAPI.DomainEvents;
-
-namespace AppilicationProcesserAPI.Models
+﻿namespace AppilicationProcesserAPI.Models
 {
     public class ApplicationSubmissionData
     {
         public Guid DepartmentId { get; }
         public Dictionary<string, string> Questionnaire { get; }
 
-        public ApplicationSubmissionData(Guid departmentId, Dictionary<string, string> questionnaire)
+        public byte[] CVFile { get; }
+
+        public ApplicationSubmissionData(Guid departmentId, Dictionary<string, string> questionnaire, byte[] cvFile)
         {
             DepartmentId = departmentId;
             Questionnaire = questionnaire;
+            CVFile = cvFile;
         }
     }
 }

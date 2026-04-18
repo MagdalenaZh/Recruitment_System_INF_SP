@@ -45,13 +45,16 @@ namespace AppilicationProcesserAPI.Models
         public Guid DepartmentId { get; }
         public Dictionary<string, string> Questionnaire { get; }
         public ApplicationStatus ApplicationStatus { get; }
-        public ApplicationDatabaseModel(Guid applicationId, Guid userId, Guid departmentId, Dictionary<string, string> questionnaire, ApplicationStatus applicationStatus)
+        CVFile CV { get; }
+
+        public ApplicationDatabaseModel(Guid applicationId, Guid userId, Guid departmentId, Dictionary<string, string> questionnaire, ApplicationStatus applicationStatus, CVFile cvFile)
         {
             ApplicationId = applicationId;
             UserId = userId;
             DepartmentId = departmentId;
             Questionnaire = questionnaire;
             ApplicationStatus = applicationStatus;
+            CV = cvFile;
         }
     }
 

@@ -61,13 +61,16 @@ namespace AppilicationProcesserAPI.PersistanceServices
                 var questionaire = reader.GetString(3);
                 var status = (ApplicationStatus)reader.GetInt32(4);
                 var seriaizedQuestionaire = JsonSerializer.Deserialize<Dictionary<string, string>>(questionaire, _serializerOptions);
+                var cvContent = reader.IsDBNull(5) ? Array.Empty<byte>() : (byte[])reader[5];
+
+                var cv = new CVFile($"{userId}_CV.pdf", "application/pdf", cvContent);
 
                 if (seriaizedQuestionaire is null)
                 {
                     throw new Exception($"Failed to deserialize questionaire for application {applicationId}");
                 }
 
-                applications.Add(new ApplicationDatabaseModel(applicationId, userId, departmentId, seriaizedQuestionaire, status));
+                applications.Add(new ApplicationDatabaseModel(applicationId, userId, departmentId, seriaizedQuestionaire, status, cv));
             }
 
             return applications;
@@ -91,12 +94,15 @@ namespace AppilicationProcesserAPI.PersistanceServices
                 var status = (ApplicationStatus)reader.GetInt32(3);
                 var seriaizedQuestionaire = JsonSerializer.Deserialize<Dictionary<string, string>>(questionaire, _serializerOptions);
 
+                var cvContent = reader.IsDBNull(4) ? Array.Empty<byte>() : (byte[])reader[4];
+                var cv = new CVFile($"{userId}_CV.pdf", "application/pdf", cvContent);
+
                 if (seriaizedQuestionaire is null)
                 {
                     throw new Exception($"Failed to deserialize questionaire for application {applicationId}");
                 }
 
-                applications.Add(new ApplicationDatabaseModel(applicationId, userId, departmentId, seriaizedQuestionaire, status));
+                applications.Add(new ApplicationDatabaseModel(applicationId, userId, departmentId, seriaizedQuestionaire, status, cv));
             }
 
             return applications;
@@ -119,13 +125,15 @@ namespace AppilicationProcesserAPI.PersistanceServices
                 var questionaire = reader.GetString(2);
                 var status = (ApplicationStatus)reader.GetInt32(3);
                 var seriaizedQuestionaire = JsonSerializer.Deserialize<Dictionary<string, string>>(questionaire, _serializerOptions);
+                var cvContent = reader.IsDBNull(4) ? Array.Empty<byte>() : (byte[])reader[4];
+                var cv = new CVFile($"{userId}_CV.pdf", "application/pdf", cvContent);
 
                 if (seriaizedQuestionaire is null)
                 {
                     throw new Exception($"Failed to deserialize questionaire for application {applicationId}");
                 }
 
-                applications.Add(new ApplicationDatabaseModel(applicationId, userId, departmentId, seriaizedQuestionaire, status));
+                applications.Add(new ApplicationDatabaseModel(applicationId, userId, departmentId, seriaizedQuestionaire, status, cv));
             }
 
             return applications;

@@ -4,16 +4,16 @@
     {
         #region SELECT QUERIES
         internal const string GetAllEventsForAggregate = "SELECT [EventType], [PayLoad] FROM [Events] WHERE [AggregateId] = @aggregateId ORDER BY [TimeStamp]";
-        internal const string GetAllApplicationsForUser = "SELECT [AggregateId], [DepartmentId], [Questionnaire], [Status] FROM [Applications] WHERE [UserId] = @userId";
+        internal const string GetAllApplicationsForUser = "SELECT [AggregateId], [DepartmentId], [Questionnaire], [Status], [ApplicationCv] FROM [Applications] WHERE [UserId] = @userId";
         internal const string GetAllApplicationsForClub = """
-            SELECT appl.[AggregateId], appl.[UserId], appl.[DepartmentId], appl.[Questionnaire], appl.[Status] 
+            SELECT appl.[AggregateId], appl.[UserId], appl.[DepartmentId], appl.[Questionnaire], appl.[Status], appl.[ApplicationCv] 
             FROM [Applications] AS appl 
             INNER JOIN [Departments] AS deprt ON appl.[DepartmentId] = deprt.[DepartmentId] 
             INNER JOIN [Clubs] AS clb ON deprt.[ClubId] = clb.[ClubId] 
             WHERE clb.[ClubId] = @clubId
             """;
         internal const string GetAllApplicationsForDepartment = """
-            SELECT [AggregateId], [UserId], [Questionnaire], [Status] 
+            SELECT [AggregateId], [UserId], [Questionnaire], [Status], [ApplicationCv] 
             FROM [Applications] WHERE [DepartmentId] = @departmentId
             """;
         internal const string GetAllOpenInterviewSlotsForClub = """
@@ -79,7 +79,7 @@
         #region INSERT QUERIES
         internal const string InsertEvent = "INSERT INTO [Events] ([EventId], [AggregateId], [EventType], [PayLoad], [TimeStamp]) VALUES (@eventId, @aggregateId, @eventType, @payload, @timeStamp)";
 
-        internal const string InsertApplication = "INSERT INTO [Applications] ([AggregateId], [UserId], [DepartmentId], [Questionnaire], [Status]) VALUES (@aggregateId, @userId, @departmentId, @questionnaire, @status)";
+        internal const string InsertApplication = "INSERT INTO [Applications] ([AggregateId], [UserId], [DepartmentId], [Questionnaire], [Status], [ApplicationCv]) VALUES (@aggregateId, @userId, @departmentId, @questionnaire, @status, @cvFile)";
 
         internal const string InsertBookedInterviewSlot = "INSERT INTO [BookedSlots] ([SlotId], [AggregateId]) VALUES (@slotId, @aggregateId)";
 
