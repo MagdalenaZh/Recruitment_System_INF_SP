@@ -29,7 +29,6 @@ export function BoardInterviewsHomePage() {
   const {
     slots,
     departmentStats,
-    clubName,
     loading,
     error,
     load,

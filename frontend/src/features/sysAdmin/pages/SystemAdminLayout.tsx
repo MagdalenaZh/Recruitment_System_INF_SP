@@ -1,6 +1,5 @@
 import { Outlet } from "react-router-dom";
 import { SysAdminProvider } from "../context/SysAdminContext";
-import { SystemAdminSectionNav } from "../components/SystemAdminSectionNav";
 import { Navbar } from "../../../components/layout/Navbar/Navbar";
 import { Footer } from "../../../components/layout/Footer";
 
