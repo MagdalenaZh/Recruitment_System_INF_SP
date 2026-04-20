@@ -53,24 +53,24 @@ export function HeroSection() {
       />
 
       <Container>
-        <div className="relative z-10 grid min-h-screen items-center gap-10 pt-24 pb-16 lg:grid-cols-[60%_40%]">
-          <div className="max-w-3xl">
-            <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs text-white/85 ring-1 ring-white/15">
+        <div className="relative z-10 grid min-h-screen items-center gap-10 pt-24 pb-16 lg:grid-cols-[70%_30%]">
+          <div className="max-w-4xl">
+            <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-base text-white/85 ring-1 ring-white/15">
               <span className="h-1.5 w-1.5 rounded-full bg-blue-400" />
               Browse clubs • See recruiting • Apply faster
             </div>
 
-            <h1 className="mt-6 text-4xl font-bold tracking-tight text-white md:text-6xl">
+            <h1 className="mt-8 text-4xl font-bold tracking-tight text-white md:text-7xl">
               Discover AUBG clubs.
               <span className="block text-blue-300">Join what fits you.</span>
             </h1>
 
-            <p className="mt-5 max-w-2xl text-base text-white/75 md:text-lg">
+            <p className="mt-7 max-w-2xl text-base text-white/75 md:text-2xl">
               One place to explore student organizations, filter by category,
               and check who’s actively recruiting right now.
             </p>
 
-            <div className="mt-8 flex flex-wrap gap-3">
+            <div className="mt-10 flex flex-wrap gap-3">
               <a href="#clubs" className="inline-flex">
                 <Button type="button">Browse clubs</Button>
               </a>
@@ -106,20 +106,6 @@ export function HeroSection() {
                   </div>
                 );
               })}
-            </div>
-
-            <div className="absolute bottom-8 left-1/2 flex -translate-x-1/2 gap-2">
-              {logos.map((_, index) => (
-                <span
-                  key={index}
-                  className={[
-                    "h-2.5 rounded-full transition-all duration-300",
-                    index === activeIndex
-                      ? "w-8 bg-blue-400"
-                      : "w-2.5 bg-white/30",
-                  ].join(" ")}
-                />
-              ))}
             </div>
           </div>
         </div>
