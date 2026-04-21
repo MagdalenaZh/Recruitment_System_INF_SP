@@ -49,7 +49,7 @@ public class ModelAndRepresentationTests
         var userId = Guid.NewGuid();
         var deptId = Guid.NewGuid();
         var questionnaire = new Dictionary<string, string> { ["q1"] = "a1" };
-        var model = new ApplicationDatabaseModel(appId, userId, deptId, questionnaire, ApplicationStatus.InProgress);
+        var model = new ApplicationDatabaseModel(appId, userId, deptId, questionnaire, ApplicationStatus.InProgress, new CVFile("test", "test", new byte[0]));
 
         Assert.Equal(appId, model.ApplicationId);
         Assert.Equal(userId, model.UserId);
@@ -88,7 +88,7 @@ public class ModelAndRepresentationTests
     public void UserDatabaseModel_StoresAllProperties()
     {
         var userId = Guid.NewGuid();
-        var model = new UserDatabaseModel(userId, "Alice", "Smith", "alice@example.com", "3rd Year", "CS");
+        var model = new UserDatabaseModel(userId, "Alice", "Smith", "alice@example.com", "3rd Year", "CS", new CVFile("test", "test", new byte[0]));
 
         Assert.Equal(userId, model.UserId);
         Assert.Equal("Alice", model.FirstName);
@@ -208,7 +208,7 @@ public class ModelAndRepresentationTests
     [Fact]
     public void UpdateUserInformationRequest_StoresAllProperties()
     {
-        var req = new UpdateUserInformationRequest("Alice", "Smith", "2nd Year", "CS");
+        var req = new UpdateUserInformationRequest("Alice", "Smith", "2nd Year", "CS", new byte[0]);
 
         Assert.Equal("Alice", req.FirstName);
         Assert.Equal("Smith", req.LastName);

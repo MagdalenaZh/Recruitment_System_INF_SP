@@ -44,7 +44,7 @@ public class RecruitmentInformationEndpointsTests : IClassFixture<TestWebApplica
     public async Task GetUserInformation_ReturnsConfiguredFakeUser()
     {
         var userId = Guid.Parse("22222222-2222-2222-2222-222222222222");
-        _factory.RecruitmentDataProvider.UserInfo = new UserDatabaseModel(userId, "Magi", "Pro", "magi@example.com", "Senior", "CS");
+        _factory.RecruitmentDataProvider.UserInfo = new UserDatabaseModel(userId, "Magi", "Pro", "magi@example.com", "Senior", "CS", new CVFile("test","test", new byte[0]));
 
         var response = await _client.GetAsync($"/api/recruitmentInfo/api/user-information/{userId}");
 
@@ -78,7 +78,7 @@ public class RecruitmentInformationEndpointsTests : IClassFixture<TestWebApplica
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
 
-        _factory.RecruitmentDataProvider.UserInfo = new UserDatabaseModel(Guid.NewGuid(), "Test", "User", "test@example.com", "Junior", "CS");
+        _factory.RecruitmentDataProvider.UserInfo = new UserDatabaseModel(Guid.NewGuid(), "Test", "User", "test@example.com", "Junior", "CS", new CVFile("test","test", new byte[0]));
     }
 
     [Fact]
@@ -108,7 +108,7 @@ public class RecruitmentInformationEndpointsTests : IClassFixture<TestWebApplica
         _factory.RecruitmentDataProvider.ApplicationsForUser.Clear();
         _factory.RecruitmentDataProvider.ApplicationsForUser.Add(
             new ApplicationDatabaseModel(appId, userId, Guid.NewGuid(),
-                new Dictionary<string, string> { ["q"] = "a" }, DomainEvents.ApplicationStatus.InProgress));
+                new Dictionary<string, string> { ["q"] = "a" }, ApplicationStatus.InProgress, new CVFile("test", "test", new byte[0])));
 
         var response = await _client.GetAsync($"/api/recruitmentInfo/api/applications-user/{userId}");
 
@@ -348,7 +348,9 @@ public class RecruitmentInformationEndpointsTests : IClassFixture<TestWebApplica
     [Fact]
     public async Task UpdateUserInformation_WhenAuthenticated_ReturnsOk()
     {
-        var request = new UpdateUserInformationRequest("Alice", "Smith", "2nd Year", "CS");
+        _factory.AuthorizationScopeService.AllowAll = true;
+
+        var request = new UpdateUserInformationRequest("Alice", "Smith", "2nd Year", "CS",  new byte[0]);
         var response = await _client.PutAsJsonAsync("/api/recruitmentInfo/api/update-user-information", request);
 
         response.EnsureSuccessStatusCode();

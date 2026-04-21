@@ -27,7 +27,7 @@ public class ApplicationProcessingEndpointsTests : IClassFixture<TestWebApplicat
 
         var request = new ApplicationSubmissionData(
             Guid.Parse("33333333-3333-3333-3333-333333333333"),
-            new Dictionary<string, string> { ["motivation"] = "I care" });
+            new Dictionary<string, string> { ["motivation"] = "I care" }, new byte[0]);
 
         var response = await _client.PostAsJsonAsync("/api/submit-application", request);
 
@@ -164,7 +164,7 @@ public class ApplicationProcessingEndpointsTests : IClassFixture<TestWebApplicat
 
         var request = new ApplicationSubmissionData(
             Guid.NewGuid(),
-            new Dictionary<string, string>());
+            new Dictionary<string, string>(), new byte[0]);
 
         var response = await _client.PostAsJsonAsync("/api/submit-application", request);
 

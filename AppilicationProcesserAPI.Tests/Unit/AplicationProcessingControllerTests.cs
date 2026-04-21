@@ -28,7 +28,7 @@ public class AplicationProcessingControllerTests
         SetUser(controller, Guid.NewGuid());
 
         var result = await controller.SubmitApplication(
-            new ApplicationSubmissionData(Guid.NewGuid(), new Dictionary<string, string>()),
+            new ApplicationSubmissionData(Guid.NewGuid(), new Dictionary<string, string>(), new byte[0]),
             CancellationToken.None);
 
         Assert.IsType<ForbidResult>(result);
@@ -45,7 +45,7 @@ public class AplicationProcessingControllerTests
         SetUserWithNoIdentifierClaim(controller);
 
         var result = await controller.SubmitApplication(
-            new ApplicationSubmissionData(Guid.NewGuid(), new Dictionary<string, string>()),
+            new ApplicationSubmissionData(Guid.NewGuid(), new Dictionary<string, string>(), new byte[0]),
             CancellationToken.None);
 
         Assert.IsType<UnauthorizedResult>(result);
@@ -75,7 +75,7 @@ public class AplicationProcessingControllerTests
         var userId = Guid.NewGuid();
         SetUser(controller, userId);
 
-        var request = new ApplicationSubmissionData(Guid.NewGuid(), new Dictionary<string, string> { ["why"] = "because" });
+        var request = new ApplicationSubmissionData(Guid.NewGuid(), new Dictionary<string, string> { ["why"] = "because" }, new byte[0]);
 
         var result = await controller.SubmitApplication(request, CancellationToken.None);
 
@@ -108,7 +108,7 @@ public class AplicationProcessingControllerTests
         SetUser(controller, Guid.NewGuid());
 
         var result = await controller.SubmitApplication(
-            new ApplicationSubmissionData(Guid.NewGuid(), new Dictionary<string, string>()),
+            new ApplicationSubmissionData(Guid.NewGuid(), new Dictionary<string, string>(), new byte[0]),
             CancellationToken.None);
 
         var status = Assert.IsType<ObjectResult>(result);

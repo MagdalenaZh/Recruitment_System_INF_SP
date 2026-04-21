@@ -18,7 +18,7 @@ public class FakeRecruitmentDataProvider : IRecruitmentDataProvider
     public List<DepartmentDatabaseModel> Departments { get; } = [];
     public List<NoteDatabaseModel> Notes { get; } = [];
     public List<RolesDatabaseModel> Roles { get; } = [];
-    public UserDatabaseModel? UserInfo { get; set; } = new(Guid.NewGuid(), "Test", "User", "test@example.com", "Junior", "CS");
+    public UserDatabaseModel? UserInfo { get; set; } = new(Guid.NewGuid(), "Test", "User", "test@example.com", "Junior", "CS", new CVFile("test","test", new byte[0]));
     public UserRightsDatabaseModel UserRights { get; set; } = new(Guid.NewGuid(), null, "User", null);
     public int RequiredApprovals { get; set; } = 2;
 
@@ -32,6 +32,11 @@ public class FakeRecruitmentDataProvider : IRecruitmentDataProvider
     public Task<UserRightsDatabaseModel> GetUserRightsAsync(Guid userId, CancellationToken cancellationToken) => Task.FromResult(UserRights);
     public Task<List<NoteDatabaseModel>> GetAllNotesForApplicationAsync(Guid applicationId, CancellationToken cancellationToken) => Task.FromResult(Notes);
     public Task<List<RolesDatabaseModel>> GetAllRolesAsync(CancellationToken cancellationToken) => Task.FromResult(Roles);
+
+    public Task<List<BoardMemberDatabaseModel>> GetClubBoardMembersAsync(Guid clubId, CancellationToken cancellationToken)
+    {
+        throw new NotImplementedException();
+    }
 }
 
 public class FakeSystemManagementProvider : ISystemManagementProvider
@@ -49,6 +54,11 @@ public class FakeSystemManagementProvider : ISystemManagementProvider
     public Task AssignClubAdminAsync(Guid userId, Guid clubId, Guid roleId, CancellationToken cancellationToken) => Task.CompletedTask;
     public Task AssignBoardMemberAsync(Guid userId, Guid departmentId, Guid roleId, CancellationToken cancellationToken) => Task.CompletedTask;
     public Task UpdateUserInformationAsync(Guid userId, string firstName, string lastName, string academicYear, string studyMajor, CancellationToken cancellationToken) => Task.CompletedTask;
+
+    public Task UpdateUserInformationAsync(Guid userId, string firstName, string lastName, string academicYear, string studyMajor, byte[] cvContent, CancellationToken cancellationToken)
+    {
+        throw new NotImplementedException();
+    }
 }
 
 public class FakeCalendarProvider : ICalendarProvider
