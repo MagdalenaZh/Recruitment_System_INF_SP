@@ -108,7 +108,7 @@ export const ACCOUNT_NAV_SECTIONS: AccountNavSection[] = [
     title: "System Administration",
     items: [
       {
-        key: "systemAdmin",
+        key: "systemPanel",
         label: "System admin page",
         description: "Open system administration tools",
         to: "/sys-admin",

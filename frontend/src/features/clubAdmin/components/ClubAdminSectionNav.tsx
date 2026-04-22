@@ -8,7 +8,7 @@ const ITEMS = [
 
 export function ClubAdminSectionNav() {
   return (
-    <div className="mt-6 flex flex-wrap gap-3">
+    <div className="flex flex-wrap gap-3">
       {ITEMS.map((item) => (
         <NavLink
           key={item.to}
