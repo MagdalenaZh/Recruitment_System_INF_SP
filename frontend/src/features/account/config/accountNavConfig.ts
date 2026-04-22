@@ -31,6 +31,27 @@ export const ACCOUNT_NAV_SECTIONS: AccountNavSection[] = [
     ],
   },
   {
+    title: "Board Workspace",
+    items: [
+      {
+        key: "board home",
+        label: "Applications workspace",
+        description: "Review departments and current applications",
+        to: "/board",
+        icon: "file",
+        roles: ["BoardMember", "ClubAdmin"],
+      },
+      {
+        key: "board interviews",
+        label: "Interviews workspace",
+        description: "Review scheduled interviews and decisions",
+        to: "/board/interviews",
+        icon: "file",
+        roles: ["BoardMember", "ClubAdmin"],
+      },
+    ],
+  },
+  {
     title: "Club Administration",
     items: [
       {

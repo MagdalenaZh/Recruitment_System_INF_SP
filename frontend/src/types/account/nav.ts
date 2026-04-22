@@ -4,6 +4,8 @@ export type AccountNavKey =
   | "your profile"
   | "applications"
   | "interviews"
+  | "board home"
+  | "board interviews"
   | "club admin home"
   | "club settings"
   | "club interview slots"

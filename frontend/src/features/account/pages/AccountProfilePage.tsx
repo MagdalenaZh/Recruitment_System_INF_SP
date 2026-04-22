@@ -230,9 +230,6 @@ export function AccountProfilePage() {
             <div className="mt-1 rounded-xl bg-slate-50 px-3 py-2 text-sm text-slate-700 ring-1 ring-slate-100">
               {profile.departmentName ?? "Not assigned"}
             </div>
-            <p className="mt-1 text-xs text-slate-500">
-              This is assigned by a club admin and cannot be edited here.
-            </p>
           </div>
 
           <div>
