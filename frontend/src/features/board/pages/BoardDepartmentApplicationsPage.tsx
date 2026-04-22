@@ -2,7 +2,6 @@ import { Link, useParams } from "react-router-dom";
 import { ApplicationStackList } from "../components/ApplicationStackList";
 import { useDepartmentApplications } from "../hooks/useDepartmentApplications";
 import type { ApplicationStatus } from "../types/boardTypes";
-import { BoardSectionNav } from "../components/BoardSectionNav";
 import { BoardShell } from "../components/BoardShell";
 
 export function BoardDepartmentApplicationsPage() {
