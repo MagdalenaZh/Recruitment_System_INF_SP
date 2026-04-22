@@ -92,14 +92,6 @@ export function Navbar({
             )}
           </nav>
         </div>
-
-        {showSearch && search !== undefined && setSearch && (
-          <div className="mt-3 md:hidden">
-            <div className={`rounded-2xl p-3 ${navbarShellClass}`}>
-              <ClubSearch value={search} onChange={setSearch} tone={searchTone} />
-            </div>
-          </div>
-        )}
       </Container>
     </header>
   );

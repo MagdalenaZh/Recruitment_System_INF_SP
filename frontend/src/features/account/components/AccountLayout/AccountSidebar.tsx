@@ -9,7 +9,7 @@ import { useUserProfile } from "../../hooks/useUserProfile";
 
 function cx({ isActive }: { isActive: boolean }) {
   return [
-    "flex items-center justify-between rounded-xl px-3 py-2 text-sm transition",
+    "flex items-center justify-between rounded-xl px-3 py-2 text-sm transition whitespace-nowrap",
     isActive ? "bg-slate-900 text-white" : "text-slate-700 hover:bg-slate-100",
   ].join(" ");
 }
@@ -50,16 +50,19 @@ export function AccountSidebar() {
         </div>
       </div>
 
-      <div className="mt-4 space-y-4">
+      <div className="mt-4 flex gap-3 overflow-x-auto pb-1 md:block md:space-y-4 md:overflow-visible md:pb-0">
         {sections.map((section) => (
-          <div key={section.title ?? "section"}>
+          <div
+            key={section.title ?? "section"}
+            className="min-w-[220px] shrink-0 md:min-w-0 md:shrink"
+          >
             {section.title && (
               <div className="px-1 pb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
                 {section.title}
               </div>
             )}
 
-            <div className="space-y-1">
+            <div className="space-y-1 rounded-2xl bg-slate-50 p-2 ring-1 ring-slate-100 md:rounded-none md:bg-transparent md:p-0 md:ring-0">
               {section.items.map((item) => (
                 <NavLink key={item.key} to={item.to} className={cx} end>
                   <span className="truncate">{item.label}</span>

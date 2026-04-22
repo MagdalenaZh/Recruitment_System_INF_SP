@@ -88,7 +88,7 @@ export function UserMenu() {
   if (!isAuthenticated) return null;
 
   return (
-    <div className="relative" ref={ref}>
+    <div className="relative z-30" ref={ref}>
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
@@ -99,7 +99,7 @@ export function UserMenu() {
       </button>
 
       {open && (
-        <div className="absolute right-0 mt-2 w-72 overflow-hidden rounded-2xl bg-zinc-900/95 text-white shadow-xl ring-1 ring-white/10 backdrop-blur">
+        <div className="fixed right-4 top-20 z-[200] w-[min(18rem,calc(100vw-2rem))] overflow-hidden rounded-2xl bg-zinc-900/95 text-white shadow-xl ring-1 ring-white/10 backdrop-blur md:absolute md:right-0 md:top-full md:z-40 md:mt-2 md:w-72">
           <div className="px-4 py-3">
             {loading ? (
               <div className="text-sm text-white/70">Loading...</div>
