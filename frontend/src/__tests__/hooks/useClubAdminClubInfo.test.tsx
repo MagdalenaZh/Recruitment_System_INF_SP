@@ -8,6 +8,7 @@ import type { ClubAdminClubInfo } from "../../features/clubAdmin/types/clubAdmin
 vi.mock("../../services/clubAdmin/clubAdminApi", () => ({
   clubAdminApi: {
     getCurrentClubInfo: vi.fn(),
+    getDepartmentHeads: vi.fn(),
     getAvailableRoles: vi.fn(),
     getAvailableInterviewSlots: vi.fn(),
     updateOpenPositions: vi.fn(),
@@ -17,7 +18,6 @@ vi.mock("../../services/clubAdmin/clubAdminApi", () => ({
     createInterviewSlot: vi.fn(),
     updateInterviewSlot: vi.fn(),
     assignBoardMember: vi.fn(),
-    getUserInformation: vi.fn(),
   },
 }));
 
@@ -67,6 +67,7 @@ const mockSlots = [
 
 function setupSuccessfulLoad() {
   vi.mocked(clubAdminApi.getCurrentClubInfo).mockResolvedValue(mockClubInfo);
+  vi.mocked(clubAdminApi.getDepartmentHeads).mockResolvedValue([]);
   vi.mocked(clubAdminApi.getAvailableRoles).mockResolvedValue([
     { roleId: "role-1", roleName: "BoardMember" },
   ]);
@@ -103,6 +104,31 @@ describe("initial load", () => {
     expect(result.current.data).toEqual(mockClubInfo);
     expect(result.current.interviewSlots).toHaveLength(2);
     expect(result.current.error).toBeNull();
+  });
+
+  it("keeps department head info returned by the club info payload", async () => {
+    vi.mocked(clubAdminApi.getCurrentClubInfo).mockResolvedValue({
+      ...mockClubInfo,
+      departments: mockClubInfo.departments.map((department) =>
+        department.departmentId === "dept-1"
+          ? {
+              ...department,
+              headUserId: "user-99",
+              headName: "Alice Wonderland",
+            }
+          : department,
+      ),
+    });
+
+    const { result } = renderHook(() => useClubAdminClubInfo());
+
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    const updated = result.current.data!.departments.find(
+      (d) => d.departmentId === "dept-1",
+    );
+    expect(updated!.headUserId).toBe("user-99");
+    expect(updated!.headName).toBe("Alice Wonderland");
   });
 
   it("sets error when the API call throws", async () => {
@@ -328,12 +354,14 @@ describe("assignBoardMember", () => {
     vi.mocked(clubAdminApi.assignBoardMember).mockResolvedValue({
       message: "Assigned",
     });
-    vi.mocked(clubAdminApi.getUserInformation).mockResolvedValue({
-      userId: "user-99",
-      firstName: "Alice",
-      lastName: "Wonderland",
-      email: "alice@example.com",
-    });
+    vi.mocked(clubAdminApi.getDepartmentHeads).mockResolvedValue([
+      {
+        userId: "user-99",
+        departmentId: "dept-1",
+        firstName: "Alice",
+        lastName: "Wonderland",
+      },
+    ]);
   });
 
   it("updates the department headUserId and headName in state", async () => {
@@ -349,5 +377,29 @@ describe("assignBoardMember", () => {
     );
     expect(dept!.headUserId).toBe("user-99");
     expect(dept!.headName).toBe("Alice Wonderland");
+  });
+
+  it("falls back to the assigned user id if the lookup does not return the department", async () => {
+    vi.mocked(clubAdminApi.getDepartmentHeads).mockResolvedValue([
+      {
+        userId: "user-99",
+        departmentId: "dept-2",
+        firstName: "Alice",
+        lastName: "Wonderland",
+      },
+    ]);
+
+    const { result } = renderHook(() => useClubAdminClubInfo());
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    await act(async () => {
+      await result.current.assignBoardMember("user-99", "dept-1");
+    });
+
+    const dept = result.current.data!.departments.find(
+      (d) => d.departmentId === "dept-1",
+    );
+    expect(dept!.headUserId).toBe("user-99");
+    expect(dept!.headName).toBe("user-99");
   });
 });

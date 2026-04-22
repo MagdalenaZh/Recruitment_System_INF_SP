@@ -78,6 +78,13 @@ type UserInfoDto = {
   email: string;
 };
 
+type DepartmentHeadDto = {
+  userId: string;
+  departmentId: string;
+  firstName: string;
+  lastName: string;
+};
+
 type ApplicationDto = UserApplicationDto & {
   cv?: ApiCvFile | null;
 };
@@ -169,7 +176,20 @@ async function updateClubWithCurrentValues(
 export const clubAdminApi = {
   async getCurrentClubInfo(): Promise<ClubAdminClubInfo> {
     const clubId = resolveCurrentClubId();
-    const { club, departments } = await fetchCurrentClubBundle(clubId);
+    const [{ club, departments }, departmentHeads] = await Promise.all([
+      fetchCurrentClubBundle(clubId),
+      this.getDepartmentHeads(clubId),
+    ]);
+
+    const departmentHeadMap = new Map(
+      departmentHeads.map((head) => [
+        head.departmentId,
+        {
+          headUserId: head.userId,
+          headName: `${head.firstName} ${head.lastName}`.trim() || head.userId,
+        },
+      ]),
+    );
 
     return {
       clubId: club.clubId,
@@ -183,8 +203,8 @@ export const clubAdminApi = {
         departmentName: d.departmentName,
         description: d.description,
         openPositions: d.numberOfOpenPositions,
-        headName: null,
-        headUserId: null,
+        headName: departmentHeadMap.get(d.departmentId)?.headName ?? null,
+        headUserId: departmentHeadMap.get(d.departmentId)?.headUserId ?? null,
       })),
     };
   },
@@ -256,6 +276,12 @@ export const clubAdminApi = {
     return apiPut<{ departmentId: string; roleId: string }, MessageResponse>(
       `/api/recruitmentInfo/api/assign-board-member/${userId}`,
       { departmentId, roleId },
+    );
+  },
+
+  async getDepartmentHeads(clubId: string): Promise<DepartmentHeadDto[]> {
+    return apiGet<DepartmentHeadDto[]>(
+      `/api/recruitmentInfo/api/club-boardmembers/${clubId}`,
     );
   },
 

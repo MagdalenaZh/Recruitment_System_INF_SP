@@ -193,20 +193,24 @@ export function useClubAdminClubInfo() {
         throw new Error('Role "BoardMember" is not available.');
       }
 
+      if (!data) {
+        throw new Error("Club data not loaded.");
+      }
+
       await clubAdminApi.assignBoardMember(
         userId,
         departmentId,
         boardMemberRoleId,
       );
 
-      let assignedName: string | null = null;
-      try {
-        const user = await clubAdminApi.getUserInformation(userId);
-        assignedName =
-          `${user.firstName} ${user.lastName}`.trim() || user.email;
-      } catch {
-        assignedName = userId;
-      }
+      const departmentHeads = await clubAdminApi.getDepartmentHeads(data.clubId);
+      const assignedHead = departmentHeads.find(
+        (head) => head.departmentId === departmentId,
+      );
+      const assignedName =
+        assignedHead &&
+        (`${assignedHead.firstName} ${assignedHead.lastName}`.trim() ||
+          assignedHead.userId);
 
       setData((prev) => {
         if (!prev) return prev;
@@ -217,8 +221,8 @@ export function useClubAdminClubInfo() {
             department.departmentId === departmentId
               ? {
                   ...department,
-                  headUserId: userId,
-                  headName: assignedName,
+                  headUserId: assignedHead?.userId ?? userId,
+                  headName: assignedName ?? userId,
                 }
               : department,
           ),
@@ -227,7 +231,7 @@ export function useClubAdminClubInfo() {
 
       return assignedName;
     },
-    [boardMemberRoleId],
+    [boardMemberRoleId, data],
   );
 
   return {
