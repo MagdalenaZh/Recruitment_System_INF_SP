@@ -16,7 +16,7 @@ export function ApplicationFormShell(props: {
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900">
-      <Navbar search={search} setSearch={setSearch} />
+      <Navbar search={search} setSearch={setSearch} tone="light" />
 
       {clubId && clubName ? (
         <FormHeaderSection clubId={clubId} clubName={clubName} />

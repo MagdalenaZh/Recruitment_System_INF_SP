@@ -66,8 +66,8 @@ export default function LandingPage() {
   }, [clubs, search]);
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white">
-      <Navbar search={search} setSearch={setSearch} />
+    <div className="relative min-h-screen bg-slate-950 text-white">
+      <Navbar search={search} setSearch={setSearch} overlay />
 
       <HeroSection />
 

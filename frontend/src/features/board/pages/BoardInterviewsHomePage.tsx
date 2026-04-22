@@ -99,7 +99,7 @@ export function BoardInterviewsHomePage() {
   if (loading) {
     return (
       <BoardShell>
-        <div className="mx-auto max-w-7xl p-6 pt-36">
+        <div className="mx-auto max-w-7xl p-6">
           <div className="rounded-[28px] border border-blue-100/70 bg-white/70 p-6 text-slate-600 shadow-sm backdrop-blur-sm">
             Loading interview schedule...
           </div>
@@ -111,7 +111,7 @@ export function BoardInterviewsHomePage() {
   if (error) {
     return (
       <BoardShell>
-        <div className="mx-auto max-w-7xl p-6 pt-36">
+        <div className="mx-auto max-w-7xl p-6">
           <div className="rounded-[28px] border border-red-200 bg-red-50/90 p-6 text-red-700 shadow-sm">
             <div className="font-semibold">
               Could not load interview schedule.
@@ -125,7 +125,7 @@ export function BoardInterviewsHomePage() {
 
   return (
     <BoardShell>
-      <div className="pt-28">
+      <div>
         <div className="mx-auto max-w-7xl p-4 sm:p-6">
           <div className="mb-10">
             <BoardSectionNav />

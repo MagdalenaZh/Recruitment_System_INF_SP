@@ -25,12 +25,12 @@ export function BoardDepartmentApplicationsPage() {
         <div className="absolute -bottom-56 left-[-12rem] h-[34rem] w-[34rem] rounded-full bg-indigo-500/10 blur-3xl" />
       </div>
 
-      <div className="relative mx-auto max-w-6xl p-4 pt-28 sm:p-6">
+      <div className="relative mx-auto max-w-6xl p-4 sm:p-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <Link
               to="/board"
-              className="mt-20 inline-flex items-center gap-2 text-sm font-semibold text-slate-600 transition hover:text-slate-900"
+              className="inline-flex items-center gap-2 text-sm font-semibold text-slate-600 transition hover:text-slate-900"
             >
               <span className="transition-transform duration-200 hover:-translate-x-0.5">
                 ←

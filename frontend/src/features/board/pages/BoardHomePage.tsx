@@ -11,7 +11,7 @@ export function BoardHomePage() {
 
   return (
     <BoardShell>
-      <div className="pt-28 mb-20">
+      <div className="mb-20">
         <div className="mx-auto max-w-7xl p-4 sm:p-6">
           <div className="mb-10">
             <BoardSectionNav />

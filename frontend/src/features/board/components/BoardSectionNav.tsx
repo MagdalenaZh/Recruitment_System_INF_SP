@@ -5,7 +5,7 @@ export function BoardSectionNav() {
     "inline-flex items-center rounded-full px-4 py-2 text-sm font-semibold transition";
 
   return (
-    <div className="mt-6 flex flex-wrap gap-2 rounded-2xl border border-slate-200 bg-white p-2 shadow-sm">
+    <div className="flex flex-wrap gap-2 rounded-2xl border border-slate-200 bg-white p-2 shadow-sm">
       <NavLink
         to="/board"
         end

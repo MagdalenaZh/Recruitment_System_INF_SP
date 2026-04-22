@@ -38,7 +38,7 @@ export function BoardApplicationDetailPage() {
 
   return (
     <BoardShell>
-      <div className="mx-auto max-w-6xl p-4 pb-24 pt-28 sm:p-6">
+      <div className="mx-auto max-w-6xl p-4 pb-24 sm:p-6">
         <div className="flex items-center justify-between gap-4">
           <div>
             <Link

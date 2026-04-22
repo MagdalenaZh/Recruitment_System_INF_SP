@@ -55,7 +55,7 @@ export function BoardDepartmentInterviewsPage() {
 
   return (
     <BoardShell>
-      <div className="pt-28">
+      <div>
         <div className="mx-auto max-w-6xl p-4 sm:p-6">
           <Link
             to="/board/interviews"

@@ -35,13 +35,12 @@ function getMenuItems(
   if (normalizedRole === "ClubAdmin") {
     return [
       { label: "My Profile", to: "/account" },
-      { label: "Club Applications", to: "/board" },
-      { label: "Interview Stage", to: "/board" },
+      { label: "Club Applications", to: "/club-admin/applications" },
+      { label: "Interview Stage", to: "/board/interviews" },
       { label: "Manage Club", to: "/club-admin" },
     ];
   }
 
-  // Default: regular User / Applicant
   return [
     { label: "My Profile", to: "/account" },
     {
