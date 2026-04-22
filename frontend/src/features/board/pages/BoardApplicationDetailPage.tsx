@@ -37,7 +37,7 @@ export function BoardApplicationDetailPage() {
   }
 
   return (
-    <BoardShell>
+    <BoardShell showNavbar={false}>
       <div className="mx-auto max-w-6xl p-4 pb-24 sm:p-6">
         <div className="flex items-center justify-between gap-4">
           <div>
@@ -51,9 +51,6 @@ export function BoardApplicationDetailPage() {
             >
               ← Back to applications
             </Link>
-            <div className="mt-1 text-sm text-slate-500">
-              Application ID: {applicationId}
-            </div>
           </div>
         </div>
 

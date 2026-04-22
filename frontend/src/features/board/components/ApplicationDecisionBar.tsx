@@ -1,4 +1,3 @@
-import { resolveCurrentUserId } from "../../../services/board/boardApi";
 import type { ApplicationDetail, BoardVote } from "../types/boardTypes";
 
 export function ApplicationDecisionBar({
@@ -16,16 +15,16 @@ export function ApplicationDecisionBar({
     "rounded-xl px-4 py-2 text-sm font-semibold border transition disabled:opacity-60 disabled:cursor-not-allowed";
   const showVoteSummary =
     app.status === "Pending" || app.status === "Submitted";
-  const canVote =
-    app.status === "Pending" || app.status === "Submitted";
+  const canVote = app.status === "Pending" || app.status === "Submitted";
 
   const approveActive = app.myVote === "Approve";
   const rejectActive = app.myVote === "Reject";
   const myVoteLabel =
-    app.myVote === "Approve" ? "Approve" : app.myVote === "Reject" ? "Disapprove" : "-";
-
-  const currentUserId = resolveCurrentUserId();
-  const voterEntries = app.voterDecisions ? Object.entries(app.voterDecisions) : [];
+    app.myVote === "Approve"
+      ? "Approve"
+      : app.myVote === "Reject"
+        ? "Disapprove"
+        : "-";
 
   return (
     <div className="mt-6">
@@ -39,18 +38,22 @@ export function ApplicationDecisionBar({
               <>
                 <div className="text-sm text-slate-600">
                   Your vote:{" "}
-                  <span className="font-medium text-slate-900">{myVoteLabel}</span>
+                  <span className="font-medium text-slate-900">
+                    {myVoteLabel}
+                  </span>
                 </div>
                 <div className="text-sm text-slate-600">
                   Board votes:{" "}
                   <span className="font-medium text-slate-900">
-                    {app.totalVotes} ({app.approveVotes} approve / {app.rejectVotes} reject)
+                    {app.totalVotes} ({app.approveVotes} approve /{" "}
+                    {app.rejectVotes} reject)
                   </span>
                 </div>
               </>
             ) : (
               <div className="text-sm text-slate-600">
-                Round one voting is complete. Ongoing interview votes are tracked from the interview workspace.
+                Round one voting is complete. Ongoing interview votes are
+                tracked from the interview workspace.
               </div>
             )}
           </div>
@@ -84,52 +87,22 @@ export function ApplicationDecisionBar({
           ) : null}
         </div>
 
-        {showVoteSummary && voterEntries.length > 0 ? (
-          <div className="mt-3 border-t border-slate-100 pt-3">
-            <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
-              Board member votes
-            </div>
-            <div className="flex flex-col gap-1">
-              {voterEntries.map(([userId, approved]) => {
-                const isMe =
-                  currentUserId !== null &&
-                  userId.toLowerCase() === currentUserId.toLowerCase();
-                return (
-                  <div key={userId} className="flex items-center gap-2 text-sm">
-                    <span
-                      className={
-                        isMe ? "font-semibold text-blue-700" : "text-slate-600"
-                      }
-                    >
-                      {isMe
-                        ? "You"
-                        : (app.voterNames?.[userId] ?? `${userId.slice(0, 8)}\u2026`)}
-                    </span>
-                    <span
-                      className={
-                        approved
-                          ? "font-medium text-emerald-600"
-                          : "font-medium text-rose-600"
-                      }
-                    >
-                      {approved ? "Approved" : "Rejected"}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        ) : null}
-
         {!canVote ? (
           <div className="mt-3 text-sm text-slate-600">
-            Voting is available only during round one from the application review stage.
+            Voting is available only during round one from the application
+            review stage.
           </div>
         ) : null}
 
-        {error ? <div className="mt-3 text-sm text-rose-700">{error}</div> : null}
+        {error ? (
+          <div className="mt-3 text-sm text-rose-700">{error}</div>
+        ) : null}
 
-        {loading ? <div className="mt-3 text-sm text-slate-600">Submitting your vote...</div> : null}
+        {loading ? (
+          <div className="mt-3 text-sm text-slate-600">
+            Submitting your vote...
+          </div>
+        ) : null}
       </div>
     </div>
   );

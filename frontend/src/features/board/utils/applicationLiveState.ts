@@ -122,6 +122,19 @@ function readApprovals(
     };
   }
 
+  if (
+    isApprovedApplicationState(payload) &&
+    typeof payload.requiredNumberOfApprovals === "number"
+  ) {
+    return {
+      approvalsCount:
+        typeof payload.currentNumberOfApprovals === "number"
+          ? payload.currentNumberOfApprovals
+          : 0,
+      requiredApprovals: payload.requiredNumberOfApprovals,
+    };
+  }
+
   return null;
 }
 
@@ -166,14 +179,8 @@ export function applyUpdateToApplicationListItem(
   return {
     ...item,
     status: inferredStatus ?? item.status,
-    approvalsCount:
-      inferredStatus === "InterviewPending"
-        ? 0
-        : approvals?.approvalsCount ?? item.approvalsCount,
-    requiredApprovals:
-      inferredStatus === "InterviewPending"
-        ? 0
-        : approvals?.requiredApprovals ?? item.requiredApprovals,
+    approvalsCount: approvals?.approvalsCount ?? item.approvalsCount,
+    requiredApprovals: approvals?.requiredApprovals ?? item.requiredApprovals,
     totalVotes: voteActivity?.totalVotes ?? item.totalVotes,
     approveVotes: voteActivity?.approveVotes ?? item.approveVotes,
     rejectVotes: voteActivity?.rejectVotes ?? item.rejectVotes,
@@ -216,14 +223,8 @@ export function applyUpdateToApplicationDetail(
   return {
     ...detail,
     status: inferredStatus ?? detail.status,
-    approvalsCount:
-      inferredStatus === "InterviewPending"
-        ? 0
-        : approvals?.approvalsCount ?? detail.approvalsCount,
-    requiredApprovals:
-      inferredStatus === "InterviewPending"
-        ? 0
-        : approvals?.requiredApprovals ?? detail.requiredApprovals,
+    approvalsCount: approvals?.approvalsCount ?? detail.approvalsCount,
+    requiredApprovals: approvals?.requiredApprovals ?? detail.requiredApprovals,
     totalVotes: voteActivity?.totalVotes ?? detail.totalVotes,
     approveVotes: voteActivity?.approveVotes ?? detail.approveVotes,
     rejectVotes: voteActivity?.rejectVotes ?? detail.rejectVotes,

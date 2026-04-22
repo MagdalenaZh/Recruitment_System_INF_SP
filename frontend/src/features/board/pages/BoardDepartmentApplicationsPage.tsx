@@ -19,7 +19,7 @@ export function BoardDepartmentApplicationsPage() {
   } = useDepartmentApplications(departmentId);
 
   return (
-    <BoardShell className="relative">
+    <BoardShell className="relative" showNavbar={false}>
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute -top-40 right-[-10rem] h-[28rem] w-[28rem] rounded-full bg-sky-500/10 blur-3xl" />
         <div className="absolute -bottom-56 left-[-12rem] h-[34rem] w-[34rem] rounded-full bg-indigo-500/10 blur-3xl" />
@@ -43,8 +43,6 @@ export function BoardDepartmentApplicationsPage() {
             </h1>
           </div>
         </div>
-
-        <BoardSectionNav />
 
         <div className="mt-8 rounded-[24px] border border-blue-100/70 bg-white/70 p-4 shadow-sm backdrop-blur-sm">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">

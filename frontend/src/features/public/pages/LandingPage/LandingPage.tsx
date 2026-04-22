@@ -66,18 +66,20 @@ export default function LandingPage() {
   }, [clubs, search]);
 
   return (
-    <div className="relative min-h-screen bg-slate-950 text-white">
+    <div className="relative flex min-h-screen flex-col bg-slate-950 text-white">
       <Navbar search={search} setSearch={setSearch} overlay />
 
-      <HeroSection />
+      <main className="flex-1">
+        <HeroSection />
 
-      {loading ? (
-        <div className="mx-auto max-w-6xl px-4 py-10">Loading clubs...</div>
-      ) : error ? (
-        <div className="mx-auto max-w-6xl px-4 py-10 text-red-300">{error}</div>
-      ) : (
-        <ClubsSection clubs={filtered} totalCount={filtered.length} />
-      )}
+        {loading ? (
+          <div className="mx-auto max-w-6xl px-4 py-10">Loading clubs...</div>
+        ) : error ? (
+          <div className="mx-auto max-w-6xl px-4 py-10 text-red-300">{error}</div>
+        ) : (
+          <ClubsSection clubs={filtered} totalCount={filtered.length} />
+        )}
+      </main>
 
       <Footer />
     </div>

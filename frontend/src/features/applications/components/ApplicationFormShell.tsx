@@ -1,7 +1,6 @@
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 
-import { Navbar } from "../../../components/layout/Navbar/Navbar";
 import { Container } from "../../../components/layout/Container";
 import { Footer } from "../../../components/layout/Footer";
 
@@ -16,8 +15,6 @@ export function ApplicationFormShell(props: {
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900">
-      <Navbar search={search} setSearch={setSearch} tone="light" />
-
       {clubId && clubName ? (
         <FormHeaderSection clubId={clubId} clubName={clubName} />
       ) : null}

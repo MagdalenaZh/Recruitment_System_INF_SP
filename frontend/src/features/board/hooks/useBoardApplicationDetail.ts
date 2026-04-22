@@ -127,28 +127,52 @@ export function useBoardApplicationDetail(applicationId?: string) {
 
   useEffect(() => {
     async function hydrateVoterNames() {
-      if (!data?.voterDecisions) return;
+      if (!data?.voterDecisions || !data.clubId) return;
 
       const voterIds = Object.keys(data.voterDecisions).filter(Boolean);
       if (voterIds.length === 0) return;
 
-      const unresolvedIds = voterIds.filter(
-        (userId) => !data.voterNames || !data.voterNames[userId],
-      );
+      const hasResolvedName = (userId: string) =>
+        !!Object.entries(data.voterNames ?? {}).find(
+          ([key, value]) =>
+            key.toLowerCase() === userId.toLowerCase() && value.trim().length > 0,
+        );
+
+      const unresolvedIds = voterIds.filter((userId) => !hasResolvedName(userId));
       if (unresolvedIds.length === 0) return;
 
-      const results = await Promise.allSettled(
-        unresolvedIds.map((userId) => boardApi.getUserInformation(userId)),
-      );
-
       const nextNames: Record<string, string> = {};
-      for (let index = 0; index < unresolvedIds.length; index += 1) {
-        const result = results[index];
-        const userId = unresolvedIds[index];
-        if (result.status === "fulfilled") {
+
+      const boardMembers = await boardApi
+        .getClubBoardMembers(data.clubId)
+        .catch(() => []);
+
+      for (const userId of unresolvedIds) {
+        const matchingBoardMember = boardMembers.find(
+          (member) => member.userId.toLowerCase() === userId.toLowerCase(),
+        );
+
+        if (matchingBoardMember) {
           nextNames[userId] =
-            `${result.value.firstName} ${result.value.lastName}`.trim() ||
-            userId;
+            `${matchingBoardMember.firstName} ${matchingBoardMember.lastName}`.trim() ||
+            "Board member";
+        }
+      }
+
+      const stillUnresolvedIds = unresolvedIds.filter((userId) => !nextNames[userId]);
+      if (stillUnresolvedIds.length > 0) {
+        const results = await Promise.allSettled(
+          stillUnresolvedIds.map((userId) => boardApi.getUserInformation(userId)),
+        );
+
+        for (let index = 0; index < stillUnresolvedIds.length; index += 1) {
+          const result = results[index];
+          const userId = stillUnresolvedIds[index];
+          if (result.status === "fulfilled") {
+            nextNames[userId] =
+              `${result.value.firstName} ${result.value.lastName}`.trim() ||
+              "Board member";
+          }
         }
       }
 
@@ -167,7 +191,7 @@ export function useBoardApplicationDetail(applicationId?: string) {
     }
 
     void hydrateVoterNames();
-  }, [data?.id, data?.voterDecisions, data?.voterNames, setData]);
+  }, [data?.clubId, data?.id, data?.voterDecisions, data?.voterNames, setData]);
 
   useEffect(() => {
     if (!applicationId) return;

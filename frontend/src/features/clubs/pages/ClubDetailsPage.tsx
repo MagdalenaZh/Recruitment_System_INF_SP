@@ -73,10 +73,10 @@ export default function ClubDetailsPage() {
   }, [clubId, state?.club]);
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white">
+    <div className="flex min-h-screen flex-col bg-slate-950 text-white">
       <Navbar search={search} setSearch={setSearch} />
 
-      <main className="pt-24">
+      <main className="flex-1 pt-24">
         <Container>
           <Link
             to="/home"
