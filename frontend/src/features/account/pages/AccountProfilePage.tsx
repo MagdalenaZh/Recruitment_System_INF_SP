@@ -128,6 +128,7 @@ export function AccountProfilePage() {
   const isApplicant = profile.role === "Applicant" || profile.role === "User";
   const isBoardMember = profile.role === "BoardMember";
   const isClubAdmin = profile.role === "ClubAdmin";
+  const isSystemAdmin = profile.role === "SystemAdmin";
 
   return (
     <div className="space-y-6">
@@ -187,36 +188,38 @@ export function AccountProfilePage() {
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <div>
-          <label className="text-xs font-medium text-slate-600">
-            Academic year
-          </label>
-          <select
-            value={academicYear}
-            onChange={(e) => setAcademicYear(e.target.value)}
-            className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
-          >
-            <option value="">Select academic year</option>
-            {ACADEMIC_YEAR_OPTIONS.map((option) => (
-              <option key={option} value={option}>
-                {option}
-              </option>
-            ))}
-          </select>
-        </div>
+      {!isSystemAdmin && (
+        <div className="grid gap-4 md:grid-cols-2">
+          <div>
+            <label className="text-xs font-medium text-slate-600">
+              Academic year
+            </label>
+            <select
+              value={academicYear}
+              onChange={(e) => setAcademicYear(e.target.value)}
+              className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+            >
+              <option value="">Select academic year</option>
+              {ACADEMIC_YEAR_OPTIONS.map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
+            </select>
+          </div>
 
-        <div>
-          <label className="text-xs font-medium text-slate-600">
-            Study major
-          </label>
-          <Input
-            value={studyMajor}
-            onChange={(e) => setStudyMajor(e.target.value)}
-            placeholder="Computer Science"
-          />
+          <div>
+            <label className="text-xs font-medium text-slate-600">
+              Study major
+            </label>
+            <Input
+              value={studyMajor}
+              onChange={(e) => setStudyMajor(e.target.value)}
+              placeholder="Computer Science"
+            />
+          </div>
         </div>
-      </div>
+      )}
 
       {isBoardMember && (
         <div className="grid gap-4 md:grid-cols-2">
@@ -248,10 +251,6 @@ export function AccountProfilePage() {
             <div className="mt-1 rounded-xl bg-slate-50 px-3 py-2 text-sm text-slate-700 ring-1 ring-slate-100">
               {profile.clubName ?? "Not assigned"}
             </div>
-            <p className="mt-1 text-xs text-slate-500">
-              This is based on your club-admin assignment and cannot be edited
-              here.
-            </p>
           </div>
         </div>
       )}
@@ -289,7 +288,8 @@ export function AccountProfilePage() {
           </div>
 
           <p className="mt-3 text-xs text-slate-500">
-            The selected PDF will be uploaded when you save your profile changes.
+            The selected PDF will be uploaded when you save your profile
+            changes.
           </p>
 
           {profile.cvUrl && (

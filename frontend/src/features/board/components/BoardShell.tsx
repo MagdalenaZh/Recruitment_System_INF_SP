@@ -14,7 +14,7 @@ export function BoardShell({ children, className = "" }: Props) {
     >
       <Navbar tone="light" />
       {children}
-      <Footer />
+      <Footer tone="light" />
     </div>
   );
 }

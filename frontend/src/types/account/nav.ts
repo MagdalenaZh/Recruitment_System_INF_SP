@@ -4,7 +4,12 @@ export type AccountNavKey =
   | "your profile"
   | "applications"
   | "interviews"
-  | "clubPanel"
+  | "club admin home"
+  | "club settings"
+  | "club interview slots"
+  | "club final decisions"
+  | "club applications workspace"
+  | "club interviews workspace"
   | "systemPanel";
 
 export type AccountNavItem = {

@@ -28,7 +28,7 @@ export function ApplicationFormShell(props: {
         </Container>
       </main>
 
-      <Footer />
+      <Footer tone="light" />
     </div>
   );
 }
